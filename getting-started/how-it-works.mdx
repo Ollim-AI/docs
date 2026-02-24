@@ -3,4 +3,213 @@ title: "How ollim-bot works"
 description: "The agent loop, session persistence, fork model, and context flow."
 ---
 
-Content coming soon.
+ollim-bot is a Claude-powered agent that runs as a Discord bot.
+Understanding four core concepts — the agent loop, session
+persistence, forks, and context flow — will help you get the
+most out of it.
+
+## The agent loop
+
+Every message you send follows the same path through the system:
+
+<Steps>
+  <Step title="Message received">
+    Discord delivers your DM or @mention to `bot.py`, which
+    acquires the agent lock to ensure one conversation at a time.
+  </Step>
+  <Step title="Context prepended">
+    Before your message reaches the agent, a timestamp and any
+    pending background updates are prepended. Main session messages
+    clear the pending updates file after reading; fork messages
+    peek without clearing.
+  </Step>
+  <Step title="Agent processes">
+    `agent.py` sends the enriched message to the Claude Agent SDK
+    client. The agent has access to MCP tools (`discord_embed`,
+    `ping_user`, `save_context`, `report_updates`, `enter_fork`,
+    `exit_fork`, `follow_up_chain`), Bash commands
+    (`ollim-bot tasks`, `ollim-bot cal`, etc.), file operations,
+    web tools, and three subagents (gmail-reader,
+    history-reviewer, responsiveness-reviewer).
+  </Step>
+  <Step title="Response streamed">
+    `streamer.py` streams the agent's response to Discord with
+    throttled edits. Messages exceeding 2000 characters overflow
+    into follow-up messages automatically.
+  </Step>
+</Steps>
+
+The agent lock ensures messages are processed sequentially — if
+you send a new message while the agent is responding, the current
+response is interrupted and the new message takes over.
+
+## Session persistence
+
+ollim-bot maintains a single persistent conversation with Claude
+across restarts. This is the foundation of its contextual
+understanding.
+
+### How sessions work
+
+The Claude Agent SDK assigns a session ID to each conversation.
+ollim-bot persists this ID to `~/.ollim-bot/sessions.json` (a
+plain text file containing just the session ID string). On
+restart, the bot resumes from this saved session using
+`resume=session_id`.
+
+When the conversation context grows too large, the SDK
+auto-compacts it — summarizing older messages while preserving
+meaning. The session ID changes on compaction, and ollim-bot
+detects and logs this automatically.
+
+### Session lifecycle events
+
+Every session state change is logged to
+`~/.ollim-bot/session_history.jsonl` as an append-only record:
+
+| Event | Trigger |
+|-------|---------|
+| `created` | First message (no prior session exists) |
+| `compacted` | SDK auto-compaction (session ID changed) |
+| `swapped` | Fork promoted to main via `save_context` |
+| `cleared` | `/clear` command resets conversation |
+| `interactive_fork` | Interactive fork created |
+| `bg_fork` | Background fork created |
+| `isolated_bg` | Isolated background fork (no history) |
+
+Each event records a timestamp and parent session ID, creating a
+traceable lineage of conversation branches.
+
+### Key commands
+
+- `/clear` — resets the conversation entirely (drops client,
+  deletes session ID)
+- `/compact [instructions]` — manually triggers context
+  compaction with optional guidance
+
+## The fork model
+
+Forks let the agent branch off the main conversation to handle
+separate tasks without polluting the primary context.
+
+### Interactive forks
+
+Start an interactive fork with the `/fork [topic]` slash command
+or when the agent calls the `enter_fork` MCP tool. The fork
+branches from the main session — your messages route to the fork
+client instead of the main client.
+
+Interactive forks have an idle timeout (default: 10 minutes). The
+scheduler checks every 60 seconds; after the timeout elapses, it
+prompts the agent to wrap up. After another timeout period with
+no activity, it escalates.
+
+Three exit strategies end an interactive fork:
+
+| Strategy | MCP Tool | Effect |
+|----------|----------|--------|
+| Save | `save_context` | Promotes the fork to main session |
+| Report | `report_updates` | Queues a summary, discards fork |
+| Discard | `exit_fork` | Discards fork, returns to main |
+
+An embed with buttons is sent when a fork starts, letting you
+choose an exit strategy without typing a command.
+
+<Note>
+Forks never nest — you cannot fork from a fork. Background forks
+can run in parallel with an active interactive fork.
+</Note>
+
+### Background forks
+
+Background forks run autonomously without user interaction. They
+are created by [routines](/scheduling/routines),
+[reminders](/scheduling/reminders), and
+[webhooks](/integrations/webhooks).
+
+Background forks:
+
+- Run without the agent lock, using contextvars for isolation
+- Have a 30-minute timeout (`BG_FORK_TIMEOUT = 1800`)
+- Discard their text output — the agent uses `ping_user` or
+  `discord_embed` to communicate results, subject to
+  [ping budget](/scheduling/ping-budget) limits
+- Can report summaries back to the main session via
+  `report_updates`
+- Support tool restrictions, model overrides, and isolated mode
+  via YAML config
+
+<Tip>
+Use `isolated: true` in a routine's YAML frontmatter when the
+task doesn't need conversation history — like email triage or
+calendar checks.
+</Tip>
+
+## Context flow
+
+Context flows between the main session and forks through a
+file-based bridge at `~/.ollim-bot/pending_updates.json`.
+
+### The pending updates cycle
+
+1. A background fork calls `report_updates(message)` to write a
+   timestamped summary to the pending updates file
+2. On the next main session interaction, the updates are
+   prepended to the user's message and the file is cleared
+3. Fork sessions peek at pending updates (read without clearing)
+   so they stay aware without consuming the updates
+
+This design ensures background work surfaces naturally in the
+main conversation without requiring the user to check anything.
+
+### What gets prepended to every message
+
+Every message the agent receives is enriched with:
+
+- A timestamp in Pacific time: `[2026-02-24 Mon 09:15 AM PT]`
+- Any pending background updates (for main session messages)
+
+This gives the agent consistent time awareness and ensures
+background fork results are never lost.
+
+### Reply-to-fork
+
+Replying to a message sent by a background fork starts an
+interactive fork that resumes from that background fork's
+session. This lets you drill into a background task's context
+without disrupting the main conversation. Discord message IDs are
+mapped to fork session IDs in `~/.ollim-bot/fork_messages.json`
+with a 7-day TTL.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card
+    title="Design philosophy"
+    icon="lightbulb"
+    href="/getting-started/design-philosophy"
+  >
+    The principles and tradeoffs behind ollim-bot's architecture.
+  </Card>
+  <Card
+    title="Forks"
+    icon="code-branch"
+    href="/core-usage/forks"
+  >
+    Deep dive into interactive and background forks.
+  </Card>
+  <Card
+    title="Scheduling overview"
+    icon="clock"
+    href="/scheduling/overview"
+  >
+    How routines and reminders drive proactive behavior.
+  </Card>
+  <Card
+    title="Conversations"
+    icon="comments"
+    href="/core-usage/conversations"
+  >
+    The DM interface, mentions, and message handling.
+  </Card>
+</Columns>
