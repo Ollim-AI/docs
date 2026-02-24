@@ -3,4 +3,271 @@ title: "File formats"
 description: "YAML frontmatter specs and JSONL formats for all data files."
 ---
 
-Content coming soon.
+All persistent data in ollim-bot lives under `~/.ollim-bot/` as flat files.
+There are two families of formats: **markdown files** with YAML frontmatter
+(routines, reminders, webhooks) and **JSON/JSONL files** (sessions, pending
+updates, inquiries, ping budget). The data directory is a git repository —
+most writes are auto-committed.
+
+## Markdown files (YAML frontmatter)
+
+Routines, reminders, and webhooks share a common file structure: YAML
+frontmatter delimited by `---`, followed by a markdown body. Fields that
+match their default value are omitted from the YAML when serialized.
+
+### Routines
+
+Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based on the message body.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | auto-generated | 8-character hex UUID (`uuid4().hex[:8]`) |
+| `cron` | `str` | — | Cron expression (5-field standard format) |
+| `description` | `str` | `""` | Human-readable description |
+| `background` | `bool` | `false` | Run as background fork |
+| `model` | `str \| null` | `null` | Model override (`"opus"`, `"sonnet"`, `"haiku"`) |
+| `thinking` | `bool` | `true` | Enable extended thinking |
+| `isolated` | `bool` | `false` | Run in isolated session (no conversation history) |
+| `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+| `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
+| `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist (mutually exclusive with `disallowed_tools`) |
+| `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist (mutually exclusive with `allowed_tools`) |
+
+The markdown body after the closing `---` becomes the routine's task message.
+
+```yaml title="routines/nightly-sleep-review.md"
+---
+id: "eb56e06b"
+cron: "0 22 * * *"
+description: "10 PM daily -- read sleep data"
+background: true
+---
+Review tonight's sleep data and prepare a brief summary.
+Check the sleep tracker for any anomalies.
+```
+
+<Note>
+Specifying both `allowed_tools` and `disallowed_tools` raises a `ValueError`. Use one or the other.
+</Note>
+
+### Reminders
+
+Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | auto-generated | 8-character hex UUID |
+| `run_at` | `str` | — | ISO 8601 datetime with timezone (e.g., `2026-02-24T15:30:00-08:00`) |
+| `description` | `str` | `""` | Human-readable description |
+| `background` | `bool` | `false` | Run as background fork |
+| `chain_depth` | `int` | `0` | Current position in a follow-up chain (0 = root) |
+| `max_chain` | `int` | `0` | Maximum chain depth (0 = no chaining) |
+| `chain_parent` | `str \| null` | `null` | ID of chain root (auto-set to own `id` when `max_chain > 0`) |
+| `model` | `str \| null` | `null` | Model override |
+| `thinking` | `bool` | `true` | Enable extended thinking |
+| `isolated` | `bool` | `false` | Run in isolated session |
+| `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+| `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
+| `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist |
+| `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist |
+
+```yaml title="reminders/pick-up-groceries.md"
+---
+id: "a1b2c3d4"
+run_at: "2026-02-24T18:30:00-08:00"
+---
+Pick up groceries on the way home.
+```
+
+Chained reminder example:
+
+```yaml title="reminders/follow-up-on-project.md"
+---
+id: "f5e6d7c8"
+run_at: "2026-02-24T20:00:00-08:00"
+background: true
+max_chain: 2
+chain_parent: "f5e6d7c8"
+description: "Project follow-up"
+---
+Follow up on project timeline. Check if deadlines have been updated.
+```
+
+### Webhooks
+
+Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | — | Webhook identifier (used in endpoint URL: `POST /hook/{id}`) |
+| `fields` | `dict` | — | JSON Schema (Draft 7) defining the expected payload |
+| `isolated` | `bool` | `false` | Run in isolated session |
+| `model` | `str \| null` | `null` | Model override |
+| `thinking` | `bool` | `true` | Enable extended thinking |
+| `allow_ping` | `bool` | `true` | Allow notification tools |
+| `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+
+The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
+
+```yaml title="webhooks/ci-for-repo-status.md"
+---
+id: "ci"
+isolated: true
+model: "haiku"
+fields:
+  type: object
+  required:
+    - repo
+    - status
+  properties:
+    repo:
+      type: string
+      maxLength: 200
+    status:
+      type: string
+      enum: [success, failure]
+  additionalProperties: false
+---
+CI for {repo}: {status}. Review the build logs and take any necessary action.
+```
+
+<Tip>
+String properties in the `fields` schema that lack an explicit `maxLength`
+automatically get a default limit of 500 characters. The total payload size
+is capped at 10 KB, with a maximum of 20 properties.
+</Tip>
+
+## Shared markdown conventions
+
+These rules apply to all three markdown file types (routines, reminders, webhooks):
+
+| Behavior | Details |
+|----------|---------|
+| **Slug generation** | Lowercase, replace non-alphanumeric characters with `-`, max 50 characters, strip trailing `-` |
+| **Collision handling** | Same `id` overwrites the file; different `id` appends `-2`, `-3`, etc. |
+| **Atomic writes** | `tempfile.mkstemp()` + `os.replace()` (POSIX-atomic) |
+| **Default omission** | Only non-default fields appear in YAML frontmatter |
+| **String serialization** | Double-quoted: `key: "value"` |
+| **Boolean serialization** | Lowercase: `key: true` |
+| **List serialization** | YAML block format with quoted string items |
+| **Parsing** | `yaml.safe_load()`; unknown YAML keys are silently skipped (forward-compatible) |
+| **Git integration** | Each write auto-commits with a message like `"add routine eb56e06b"` |
+
+## JSON and JSONL files
+
+### Session history (`session_history.jsonl`)
+
+Append-only JSONL log of session lifecycle events.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `session_id` | `str` | Agent SDK session identifier |
+| `event` | `str` | Event type (see below) |
+| `timestamp` | `str` | ISO datetime in `America/Los_Angeles` timezone |
+| `parent_session_id` | `str \| null` | Parent session for forks and compactions |
+
+Event types:
+
+| Event | Description |
+|-------|-------------|
+| `created` | New session created |
+| `compacted` | Session ID changed due to SDK auto-compaction |
+| `swapped` | Fork promoted to main session |
+| `cleared` | Session cleared via `/clear` |
+| `interactive_fork` | Interactive fork created |
+| `bg_fork` | Background fork created |
+| `isolated_bg` | Isolated background fork created |
+
+```json title="session_history.jsonl"
+{"session_id": "sess_abc", "event": "created",
+  "timestamp": "2026-02-24T14:30:45-08:00", "parent_session_id": null}
+{"session_id": "sess_def", "event": "bg_fork",
+  "timestamp": "2026-02-24T15:00:00-08:00", "parent_session_id": "sess_abc"}
+```
+
+### Current session (`sessions.json`)
+
+Plain text file containing the current Agent SDK session ID. Despite the
+`.json` extension, it is **not** JSON — it contains only the raw session
+ID string.
+
+### Fork messages (`fork_messages.json`)
+
+JSON array tracking Discord messages associated with active forks.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `message_id` | `int` | Discord message ID |
+| `fork_session_id` | `str` | Session ID of the fork |
+| `parent_session_id` | `str \| null` | Parent session ID |
+| `ts` | `float` | Unix timestamp (for TTL enforcement) |
+
+Records expire after **7 days** (604,800 seconds). Expired entries are filtered out on read.
+
+### Pending updates (`pending_updates.json`)
+
+JSON array of updates written by background forks for the main session.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | `str` | ISO datetime string |
+| `message` | `str` | Summary text from the `report_updates` MCP tool |
+
+Main sessions **pop** (read + clear) pending updates on the next
+interaction. Interactive forks **peek** (read-only). Writes are protected
+by an `asyncio.Lock()`.
+
+### Inquiries (`inquiries.json`)
+
+JSON object mapping 8-character hex UUIDs to button inquiry entries.
+Persists inquiry prompts so agent-created buttons survive bot restarts.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `prompt` | `str` | The prompt text sent to the agent when the button is clicked |
+| `ts` | `float` | Unix timestamp (for TTL enforcement) |
+
+Records expire after **7 days**. Expired entries are filtered out on read.
+
+```json title="inquiries.json"
+{
+  "a3f8b2c1": {"prompt": "The user clicked 'Mark as done'. Complete the task.", "ts": 1740441045.12},
+  "d4e9f0a2": {"prompt": "The user wants more details about this item.", "ts": 1740441060.45}
+}
+```
+
+### Ping budget (`ping_budget.json`)
+
+JSON object tracking the refill-on-read ping budget for background forks.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `capacity` | `int` | `5` | Maximum available pings |
+| `available` | `float` | `5.0` | Current available pings (fractional during refill) |
+| `refill_rate_minutes` | `int` | `90` | Minutes per ping refill |
+| `last_refill` | `str` | — | ISO datetime of last refill calculation |
+| `critical_used` | `int` | `0` | Critical pings used today (bypasses budget) |
+| `critical_reset_date` | `str` | — | ISO date for critical counter reset |
+| `daily_used` | `int` | `0` | Total pings used today |
+| `daily_used_reset` | `str` | — | ISO date for daily counter reset |
+
+<Warning>
+Ping budget is **not** git-committed — it is ephemeral state that resets to defaults if the file is deleted.
+</Warning>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Data directory" icon="folder" href="/configuration/data-directory">
+    Full layout of the `~/.ollim-bot/` directory structure.
+  </Card>
+  <Card title="Configuration reference" icon="gear" href="/configuration/reference">
+    Environment variables and configuration options.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    How to create and manage recurring routines.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
+    External triggers and webhook spec files.
+  </Card>
+</Columns>
