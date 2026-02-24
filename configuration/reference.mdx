@@ -3,4 +3,146 @@ title: "Configuration reference"
 description: "All environment variables, .env file, and data directory structure."
 ---
 
-Content coming soon.
+ollim-bot is configured through environment variables loaded from a `.env` file
+at the project root. All persistent data lives in `~/.ollim-bot/`, which is
+automatically managed as a git repository.
+
+## Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DISCORD_TOKEN` | Yes | — | Discord bot token for authentication |
+| `OLLIM_USER_NAME` | Yes | — | Your display name, used in the system prompt and messages |
+| `OLLIM_BOT_NAME` | Yes | — | The bot's display name |
+| `WEBHOOK_PORT` | No | — | Port for the webhook HTTP server; omit to disable webhooks |
+| `WEBHOOK_SECRET` | Conditional | — | HMAC secret for webhook authentication; required if `WEBHOOK_PORT` is set |
+
+<Warning>
+If `WEBHOOK_PORT` is set without `WEBHOOK_SECRET`, the webhook server will not start. Both must be set together.
+</Warning>
+
+`OLLIM_USER_NAME` and `OLLIM_BOT_NAME` are validated at import time — the
+process exits immediately if either is missing. `DISCORD_TOKEN` is checked
+when the bot subcommand runs.
+
+## `.env` file
+
+Place a `.env` file at the project root. Both `config.py` and `main.py` call `load_dotenv()` to load it.
+
+```bash title=".env"
+DISCORD_TOKEN=literal:your-discord-bot-token
+OLLIM_USER_NAME=literal:YourName
+OLLIM_BOT_NAME=Ollim
+WEBHOOK_PORT=8420
+WEBHOOK_SECRET=a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5
+```
+
+<Note>
+CLI subcommands (`routine`, `reminder`, `tasks`, `cal`, `gmail`) do not
+require `DISCORD_TOKEN` — it is only loaded when starting the bot.
+</Note>
+
+## Data directory
+
+All persistent state lives in `~/.ollim-bot/`. The directory is created on
+first use and managed as a git repository — most writes trigger an
+auto-commit.
+
+```
+~/.ollim-bot/
+├── bot.pid                  # PID file for single-instance check
+├── credentials.json         # Google OAuth credentials (from Cloud Console)
+├── token.json               # Google OAuth token (auto-generated)
+├── sessions.json            # Current session ID (plain string, not JSON)
+├── session_history.jsonl    # Append-only session lifecycle events
+├── pending_updates.json     # Pending updates from background forks
+├── inquiries.json           # Button inquiry prompts (7-day TTL)
+├── fork_messages.json       # Fork message tracking (7-day TTL)
+├── ping_budget.json         # Ping budget state (ephemeral, no git commit)
+├── routines/
+│   └── *.md                 # Recurring routine specs (YAML frontmatter + body)
+├── reminders/
+│   └── *.md                 # One-shot reminder specs (YAML frontmatter + body)
+└── webhooks/
+    └── *.md                 # Webhook specs (YAML frontmatter + prompt template)
+```
+
+### File categories
+
+| File | Format | Git | Description |
+|------|--------|-----|-------------|
+| `sessions.json` | Plain string | Yes | Active Agent SDK session ID |
+| `session_history.jsonl` | JSONL | Yes | Session lifecycle events |
+| `pending_updates.json` | JSON | Yes | Background fork updates for main session |
+| `inquiries.json` | JSON | Yes | Button inquiry prompts (7-day TTL) |
+| `fork_messages.json` | JSON | Yes | Fork message references (7-day TTL) |
+| `ping_budget.json` | JSON | No | Ephemeral ping budget counters |
+| `bot.pid` | Plain text | No | PID for duplicate-instance detection |
+| `credentials.json` | JSON | No | Google OAuth client credentials |
+| `token.json` | JSON | Yes | Google OAuth token (auto-generated) |
+
+## Storage patterns
+
+ollim-bot uses two storage formats with shared conventions:
+
+<Tabs>
+  <Tab title="Markdown files">
+    Routines, reminders, and webhooks are stored as `.md` files with YAML frontmatter:
+
+    ```yaml title="routines/morning-briefing.md"
+    ---
+    id: abc123
+    cron: "30 8 * * 1-5"
+    description: Morning briefing
+    ---
+    Review my tasks and calendar for today, then give me a summary.
+    ```
+
+    - Filenames are auto-generated slugs from the message content
+    - The `id` field in YAML is authoritative — filenames are for human readability
+    - Slug collisions are resolved with numeric suffixes (`-2`, `-3`, etc.)
+    - Writes use atomic temp-file-then-rename to prevent corruption
+    - Each write triggers a git commit
+  </Tab>
+  <Tab title="JSONL files">
+    Session history uses append-only JSONL (one JSON object per line):
+
+    ```json title="session_history.jsonl"
+    {"event": "created", "session_id": "sess_abc", "timestamp": "2026-02-24T10:00:00"}
+    {"event": "compacted", "session_id": "sess_abc", "timestamp": "2026-02-24T11:30:00"}
+    ```
+
+    - Lines not starting with `{` and corrupt JSON lines are silently skipped
+    - Field filtering ensures forward compatibility — unknown fields are ignored when reading
+    - Removals use atomic rewrite (read all, filter, write temp file, rename)
+    - Each write triggers a git commit
+  </Tab>
+</Tabs>
+
+## Google credentials
+
+Google integration uses file-based credentials rather than environment variables.
+
+| File | Source | Description |
+|------|--------|-------------|
+| `~/.ollim-bot/credentials.json` | Manual — downloaded from Google Cloud Console | OAuth 2.0 client credentials |
+| `~/.ollim-bot/token.json` | Auto-generated on first authentication flow | OAuth refresh and access tokens |
+
+See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full credential setup process.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Data directory" icon="folder-tree" href="/configuration/data-directory">
+    Detailed layout of the ~/.ollim-bot/ directory.
+  </Card>
+  <Card title="File formats" icon="file-code" href="/configuration/file-formats">
+    YAML frontmatter specs for routines, reminders, and webhooks.
+  </Card>
+  <Card title="Self-hosting guide" icon="server" href="/self-hosting/guide">
+    Running your own instance of ollim-bot.
+  </Card>
+  <Card title="Discord bot setup" icon="discord" href="/self-hosting/discord-bot-setup">
+    Creating a Discord application and getting your bot token.
+  </Card>
+</Columns>
