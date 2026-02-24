@@ -3,4 +3,308 @@ title: "Reminders"
 description: "One-shot and chainable reminders."
 ---
 
-Content coming soon.
+Reminders are one-shot time-based prompts that fire after a delay. Unlike
+routines, they execute once and are then removed. Reminders support
+**chaining** — a reminder with `max_chain` set can spawn follow-ups via
+the `follow_up_chain` MCP tool, letting the agent continue a task across
+multiple steps.
+
+## Overview
+
+A reminder tells ollim-bot to run a prompt at a specific future time. When
+created, you specify a delay in minutes and the scheduler computes the
+absolute fire time. Like routines, reminders can run in the foreground
+(sending you a DM) or in the background (running silently in a fork).
+
+Reminders are stored as markdown files in `~/.ollim-bot/reminders/`. The
+scheduler polls this directory every 10 seconds. After a reminder fires,
+it is removed automatically (unless it chains into a follow-up).
+
+The agent has direct file access to create and manage reminders — you can
+ask it in conversation, or use the CLI.
+
+## File format
+
+Each reminder is a `.md` file in `~/.ollim-bot/reminders/`. The `message`
+field is the markdown body after the closing `---`; all other fields go
+in the YAML frontmatter. Only non-default fields are written to the
+frontmatter.
+
+```yaml title="reminders/check-on-deployment.md"
+---
+id: "f4a9c1e2"
+run_at: "2026-02-24T15:30:00+01:00"
+description: "Check deployment status"
+background: true
+---
+Check if the deployment completed successfully.
+If there were errors, send me an embed with the details.
+```
+
+<Note>
+  The `message` field does not appear in the frontmatter — it is the
+  markdown body below the closing `---`.
+</Note>
+
+### Frontmatter fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | — | Auto-generated 8-char hex ID |
+| `run_at` | `str` | — | ISO datetime (computed from delay) |
+| `description` | `str` | `""` | Short summary for `reminder list` |
+| `background` | `bool` | `false` | Run in a background fork |
+| `chain_depth` | `int` | `0` | Current position in a chain |
+| `max_chain` | `int` | `0` | Max follow-up depth (0 = plain one-shot) |
+| `chain_parent` | `str` | `null` | ID of the chain root |
+| `model` | `str` | `null` | Model override (bg only) |
+| `thinking` | `bool` | `true` | Extended thinking (bg only) |
+| `isolated` | `bool` | `false` | Fresh context, not forked (bg only) |
+| `update_main_session` | `str` | `"on_ping"` | Sync mode: `always` / `on_ping` / `freely` / `blocked` |
+| `allow_ping` | `bool` | `true` | Allow pings and embeds (bg only) |
+| `allowed_tools` | `list[str]` | `null` | MCP tool whitelist (bg only) |
+| `disallowed_tools` | `list[str]` | `null` | MCP tool blacklist (bg only) |
+
+<Warning>
+  `allowed_tools` and `disallowed_tools` cannot both be set on the same
+  reminder.
+</Warning>
+
+### File naming
+
+Filenames are slugified from the message text (lowercase, hyphens, max
+50 characters). The `id` field in the YAML frontmatter is authoritative
+— filenames are for human readability only. Collisions append `-2`,
+`-3`, etc.
+
+## Managing reminders
+
+<Tabs>
+  <Tab title="CLI">
+    The `ollim-bot reminder` subcommand manages reminders from the
+    terminal.
+
+    **Add a reminder:**
+
+    ```bash
+    ollim-bot reminder add \
+      --message "Check if the deployment completed successfully" \
+      --delay 30 \
+      --description "Check deployment status" \
+      --background
+    ```
+
+    Additional flags for background reminders:
+
+    | Flag | Description |
+    |------|-------------|
+    | `--model <model>` | Model override |
+    | `--no-thinking` | Disable extended thinking |
+    | `--isolated` | Run with fresh context |
+    | `--update-main-session <mode>` | `always`, `on_ping`, `freely`, or `blocked` |
+    | `--no-ping` | Disable `ping_user` and `discord_embed` |
+    | `--allowed-tools <tool> ...` | MCP tool whitelist |
+    | `--disallowed-tools <tool> ...` | MCP tool blacklist |
+
+    For chainable reminders, add `--max-chain`:
+
+    ```bash
+    ollim-bot reminder add \
+      --message "Check for a response to my email" \
+      --delay 60 \
+      --max-chain 3 \
+      --background
+    ```
+
+    **List pending reminders:**
+
+    ```bash
+    ollim-bot reminder list
+    ```
+
+    Output:
+
+    ```
+      f4a9c1e2  [bg] at 2026-02-24T15:30  Check deployment status
+      b7d3e8a1  [bg] at 2026-02-24T16:00  (chain 1/3)  Check for email response
+    ```
+
+    **Cancel a reminder:**
+
+    ```bash
+    ollim-bot reminder cancel f4a9c1e2
+    ```
+  </Tab>
+  <Tab title="Agent">
+    The agent has direct file access to `~/.ollim-bot/reminders/`
+    and can create, edit, or delete reminder files. You can ask the
+    agent in conversation:
+
+    - "Remind me in 30 minutes to check on the deployment"
+    - "Set a background reminder to check my email in an hour"
+    - "Cancel the deployment reminder"
+
+    The agent writes the markdown file directly. Changes are picked
+    up by the scheduler within 10 seconds.
+  </Tab>
+</Tabs>
+
+## Follow-up chains
+
+A plain reminder (`max_chain: 0`) fires once and is removed. A
+**chainable** reminder (`max_chain: N`) can spawn follow-ups: when the
+agent runs the reminder, it can call the `follow_up_chain` MCP tool to
+schedule a continuation at `chain_depth + 1`.
+
+Chains end when:
+- The agent decides not to call `follow_up_chain` (task complete, nothing to report)
+- `chain_depth` reaches `max_chain` (no more follow-ups allowed)
+
+This lets the agent monitor something over time — check for an email
+reply, wait for a build to finish, or follow up on an unanswered
+question — without creating an open-ended loop.
+
+```yaml title="reminders/check-email-response.md"
+---
+id: "b7d3e8a1"
+run_at: "2026-02-24T16:00:00+01:00"
+description: "Check for email response"
+background: true
+max_chain: 3
+chain_depth: 0
+chain_parent: "b7d3e8a1"
+---
+Check if there's a response to the email I sent to the team.
+If no response yet, chain a follow-up. If they replied, send me an embed.
+```
+
+When the agent chains, the next reminder inherits the `chain_parent` and
+increments `chain_depth`. Chain reminders also inherit tool restrictions
+from the parent via `ChainContext`.
+
+## Background vs foreground
+
+By default, reminders run in the **foreground** — the agent sends you
+a DM when the reminder fires, running the prompt in the main session
+context.
+
+Set `background: true` to run the reminder silently in a background
+fork. Text output is discarded — the agent must use `ping_user` or
+`discord_embed` to reach you.
+
+<Tabs>
+  <Tab title="Foreground">
+    The reminder fires and the agent sends you a DM with its response,
+    just like a normal conversation.
+
+    ```yaml title="reminders/standup-prep.md"
+    ---
+    id: "a2b3c4d5"
+    run_at: "2026-02-24T09:45:00+01:00"
+    description: "Standup prep"
+    ---
+    What should I mention in standup? Check my recent tasks and calendar.
+    ```
+  </Tab>
+  <Tab title="Background">
+    The reminder runs in a forked session. Background reminders support
+    additional configuration for model, thinking, isolation, and tool
+    restrictions.
+
+    ```yaml title="reminders/check-deployment.md"
+    ---
+    id: "f4a9c1e2"
+    run_at: "2026-02-24T15:30:00+01:00"
+    description: "Check deployment status"
+    background: true
+    isolated: true
+    model: "haiku"
+    ---
+    Check if the deployment completed successfully.
+    If there were errors, send me an embed with the details.
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Combine `background: true` with `max_chain` for monitoring tasks.
+  The agent checks periodically in the background and only pings you
+  when there is something to report.
+</Tip>
+
+## Examples
+
+### Simple one-shot reminder (foreground)
+
+```yaml title="reminders/take-a-break.md"
+---
+id: "e1f2a3b4"
+run_at: "2026-02-24T14:00:00+01:00"
+description: "Break reminder"
+---
+Time for a break. What have I been working on for the last 2 hours?
+```
+
+### Background monitoring with chain
+
+```yaml title="reminders/wait-for-ci.md"
+---
+id: "c5d6e7f8"
+run_at: "2026-02-24T13:00:00+01:00"
+description: "CI pipeline check"
+background: true
+isolated: true
+max_chain: 5
+chain_depth: 0
+chain_parent: "c5d6e7f8"
+allowed_tools:
+  - "mcp__discord__*"
+update_main_session: "on_ping"
+---
+Check the CI pipeline status.
+If still running, chain a follow-up in 15 minutes.
+If passed, send me an embed. If failed, ping me with the error.
+```
+
+### Quiet background check (no pings)
+
+```yaml title="reminders/inbox-scan.md"
+---
+id: "a8b9c0d1"
+run_at: "2026-02-24T12:00:00+01:00"
+description: "Inbox scan"
+background: true
+isolated: true
+allow_ping: false
+allowed_tools:
+  - "gmail"
+update_main_session: "always"
+---
+Scan my inbox for anything urgent.
+Save a summary to pending updates.
+```
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Routines" icon="rotate" href="/scheduling/routines">
+    Recurring cron-based schedules for daily and weekly prompts.
+  </Card>
+  <Card
+    title="Background forks"
+    icon="code-branch"
+    href="/scheduling/background-forks"
+  >
+    Deep dive into background fork configuration and behavior.
+  </Card>
+  <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
+    How notification rate limiting works for background tasks.
+  </Card>
+  <Card
+    title="Scheduling overview"
+    icon="clock"
+    href="/scheduling/overview"
+  >
+    How the scheduler polls and executes routines and reminders.
+  </Card>
+</Columns>
