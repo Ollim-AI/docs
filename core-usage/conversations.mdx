@@ -3,4 +3,137 @@ title: "Conversations"
 description: "DM interface, @mentions, message flow, and context management."
 ---
 
-Content coming soon.
+ollim-bot maintains a single persistent conversation per user. You talk to it through Discord DMs or @mentions in a server channel, and the bot streams its response back in real time. Context carries across messages and survives restarts — every message builds on what came before.
+
+## Overview
+
+The conversation system has three layers:
+
+1. **Discord interface** (`bot.py`) — receives messages, manages reactions and typing indicators, handles interrupt-on-new-message
+2. **Agent loop** (`agent.py`) — routes messages to the Claude Agent SDK client, prepends context (timestamp and background updates), manages the session
+3. **Streamer** (`streamer.py`) — streams agent output to Discord with throttled edits and multi-message overflow
+
+All message processing is serialized through an async lock. Only one message is processed at a time — if a new message arrives while the agent is responding, the current response is interrupted.
+
+## Talking to ollim-bot
+
+<Tabs>
+  <Tab title="DMs">
+    Send a direct message to the bot. The full message content is forwarded to the agent.
+
+    The bot requires the `message_content` intent to read DM content. This is configured at startup:
+
+    ```python
+    intents = discord.Intents.default()
+    intents.message_content = True
+    ```
+  </Tab>
+  <Tab title="@Mentions">
+    Mention the bot in any server channel it has access to. The bot strips the mention prefix from the message before forwarding to the agent:
+
+    ```python
+    content = message.content.replace(f"<@{bot.user.id}>", "").strip()
+    ```
+
+    The bot ignores server messages that do not contain a mention.
+  </Tab>
+</Tabs>
+
+## Message flow
+
+When you send a message, the bot processes it through a fixed sequence:
+
+<Steps>
+  <Step title="Acknowledge">
+    The bot adds an eyes reaction to your message, confirming receipt.
+  </Step>
+  <Step title="Check for interrupt">
+    If the agent is currently responding (the async lock is held), the bot calls `agent.interrupt()` to cancel the in-progress response before proceeding.
+  </Step>
+  <Step title="Resolve reply context">
+    If your message is a reply to a previous message:
+
+    - **Reply to a fork message** — the bot looks up the fork session ID via `lookup_fork_session()` and starts an interactive fork that resumes from that session.
+    - **Reply to a regular message** — the bot prepends quoted context from the referenced message (plain text from `.content`, or title + description + fields from the first embed). Quoted text is truncated to 500 characters.
+  </Step>
+  <Step title="Acquire lock and dispatch">
+    The bot acquires the agent lock, sends a typing indicator, and dispatches the message to `stream_chat()`. The agent prepends a timestamp (Pacific timezone) and any pending background updates to your message before sending it to the Claude API.
+  </Step>
+  <Step title="Stream response">
+    The agent's response streams back to Discord in real time. See [Streaming responses](#streaming-responses) below.
+  </Step>
+  <Step title="Clean up">
+    The eyes reaction is removed. If the agent requested a fork entry or exit during its response, the bot processes that transition.
+  </Step>
+</Steps>
+
+<Note>
+  Interrupt-on-new-message means you can always course-correct mid-response. Send a follow-up message and the bot drops what it was doing to address your latest input. You can also interrupt manually with the `/interrupt` [slash command](/core-usage/slash-commands).
+</Note>
+
+## Images
+
+The bot reads image attachments from your message and forwards them to the agent as base64-encoded content blocks. Supported formats are detected by magic bytes (not file extension):
+
+| Format | Magic bytes |
+|--------|-------------|
+| JPEG   | `FF D8 FF`  |
+| PNG    | `89 50 4E 47` |
+| GIF    | `47 49 46 38` |
+| WebP   | `52 49 46 46` (RIFF) |
+
+Attach images directly to your Discord message — no special syntax needed.
+
+## Streaming responses
+
+Agent responses stream to Discord progressively. The streamer accumulates text deltas and flushes them to a Discord message on a throttled schedule:
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `FIRST_FLUSH_DELAY` | 0.2s | Initial delay before the first message, allowing tokens to accumulate |
+| `EDIT_INTERVAL` | 0.5s | Time between message edits, respecting Discord's rate limits |
+| `MAX_MSG_LEN` | 2000 | Discord's character limit per message |
+
+When a response exceeds 2000 characters, the streamer finalizes the current message and starts a new one. Long responses may span multiple Discord messages.
+
+During pauses (such as tool execution), the bot sends typing indicators to show it is still working.
+
+<Tip>
+  Tool invocations appear inline as dimmed labels (e.g., <code>Tool(args)</code>) so you can see what the agent is doing in real time.
+</Tip>
+
+## Session persistence
+
+ollim-bot maintains a single persistent session with the Claude Agent SDK. The session ID is stored at `~/.ollim-bot/sessions.json` and is resumed on every bot restart.
+
+Every message builds on the full conversation history. The SDK handles auto-compaction when the context grows too large — ollim-bot detects this by tracking session ID changes and logs a `compacted` event with the parent session ID for lineage tracking.
+
+Session lifecycle events are recorded in `~/.ollim-bot/session_history.jsonl`:
+
+| Event | Trigger |
+|-------|---------|
+| `created` | First message after startup with no prior session |
+| `compacted` | SDK auto-compacted the session (new session ID, parent tracked) |
+| `swapped` | Fork promoted to main session via save action |
+| `cleared` | User ran `/clear` |
+| `interactive_fork` | Interactive fork created |
+| `bg_fork` | Background fork created |
+
+Use `/clear` to reset the conversation entirely — this drops the current session, deletes the session ID, and starts fresh. Use `/compact` to compress context without losing the session.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    All commands available during conversations — model switching, context management, forks, and more.
+  </Card>
+  <Card title="Forks" icon="code-branch" href="/core-usage/forks">
+    Branch conversations into isolated contexts for focused exploration.
+  </Card>
+  <Card title="How ollim-bot works" icon="gears" href="/getting-started/how-it-works">
+    Deeper look at the agent loop, session model, and context flow.
+  </Card>
+  <Card title="Streaming & Discord" icon="wave-pulse" href="/architecture/streaming">
+    Technical details of how responses stream to Discord.
+  </Card>
+</Columns>
