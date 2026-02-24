@@ -3,4 +3,292 @@ title: "Adding new integrations"
 description: "How to add Google services, MCP tools, CLI commands, and webhook specs."
 ---
 
-Content coming soon.
+ollim-bot is structured so that new integrations follow established patterns. This guide covers the four main extension points: Google services, MCP tools, CLI commands, and webhook specs.
+
+Each section walks through the full procedure, referencing the conventions used by existing integrations.
+
+## Adding a Google service
+
+Existing services (Tasks, Calendar, Gmail) all follow the same structure: a scope in `google/auth.py`, a module under `google/`, a CLI subcommand in `main.py`, and documentation in `prompts.py`.
+
+<Steps>
+  <Step title="Add the OAuth scope">
+    Add the new scope to the `SCOPES` list in `src/ollim_bot/google/auth.py`:
+
+    ```python title="src/ollim_bot/google/auth.py"
+    SCOPES = [
+        "https://www.googleapis.com/auth/tasks",
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/drive.readonly",  # new scope
+    ]
+    ```
+
+    <Warning>
+    After adding a scope, delete `~/.ollim-bot/token.json` to force re-consent. The next bot start will open a browser for the updated OAuth flow.
+    </Warning>
+  </Step>
+  <Step title="Create the service module">
+    Add a new module under `src/ollim_bot/google/`. Follow the pattern established by `tasks.py` and `calendar.py`:
+
+    ```python title="src/ollim_bot/google/drive.py"
+    import argparse
+    from ollim_bot.google.auth import get_service
+
+
+    def _get_drive_service():
+        return get_service("drive", "v3")
+
+
+    def run_drive_command(argv: list[str]) -> None:
+        parser = argparse.ArgumentParser(prog="ollim-bot drive")
+        sub = parser.add_subparsers(dest="action")
+
+        sub.add_parser("list")
+        # ... additional subparsers
+
+        args = parser.parse_args(argv)
+        if args.action == "list":
+            _handle_list(args)
+        else:
+            parser.print_help()
+    ```
+
+    Key conventions:
+    - `_get_*_service()` calls `get_service(api, version)` — credentials are obtained fresh on every call
+    - `run_*_command(argv: list[str])` is the CLI entry point, using `argparse` with subparsers
+    - Functions called from embed button actions (like `complete_task` and `delete_event`) are module-level and return the affected item's name for confirmation messages
+  </Step>
+  <Step title="Register the CLI subcommand">
+    Add a lazy import and dispatch case in `src/ollim_bot/main.py`:
+
+    ```python title="src/ollim_bot/main.py"
+    if cmd == "drive":
+        from ollim_bot.google.drive import run_drive_command
+        run_drive_command(sys.argv[2:])
+        return
+    ```
+
+    Add the subcommand to the `HELP` string in the same file.
+  </Step>
+  <Step title="Document in the system prompt">
+    Add a section to `SYSTEM_PROMPT` in `src/ollim_bot/prompts.py` describing the new CLI commands. Follow the format of the existing Google Tasks and Calendar sections — list available subcommands, flag names, and usage patterns so the agent knows how to use the integration.
+  </Step>
+  <Step title="Enable the scope in Google Cloud Console">
+    In your Google Cloud project, enable the API for the new service (e.g., Google Drive API) under **APIs & Services > Library**. The OAuth consent screen must also list the new scope.
+  </Step>
+</Steps>
+
+<Tip>
+If the new service needs embed buttons (like "Mark done" on tasks or "Delete" on events), add button action handlers in `views.py` following the `task_done:`, `task_del:`, or `event_del:` patterns. The action string format is `type:payload`.
+</Tip>
+
+## Adding an MCP tool
+
+MCP tools are defined in `src/ollim_bot/agent_tools.py` using the `@tool` decorator from `claude_agent_sdk`. All tools are registered on a single server named `discord`.
+
+<Steps>
+  <Step title="Define the tool function">
+    Use the `@tool` decorator with a name, description, and JSON Schema for parameters:
+
+    ```python title="src/ollim_bot/agent_tools.py"
+    @tool(
+        "my_tool",
+        "Description of what this tool does.",
+        {
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string",
+                    "description": "What this parameter controls",
+                },
+            },
+            "required": ["param"],
+        },
+    )
+    async def my_tool(args: dict[str, Any]) -> dict[str, Any]:
+        # Implementation here
+        return {"content": [{"type": "text", "text": "Result message"}]}
+    ```
+
+    Tool functions are always `async`, take a single `args` dict, and return a dict with a `content` list of text blocks.
+  </Step>
+  <Step title="Handle execution context">
+    Use the `_source()` helper to determine if the tool is running in the main session, an interactive fork, or a background fork:
+
+    ```python
+    source = _source()  # Returns "main", "fork", or "bg"
+    ```
+
+    If the tool sends visible output in a background fork, it must respect the ping budget and busy-check gates:
+
+    ```python
+    if source == "bg":
+        if not get_bg_fork_config().allow_ping:
+            return {"content": [{"type": "text", "text": "Pinging disabled."}]}
+        if budget_error := _check_bg_budget(args):
+            return budget_error
+    ```
+
+    For accessing the Discord channel, use the dual-pattern that works in both main and forked contexts:
+
+    ```python
+    channel = _channel_var.get() or _channel
+    ```
+  </Step>
+  <Step title="Register the tool">
+    Add the tool function to the `tools` list in the `agent_server` at the bottom of `agent_tools.py`:
+
+    ```python title="src/ollim_bot/agent_tools.py"
+    agent_server = create_sdk_mcp_server(
+        "discord",
+        tools=[
+            discord_embed,
+            ping_user,
+            follow_up_chain,
+            save_context,
+            report_updates,
+            enter_fork,
+            exit_fork,
+            my_tool,  # add here
+        ],
+    )
+    ```
+  </Step>
+</Steps>
+
+<Note>
+The channel global `_channel` is set by `set_channel()` (main session, protected by the agent lock), while `_channel_var` is a `ContextVar` set by `set_fork_channel()` (background forks, no lock needed). Every path into `stream_chat` must call both `agent_tools.set_channel` and `permissions.set_channel` — this is the channel-sync invariant.
+</Note>
+
+## Adding a CLI command
+
+CLI commands are dispatched from `src/ollim_bot/main.py`. Each subcommand is a self-contained module with its own `argparse` setup.
+
+<Steps>
+  <Step title="Create the command module">
+    Implement a `run_*_command(argv: list[str])` function using `argparse`:
+
+    ```python
+    import argparse
+
+    def run_example_command(argv: list[str]) -> None:
+        parser = argparse.ArgumentParser(prog="ollim-bot example")
+        sub = parser.add_subparsers(dest="action")
+
+        list_p = sub.add_parser("list")
+        add_p = sub.add_parser("add")
+        add_p.add_argument("-m", "--message", required=True)
+
+        args = parser.parse_args(argv)
+        if args.action == "list":
+            _handle_list()
+        elif args.action == "add":
+            _handle_add(args)
+        else:
+            parser.print_help()
+    ```
+  </Step>
+  <Step title="Register in main.py">
+    Add a dispatch branch with a lazy import in the `main()` function of `src/ollim_bot/main.py`:
+
+    ```python title="src/ollim_bot/main.py"
+    if cmd == "example":
+        from ollim_bot.example import run_example_command
+        run_example_command(sys.argv[2:])
+        return
+    ```
+
+    Lazy imports keep startup fast — subcommand modules are only loaded when invoked.
+
+    Update the `HELP` string to include the new subcommand.
+  </Step>
+  <Step title="Document in the system prompt">
+    Add CLI usage documentation to `SYSTEM_PROMPT` in `src/ollim_bot/prompts.py` so the agent can invoke the new command via its `bash` tool.
+  </Step>
+</Steps>
+
+## Adding a webhook spec
+
+Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/webhooks/`. They define how external HTTP requests trigger background agent tasks.
+
+<Steps>
+  <Step title="Create the spec file">
+    Add a markdown file in the webhooks directory:
+
+    ```yaml title="~/.ollim-bot/webhooks/deploy-notify.md"
+    ---
+    id: deploy-notify
+    message: "A deployment just completed. Review the status and notify if there are failures."
+    fields:
+      type: object
+      properties:
+        service:
+          type: string
+          maxLength: 100
+        status:
+          type: string
+          enum: [success, failure, rollback]
+        url:
+          type: string
+          maxLength: 500
+      required: [service, status]
+    ---
+    ```
+
+    The `fields` value is a JSON Schema that validates incoming payloads. A `maxLength: 2000` default is injected for any string field without an explicit limit.
+  </Step>
+  <Step title="Configure optional behavior">
+    The YAML frontmatter supports these optional fields:
+
+    | Field | Type | Default | Description |
+    |-------|------|---------|-------------|
+    | `id` | string | — | Unique webhook identifier (used in the URL path) |
+    | `message` | string | — | Task instruction given to the agent |
+    | `fields` | object | — | JSON Schema for payload validation |
+    | `isolated` | boolean | `false` | Run in an isolated background fork (no main session context) |
+    | `model` | string | `null` | Override the Claude model for this webhook |
+    | `thinking` | boolean | `true` | Enable extended thinking |
+    | `allow_ping` | boolean | `true` | Allow the agent to ping the user |
+    | `update_main_session` | string | `"on_ping"` | `freely`, `blocked`, `always`, or `on_ping` |
+  </Step>
+  <Step title="Set the webhook secret">
+    The `WEBHOOK_SECRET` environment variable must be set. Incoming requests are authenticated via the `Authorization` header:
+
+    ```bash
+    curl -X POST http://127.0.0.1:PORT/hook/deploy-notify \
+      -H "Authorization: Bearer $WEBHOOK_SECRET" \
+      -H "Content-Type: application/json" \
+      -d '{"service": "api-server", "status": "failure"}'
+    ```
+  </Step>
+  <Step title="Understand the dispatch pipeline">
+    When a webhook fires:
+
+    1. **Validation** — the payload is checked against the `fields` JSON Schema. Invalid payloads return `400`.
+    2. **Haiku screening** — string fields are screened by a fast Claude Haiku call for prompt injection. Flagged fields are redacted.
+    3. **Prompt construction** — `build_webhook_prompt` combines the scheduling preamble (active routines and reminders) with the webhook's `message` and fenced payload data.
+    4. **Background fork** — the prompt is dispatched as a background fork with the spec's configured behavior (isolated, model, allow_ping, etc.).
+  </Step>
+</Steps>
+
+<Note>
+Webhook data is fenced with explicit labels in the prompt — `WEBHOOK DATA (untrusted external input)` is separated from `TASK (from your webhook spec)` — so the agent can distinguish data from instructions. The Haiku screening step runs before the main agent sees any payload content.
+</Note>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Full reference for all seven built-in MCP tools.
+  </Card>
+  <Card title="System prompt" icon="scroll" href="/extending/system-prompt">
+    How the system prompt is structured and where to document new tools.
+  </Card>
+  <Card title="Webhooks" icon="globe" href="/integrations/webhooks">
+    How webhooks work from the user's perspective.
+  </Card>
+  <Card title="Google OAuth setup" icon="key" href="/self-hosting/google-oauth-setup">
+    Setting up Google Cloud credentials for the OAuth flow.
+  </Card>
+</Columns>
