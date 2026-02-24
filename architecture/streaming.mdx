@@ -3,4 +3,184 @@ title: "Streaming & Discord"
 description: "How agent responses stream to Discord with throttled edits and overflow handling."
 ---
 
-Content coming soon.
+Agent responses stream token-by-token from the Claude Agent SDK into
+Discord messages. The `streamer.py` module bridges these two systems,
+handling Discord's rate limits, the 2000-character message cap, and
+typing indicators during tool execution pauses.
+
+## Overview
+
+The streaming pipeline has three stages:
+
+1. `Agent.stream_chat()` yields text deltas from the SDK's
+   `StreamEvent` messages
+2. `stream_to_channel()` buffers those deltas and progressively edits a
+   Discord message
+3. A background editor task flushes the buffer on a fixed interval,
+   keeping edits throttled and showing typing indicators during pauses
+
+The key design constraint is Discord's rate limit on message edits
+(roughly 5 edits per 5 seconds per channel). The streamer stays well
+within this by editing at a fixed interval rather than on every delta.
+
+## Text deltas
+
+`Agent.stream_chat()` is an async generator that consumes the SDK
+response stream and yields only the text portions. It handles several
+event types internally:
+
+| Event type | Handling |
+|------------|----------|
+| `content_block_delta` with `text` | Yielded as a text delta |
+| `content_block_delta` with `input_json_delta` | Accumulated for tool-use markers (not yielded as text) |
+| `content_block_start` with `tool_use` | Captures tool name for marker emission |
+| `content_block_stop` for tool use | Emits a `-# *ToolName(args)*` marker as a yielded delta |
+
+Tool-use markers appear as subdued text in Discord (using the `-# `
+markdown small-text prefix), showing the user what the agent is doing
+during pauses.
+
+<Note>
+When an `enter_fork` tool fires during streaming, `stream_chat()`
+interrupts the SDK client and suppresses remaining stream events. The
+loop continues to drain messages so the `ResultMessage` still saves the
+session ID, but no further text deltas are yielded.
+</Note>
+
+## Throttled editing
+
+`stream_to_channel()` consumes the text deltas and maintains a buffer.
+A background `editor` coroutine flushes the buffer to Discord on a
+fixed schedule.
+
+### Timing constants
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `FIRST_FLUSH_DELAY` | 0.2s | Initial delay so the first message accumulates a meaningful chunk |
+| `EDIT_INTERVAL` | 0.5s | Responsive feel while staying within Discord's rate limits |
+| `MAX_MSG_LEN` | 2000 | Discord's maximum message length |
+
+### Flush cycle
+
+The editor runs this loop:
+
+1. Wait `FIRST_FLUSH_DELAY` before the first flush
+2. Flush the buffer — send a new message or edit the existing one
+3. Wait `EDIT_INTERVAL`
+4. If new content arrived (`stale` flag is set), flush again
+5. If no new content but the response isn't done, send a typing
+   indicator
+6. Repeat from step 3 until the delta stream ends
+
+The `stale` flag is set whenever new text arrives from the generator
+and cleared after each successful flush. This avoids unnecessary edits
+when no new text has accumulated.
+
+<Tip>
+Discord.py handles HTTP 429 rate-limit responses transparently, so
+even if edits occasionally bunch up, the library retries automatically.
+</Tip>
+
+## Overflow handling
+
+When the buffer exceeds 2000 characters, the streamer splits across
+multiple messages:
+
+1. The current message is finalized at 2000 characters (via
+   `msg.edit()` or initial `channel.send()`)
+2. A new message is sent with the overflow text
+3. If the overflow itself exceeds 2000 characters, the process repeats
+   in a loop until all accumulated text is dispatched
+4. The `msg_start` index tracks where the current message begins in the
+   full buffer, so the streamer always knows which slice to send
+
+Each new message created during overflow is registered with
+`track_message()` for fork session tracking. This ensures that if the
+response came from a background fork, the user can reply to any of the
+overflow messages to resume that fork.
+
+## Typing indicators
+
+The streamer shows Discord typing indicators (`channel.typing()`) when
+the agent is working but not producing text — typically during tool
+execution. This happens in the editor loop: when the interval fires
+and the `stale` flag is `false` (no new text), but the stream hasn't
+ended yet, the editor sends a typing indicator instead of editing the
+message.
+
+Before each `stream_to_channel()` call, the bot also sends an initial
+`channel.typing()` to show activity while the first tokens arrive.
+
+## Interrupt on new message
+
+When the user sends a new message while a response is streaming, the
+bot interrupts the current response:
+
+1. `on_message` checks if the agent lock is held (meaning a response is
+   in progress)
+2. If locked, it calls `agent.interrupt()`, which cancels pending
+   permission requests and interrupts the SDK client
+3. The interrupted `stream_chat()` generator stops yielding deltas
+4. `stream_to_channel()` finishes its final flush with whatever text
+   accumulated
+5. The new message is processed with a fresh `stream_to_channel()` call
+
+The `/interrupt` slash command provides the same behavior on demand.
+
+## Empty responses
+
+If the delta stream produces no text at all — and no fork entry was
+requested — the streamer sends a fallback message:
+
+```
+hmm, I didn't have a response for that.
+```
+
+This covers edge cases where the agent's entire response was tool use
+with no text output. If a fork entry was requested (the agent called
+`enter_fork`), the empty text is expected and no fallback is sent.
+
+## Message tracking
+
+Every message sent by the streamer — both initial messages and overflow
+continuations — is registered via `track_message(message_id)`. This
+feeds into the fork session tracking system: when a background fork
+streams a response, the message IDs are collected so that a user reply
+to any of those messages can resume the fork's session.
+
+See [reply-to-fork context](/architecture/context-flow#reply-to-fork-context)
+for the full tracking lifecycle.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card
+    title="Context flow"
+    icon="arrows-spin"
+    href="/architecture/context-flow"
+  >
+    How context moves between sessions, forks, and pending updates.
+  </Card>
+  <Card
+    title="Session management"
+    icon="database"
+    href="/architecture/session-management"
+  >
+    Session IDs, lifecycle events, and compaction.
+  </Card>
+  <Card
+    title="Forks"
+    icon="code-branch"
+    href="/core-usage/forks"
+  >
+    Interactive forks, exit strategies, and idle timeout.
+  </Card>
+  <Card
+    title="Conversations"
+    icon="comments"
+    href="/core-usage/conversations"
+  >
+    DM interface, message flow, and interrupt behavior.
+  </Card>
+</Columns>
