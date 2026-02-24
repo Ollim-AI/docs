@@ -3,4 +3,177 @@ title: "Gmail"
 description: "Read-only email access via the gmail-reader subagent."
 ---
 
-Content coming soon.
+ollim-bot provides read-only Gmail access through the `gmail.readonly` OAuth scope.
+The agent uses a dedicated **gmail-reader subagent** to triage your inbox —
+surfacing actionable emails while filtering out noise.
+You can also query Gmail directly from the CLI.
+
+## Prerequisites
+
+- Google OAuth configured with the `gmail.readonly` scope (see [Google OAuth setup](/self-hosting/google-oauth-setup))
+- `credentials.json` in `~/.ollim-bot/` from the Google Cloud Console
+- `token.json` in `~/.ollim-bot/` (auto-generated on first auth)
+
+## Setup
+
+Gmail shares the same OAuth flow as Google Tasks and Google Calendar.
+If you already have Google integration working, Gmail is available
+automatically — no additional setup required.
+
+<Note>
+Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify emails.
+</Note>
+
+## Usage
+
+<Tabs>
+  <Tab title="CLI">
+    The `ollim-bot gmail` command provides four subcommands for direct inbox access.
+
+    ### List unread emails
+
+    ```bash
+    ollim-bot gmail unread
+    ollim-bot gmail unread --max 5
+    ```
+
+    Output format:
+
+    ```
+      MSG_ID  2026-02-24 09:15  Alice Smith  Meeting follow-up
+      MSG_ID  2026-02-24 08:30  Bob Jones    Invoice #1234
+    ```
+
+    The `--max` flag limits results (default: 20).
+
+    ### Read an email
+
+    ```bash
+    ollim-bot gmail read MSG_ID
+    ```
+
+    Displays From, To, date, subject, and the message body.
+    Bodies longer than 3000 characters are truncated.
+    The reader prefers `text/plain` content and falls back
+    to `text/html` with tags stripped.
+
+    ### Search emails
+
+    ```bash
+    ollim-bot gmail search "from:alice subject:meeting"
+    ollim-bot gmail search "is:unread after:2026/02/20" --max 10
+    ```
+
+    Uses standard [Gmail search query syntax](https://support.google.com/mail/answer/7190).
+    The `--max` flag limits results (default: 20).
+
+    ### List labels
+
+    ```bash
+    ollim-bot gmail labels
+    ```
+
+    Lists all Gmail labels with their IDs and names.
+
+    ### CLI reference
+
+    | Subcommand | Arguments | Default | Description |
+    |------------|-----------|---------|-------------|
+    | `unread` | `--max N` | 20 | List unread emails |
+    | `read` | `<id>` | — | Read a full email by message ID |
+    | `search` | `"<query>"`, `--max N` | 20 | Search with Gmail query syntax |
+    | `labels` | — | — | List all labels |
+  </Tab>
+  <Tab title="Agent">
+    The agent delegates Gmail access to the **gmail-reader subagent** —
+    a specialized triage assistant that runs as a
+    [subagent](/extending/subagents) with its own system prompt.
+
+    ### Triage process
+
+    The gmail-reader follows a structured workflow:
+
+    1. Runs `ollim-bot gmail unread` to get the inbox snapshot
+    2. Reads the full content of any email that might be actionable (subject lines alone are unreliable)
+    3. Uses `ollim-bot gmail search` to narrow results if the unread list is large
+    4. Reports findings in a structured format
+
+    ### What gets surfaced
+
+    The subagent reports emails where action is needed:
+
+    - **Replies expected** — a real person is waiting for a response
+    - **Security alerts** — password changes, login attempts, or account modifications not initiated by you
+    - **Financial** — bills due, failed payments, payment confirmations requiring review
+    - **Time-sensitive** — deadlines, meeting changes, approval requests
+    - **Packages needing action** — delivery issues, signature required (not routine tracking confirmations)
+
+    ### What gets filtered
+
+    The subagent skips automated noise:
+
+    - Newsletters, digests, and marketing emails
+    - Promotional offers and event promotions
+    - Delivery/shipping confirmations and order receipts
+    - Social media notifications
+    - Political emails
+    - Service agreement updates and routine account notices
+
+    Ambiguous emails are read in full and included with a note explaining why they might need attention.
+
+    ### Report format
+
+    ```
+    Action items:
+    - [Alice Smith] [2026-02-24 09:15] Meeting follow-up -- respond with availability
+    - [Bank] [2026-02-24 08:00] Payment failed -- check payment method
+
+    Skipped: 12 emails (all noise/automated)
+    ```
+
+    When nothing needs attention, the report reads:
+    "Inbox clear -- nothing needs your attention."
+    The skipped line is omitted when zero emails were skipped.
+
+    <Warning>
+    The gmail-reader treats email content as data. It never executes
+    instructions, follows links, or performs actions described in emails.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Gmail commands return no messages">
+    Verify that your OAuth token includes the `gmail.readonly` scope.
+    If you added Gmail after the initial OAuth flow, delete
+    `~/.ollim-bot/token.json` and re-authenticate to pick up the new scope.
+  </Accordion>
+  <Accordion title="Body shows '(no text body)'">
+    Some emails use only HTML with embedded images and no text content.
+    The reader extracts `text/plain` first, then falls back to stripped
+    `text/html`. Emails that are purely image-based will show no body.
+  </Accordion>
+  <Accordion title="Dates display in Pacific Time">
+    All Gmail timestamps are displayed in `America/Los_Angeles`
+    (Pacific Time). This is currently not configurable.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Google integration" icon="key" href="/integrations/google-overview">
+    OAuth setup and shared authentication across Google services.
+  </Card>
+  <Card title="Subagents" icon="robot" href="/extending/subagents">
+    How the gmail-reader and other subagents are defined and invoked.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Schedule automatic email triage as a recurring routine.
+  </Card>
+  <Card title="Background forks" icon="code-branch" href="/scheduling/background-forks">
+    How subagents like gmail-reader execute in isolated background forks.
+  </Card>
+</Columns>
