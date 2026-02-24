@@ -3,4 +3,97 @@ title: "Extend ollim-bot"
 description: "When to use routines, reminders, webhooks, MCP tools, or subagents."
 ---
 
-Content coming soon.
+ollim-bot has five extensibility mechanisms: routines, reminders, webhooks, MCP tools, and subagents. Each serves a different trigger pattern and interaction model, but the scheduling mechanisms share a common execution path and configuration schema.
+
+All scheduling mechanisms — routines, reminders, and webhooks — are data-driven. Each is a markdown file with YAML frontmatter stored in `~/.ollim-bot/`. The scheduler picks up changes every 10 seconds. No code changes required to add new instances.
+
+## Mechanisms
+
+<Columns cols={3}>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Recurring cron-scheduled prompts that define the bot's daily rhythm.
+  </Card>
+  <Card title="Reminders" icon="bell" href="/scheduling/reminders">
+    One-shot time-based nudges with optional follow-up chains.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
+    External HTTP triggers with JSON Schema validation and prompt injection screening.
+  </Card>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Agent-initiated actions within any session — embeds, pings, fork management.
+  </Card>
+  <Card title="Subagents" icon="robot" href="/extending/subagents">
+    Specialized agents for delegated tasks like email triage and history review.
+  </Card>
+  <Card title="Interactive forks" icon="code-branch" href="/core-usage/forks">
+    User-initiated branched conversations for focused work.
+  </Card>
+</Columns>
+
+## Decision matrix
+
+| Mechanism | Trigger | Recurrence | Session model | Best for |
+|-----------|---------|------------|---------------|----------|
+| **Routines** | Cron schedule | Recurring | Background fork | Daily check-ins, weekly reviews, periodic monitoring |
+| **Reminders** | Specific time | Once (chainable via `follow_up_chain`) | Background fork | Time-based nudges, progressive follow-up workflows |
+| **Webhooks** | HTTP POST from external system | On-demand | Background fork | GitHub events, monitoring alerts, form submissions |
+| **MCP tools** | Agent decision during conversation | Per-interaction | Current session | Structured embeds, user pings, fork management |
+| **Subagents** | Delegated by main agent | Per-invocation | Background fork | Email triage, history review, responsiveness analysis |
+| **Interactive forks** | `/fork` command or `enter_fork` tool | Per-session | Forked from main | Deep dives, research, tangents without context bloat |
+
+### Choosing between routines and reminders
+
+Use **routines** when you want something to fire on a recurring schedule — every weekday at 9am, every Sunday evening. Routines persist until removed.
+
+Use **reminders** when you want a one-shot prompt at a specific time. For progressive workflows (e.g., "check if the user responded, then follow up"), set `max_chain` and let the agent call `follow_up_chain` to schedule continuations.
+
+### Choosing between webhooks and routines
+
+Both run as background forks. Use **webhooks** when the trigger comes from an external system (a GitHub push, a monitoring alert). Use **routines** when the trigger is time-based. Webhooks include 4-layer input security: JSON Schema validation, content fencing, Haiku screening of strings, and operational limits.
+
+## Shared configuration
+
+Routines, reminders, and webhooks all dispatch through the same background fork execution path (`run_agent_background`). They share these YAML frontmatter fields:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `background` | boolean | `false` | Run in a background fork instead of the main session |
+| `model` | string | — | Override the default model (`haiku`, `sonnet`, `opus`) |
+| `thinking` | boolean | `true` | Enable extended thinking |
+| `isolated` | boolean | `false` | Run without main session history or fork state |
+| `update_main_session` | string | `on_ping` | `always`, `on_ping`, `freely`, or `blocked` — controls `report_updates` behavior |
+| `allow_ping` | boolean | `true` | Whether `ping_user` and `discord_embed` are available |
+| `allowed_tools` | list | — | Allowlist of tools (overrides defaults, mutually exclusive with `disallowed_tools`) |
+| `disallowed_tools` | list | — | Blocklist of tools (mutually exclusive with `allowed_tools`) |
+
+<Tip>All three mechanisms are markdown files with YAML frontmatter stored in `~/.ollim-bot/`. The agent can create and manage them directly using Glob, Read, Write, and Edit tools — no CLI required.</Tip>
+
+## Background fork execution
+
+When a routine, reminder, or webhook fires with `background: true`, the scheduler:
+
+1. Creates a disposable forked session (or an isolated session if `isolated: true`)
+2. Injects a preamble with current ping budget, upcoming schedule, and refill timing
+3. Runs the prompt with the configured model and tool restrictions
+4. Discards the fork — text output is never shown directly
+
+The agent communicates results through MCP tools: `ping_user` for plain text alerts, `discord_embed` for structured messages, and `report_updates` to queue a summary for the next main session interaction. If neither `ping_user` nor `report_updates` is called, the fork is silently discarded with zero context bloat.
+
+<Note>Background forks run without holding the agent lock. When the user is mid-conversation, non-critical pings return errors and the agent falls back to `report_updates`. Critical pings (`critical: true`) bypass the busy check but are still tracked against the [ping budget](/scheduling/ping-budget).</Note>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Reference for all agent-initiated tools: discord_embed, ping_user, follow_up_chain, and more.
+  </Card>
+  <Card title="Subagents" icon="robot" href="/extending/subagents">
+    How gmail-reader, history-reviewer, and responsiveness-reviewer work.
+  </Card>
+  <Card title="System prompt" icon="terminal" href="/extending/system-prompt">
+    How the system prompt is structured and what gets injected.
+  </Card>
+  <Card title="Adding integrations" icon="plug" href="/extending/adding-integrations">
+    How to add new Google services, MCP tools, or webhook specs.
+  </Card>
+</Columns>
