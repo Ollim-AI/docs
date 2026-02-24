@@ -1,122 +1,138 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "ollim-bot",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#5865F2",
+    "light": "#7289DA",
+    "dark": "#4752C4"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
+  "logo": {
+    "light": "/images/logo-light.svg",
+    "dark": "/images/logo-dark.svg",
+    "href": "literal:https://github.com/your-username/ollim-bot"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "literal:https://github.com/your-username/ollim-bot"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "literal:https://github.com/your-username/ollim-bot"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
+            "icon": "rocket",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "getting-started/overview",
+              "getting-started/quickstart",
+              "getting-started/setup",
+              "getting-started/how-it-works",
+              "getting-started/design-philosophy"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Usage",
+            "icon": "message-bot",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "core-usage/conversations",
+              "core-usage/slash-commands",
+              "core-usage/forks",
+              "core-usage/embeds-and-buttons",
+              "core-usage/permissions"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Scheduling",
+            "icon": "clock",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "scheduling/overview",
+              "scheduling/routines",
+              "scheduling/reminders",
+              "scheduling/background-forks",
+              "scheduling/ping-budget"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Integrations",
+            "icon": "plug",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "integrations/google-overview",
+              "integrations/google-tasks",
+              "integrations/google-calendar",
+              "integrations/google-gmail",
+              "integrations/webhooks"
+            ]
+          },
+          {
+            "group": "Extending",
+            "icon": "puzzle-piece",
+            "pages": [
+              "extending/overview",
+              "extending/mcp-tools",
+              "extending/subagents",
+              "extending/system-prompt",
+              "extending/adding-integrations"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "icon": "gear",
+            "pages": [
+              "configuration/reference",
+              "configuration/data-directory",
+              "configuration/file-formats"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "icon": "sitemap",
+            "pages": [
+              "architecture/overview",
+              "architecture/session-management",
+              "architecture/context-flow",
+              "architecture/streaming"
+            ]
+          },
+          {
+            "group": "Development",
+            "icon": "code",
+            "pages": [
+              "development/guide",
+              "development/testing",
+              "development/cli-reference",
+              "development/troubleshooting"
+            ]
+          },
+          {
+            "group": "Self-Hosting",
+            "icon": "server",
+            "pages": [
+              "self-hosting/guide",
+              "self-hosting/discord-bot-setup",
+              "self-hosting/google-oauth-setup"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
+        "tab": "Changelog",
+        "icon": "history",
+        "pages": [
+          "changelog"
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

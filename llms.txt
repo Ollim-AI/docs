@@ -1,0 +1,63 @@
+# ollim-bot Documentation
+
+> ADHD-friendly Discord bot with proactive reminders, powered by Claude.
+
+## Getting Started
+- [ollim-bot overview](getting-started/overview.mdx)
+- [Quickstart](getting-started/quickstart.mdx)
+- [Setup guide](getting-started/setup.mdx)
+- [How ollim-bot works](getting-started/how-it-works.mdx)
+- [Design philosophy](getting-started/design-philosophy.mdx)
+
+## Core Usage
+- [Conversations](core-usage/conversations.mdx)
+- [Slash commands](core-usage/slash-commands.mdx)
+- [Forks](core-usage/forks.mdx)
+- [Embeds & buttons](core-usage/embeds-and-buttons.mdx)
+- [Permissions](core-usage/permissions.mdx)
+
+## Scheduling
+- [Scheduling overview](scheduling/overview.mdx)
+- [Routines](scheduling/routines.mdx)
+- [Reminders](scheduling/reminders.mdx)
+- [Background forks](scheduling/background-forks.mdx)
+- [Ping budget](scheduling/ping-budget.mdx)
+
+## Integrations
+- [Google integration](integrations/google-overview.mdx)
+- [Google Tasks](integrations/google-tasks.mdx)
+- [Google Calendar](integrations/google-calendar.mdx)
+- [Gmail](integrations/google-gmail.mdx)
+- [Webhooks](integrations/webhooks.mdx)
+
+## Extending
+- [Extend ollim-bot](extending/overview.mdx)
+- [MCP tools](extending/mcp-tools.mdx)
+- [Subagents](extending/subagents.mdx)
+- [System prompt](extending/system-prompt.mdx)
+- [Adding new integrations](extending/adding-integrations.mdx)
+
+## Configuration
+- [Configuration reference](configuration/reference.mdx)
+- [Data directory](configuration/data-directory.mdx)
+- [File formats](configuration/file-formats.mdx)
+
+## Architecture
+- [Architecture overview](architecture/overview.mdx)
+- [Session management](architecture/session-management.mdx)
+- [Context flow](architecture/context-flow.mdx)
+- [Streaming & Discord](architecture/streaming.mdx)
+
+## Development
+- [Development guide](development/guide.mdx)
+- [Testing](development/testing.mdx)
+- [CLI reference](development/cli-reference.mdx)
+- [Troubleshooting](development/troubleshooting.mdx)
+
+## Self-Hosting
+- [Self-hosting guide](self-hosting/guide.mdx)
+- [Discord bot setup](self-hosting/discord-bot-setup.mdx)
+- [Google OAuth setup](self-hosting/google-oauth-setup.mdx)
+
+## Changelog
+- [Changelog](changelog.mdx)
