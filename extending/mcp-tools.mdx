@@ -3,4 +3,151 @@ title: "MCP tools"
 description: "All MCP tools: discord_embed, ping_user, follow_up_chain, save_context, report_updates, enter_fork, exit_fork."
 ---
 
-Content coming soon.
+ollim-bot exposes seven MCP tools to the agent via a server named `discord`. These tools let the agent send messages, manage forks, report findings, and schedule follow-ups — all without direct access to the Discord API.
+
+The tools are defined in `agent_tools.py` and registered on a single `create_sdk_mcp_server("discord", ...)` instance.
+
+## Output tools
+
+These tools send visible messages to the Discord channel.
+
+### `discord_embed`
+
+Send a rich embed message with optional action buttons.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `title` | string | Yes | — | Embed title |
+| `description` | string | No | — | Embed body text |
+| `color` | string | No | `"blue"` | `blue` (info), `green` (success), `red` (urgent), `yellow` (warning) |
+| `fields` | array | No | `[]` | Objects with `name` (string, required), `value` (string, required), `inline` (boolean, optional) |
+| `buttons` | array | No | `[]` | Objects with `label` (string, required), `action` (string, required), `style` (string, optional) |
+| `critical` | boolean | No | `false` | Bypasses busy check and ping budget when `true` |
+
+**Button actions** follow a `type:payload` format:
+
+| Action | Description |
+|--------|-------------|
+| `task_done:<task_id>` | Mark a Google Task as complete |
+| `task_del:<task_id>` | Delete a Google Task |
+| `event_del:<event_id>` | Delete a Google Calendar event |
+| `agent:<prompt>` | Send a prompt back to the agent |
+
+**Button styles:** `success`, `danger`, `primary`, `secondary`.
+
+**Availability:** Main session, interactive forks, and background forks. In background forks, the embed is blocked if `allow_ping` is `false`, the user is mid-conversation (unless `critical` is `true`), or the [ping budget](/scheduling/ping-budget) is exhausted. A source tag (`bg` or `fork`) is added to the embed footer when not in the main session.
+
+### `ping_user`
+
+Send a plain text message prefixed with `[bg]`.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `message` | string | Yes | — | The message to send |
+| `critical` | boolean | No | `false` | Bypasses busy check and ping budget when `true` |
+
+**Availability:** Background forks only. Subject to the same `allow_ping`, busy check, and ping budget gates as `discord_embed`.
+
+<Note>
+Both output tools call `track_message` so that replies to bot messages in the channel are correctly routed back to the fork that sent them.
+</Note>
+
+## Fork management tools
+
+These tools control [interactive fork](/core-usage/forks) lifecycle.
+
+### `enter_fork`
+
+Start an interactive fork branching from the main session.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `topic` | string | No | — | Optional topic label for the fork |
+| `idle_timeout` | integer | No | `10` | Minutes before the idle timeout prompt fires |
+
+**Availability:** Main session only. Returns an error if already inside any fork (interactive or background). The fork interrupts the current agent turn immediately.
+
+### `save_context`
+
+Promote the current interactive fork to the main session. The fork's conversation history replaces the main session, and any pending updates are cleared.
+
+Takes no parameters.
+
+**Availability:** Interactive forks only. Returns an error in background forks or the main session.
+
+### `report_updates`
+
+Report a summary from the current fork to the main session. The summary is injected into the next main-session interaction via `pending_updates.json`.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `message` | string | Yes | — | Short summary of what was found |
+
+<Tabs>
+  <Tab title="Interactive fork">
+    Sets the exit action to `REPORT`. The fork is discarded after the agent finishes responding — further tool calls delay the exit.
+  </Tab>
+  <Tab title="Background fork">
+    Appends the update and marks the fork as reported. The fork continues running. Blocked if `update_main_session` is set to `blocked` in the background fork config.
+  </Tab>
+</Tabs>
+
+**Availability:** Interactive forks and background forks. Returns an error in the main session.
+
+### `exit_fork`
+
+Exit the current interactive fork. The fork is discarded and the main session resumes. No context is preserved.
+
+Takes no parameters.
+
+**Availability:** Interactive forks only. Returns an error in background forks or the main session.
+
+## Chain tool
+
+### `follow_up_chain`
+
+Schedule a follow-up reminder that continues the current chain. Used by [reminders](/scheduling/reminders) with `max_chain` to create self-continuing check-in sequences.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `minutes_from_now` | integer | Yes | — | Minutes until the next check fires |
+
+The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. All configuration from the current `ChainContext` is forwarded: `background`, `model`, `thinking`, `isolated`, `update_main_session`, `allow_ping`, `allowed_tools`, and `disallowed_tools`.
+
+Returns an error if:
+- No active reminder context exists (the tool was called outside a reminder-triggered session)
+- The chain depth has reached `max_chain`
+
+<Tip>
+If the task is done or no follow-up is needed, simply don't call `follow_up_chain`. The chain ends naturally.
+</Tip>
+
+## Background fork enforcement
+
+Background forks use a stop hook (`require_report_hook`) that enforces the `update_main_session` policy before the agent can finish:
+
+| Mode | Behavior |
+|------|----------|
+| `freely` | No enforcement — reporting is optional |
+| `blocked` | No enforcement — `report_updates` is blocked |
+| `always` | Agent must call `report_updates` before stopping |
+| `on_ping` | Agent must call `report_updates` if it sent any visible output (ping or embed) |
+
+See [background forks](/scheduling/background-forks) for how these modes are configured in routine and reminder YAML frontmatter.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Forks" icon="code-branch" href="/core-usage/forks">
+    How interactive and background forks work.
+  </Card>
+  <Card title="Background forks" icon="gears" href="/scheduling/background-forks">
+    Configuration for background fork behavior, tool restrictions, and update modes.
+  </Card>
+  <Card title="Ping budget" icon="bell" href="/scheduling/ping-budget">
+    How the refill-on-read budget gates output tools.
+  </Card>
+  <Card title="System prompt" icon="scroll" href="/extending/system-prompt">
+    How tool instructions are injected into the agent's system prompt.
+  </Card>
+</Columns>
