@@ -3,4 +3,159 @@ title: "Google Tasks"
 description: "Task management, CLI commands, and embed button actions."
 ---
 
-Content coming soon.
+ollim-bot provides full read/write access to your primary Google Tasks list.
+You can list, add, complete, update, and delete tasks through CLI commands,
+and the agent can present tasks in Discord embeds with action buttons for
+one-click completion or deletion.
+
+## Prerequisites
+
+- Google OAuth credentials configured (see [Google OAuth setup](/self-hosting/google-oauth-setup))
+- Completed the initial OAuth consent flow — the `tasks` scope is included by default
+
+## Setup
+
+No additional setup is required beyond the shared Google OAuth flow. The
+`https://www.googleapis.com/auth/tasks` scope is part of the default scope
+list in `google/auth.py`. Once you've completed the
+[Google integration](/integrations/google-overview) setup, Tasks is ready to use.
+
+## Usage
+
+<Tabs>
+  <Tab title="CLI">
+    The `ollim-bot tasks` subcommand provides five operations.
+
+    ### List tasks
+
+    ```bash
+    ollim-bot tasks list
+    ```
+
+    Shows incomplete tasks from your default task list. Each line displays the
+    task ID, due date, status checkbox, and title:
+
+    ```
+      abc123  2026-03-01    [ ]  Buy groceries
+      def456  (no due)      [ ]  Call dentist
+    ```
+
+    To include completed and hidden tasks:
+
+    ```bash
+    ollim-bot tasks list --all
+    ```
+
+    ### Add a task
+
+    ```bash
+    ollim-bot tasks add "Buy groceries" --due 2026-03-01 --notes "Milk, eggs, bread"
+    ```
+
+    | Argument | Required | Description |
+    |----------|----------|-------------|
+    | `title` (positional) | Yes | Task title |
+    | `--due` | No | Due date in `YYYY-MM-DD` format |
+    | `--notes` | No | Task notes or description |
+
+    Due dates are stored as midnight UTC (`YYYY-MM-DDT00:00:00.000Z`).
+
+    ### Complete a task
+
+    ```bash
+    ollim-bot tasks done <task_id>
+    ```
+
+    ### Update a task
+
+    ```bash
+    ollim-bot tasks update <task_id> --title "Updated title" --due 2026-03-15
+    ```
+
+    At least one of `--title`, `--due`, or `--notes` must be provided.
+
+    ### Delete a task
+
+    ```bash
+    ollim-bot tasks delete <task_id>
+    ```
+
+    Permanently deletes the task from your Google Tasks list.
+  </Tab>
+  <Tab title="Agent">
+    The agent interacts with Google Tasks through two mechanisms.
+
+    ### Embed buttons
+
+    When the agent presents tasks in a Discord embed, it can attach action
+    buttons using the `discord_embed` MCP tool:
+
+    - **Complete** — button action `task_done:<task_id>`, marks the task as completed
+    - **Delete** — button action `task_del:<task_id>`, permanently removes the task
+
+    Clicking a button triggers an ephemeral Discord response confirming the
+    action and appends a context update to the session
+    (e.g., `User completed task "Buy groceries"`), so the agent knows what you did.
+
+    ### CLI delegation
+
+    The agent can also run `ollim-bot tasks` subcommands directly for
+    operations like listing all tasks, adding new ones, or updating existing
+    entries.
+  </Tab>
+</Tabs>
+
+<Note>
+All operations use your default task list (`@default`). ollim-bot does not
+support multiple task lists.
+</Note>
+
+## API helpers
+
+Two functions are exported from `google/tasks.py` for use by Discord button
+handlers in `views.py`:
+
+| Function | Signature | Returns |
+|----------|-----------|---------|
+| `complete_task` | `complete_task(task_id: str) -> str` | Task title |
+| `delete_task` | `delete_task(task_id: str) -> str` | Task title |
+
+Both are called via `asyncio.to_thread` in the button handlers to avoid
+blocking the Discord event loop.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tasks commands return an auth error">
+    Your OAuth token may have expired or been revoked. Delete
+    `~/.ollim-bot/token.json` and run any tasks command to trigger
+    re-authentication.
+  </Accordion>
+  <Accordion title="How do I find a task ID?">
+    Task IDs are displayed as the first column in `ollim-bot tasks list`
+    output. When using embed buttons, the agent encodes the ID into the
+    button action automatically.
+  </Accordion>
+  <Accordion title="Due dates show the wrong day">
+    Due dates are stored as midnight UTC. The Google Tasks API and CLI both
+    use `YYYY-MM-DD` format. If your local timezone is ahead of UTC, a task
+    due "today" may display as yesterday in some Google interfaces.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Google Calendar" icon="calendar" href="/integrations/google-calendar">
+    Manage calendar events through similar CLI and agent interactions.
+  </Card>
+  <Card title="Google integration" icon="link" href="/integrations/google-overview">
+    Shared OAuth setup and all available Google services.
+  </Card>
+  <Card title="Embeds & buttons" icon="rectangle-list" href="/core-usage/embeds-and-buttons">
+    How the agent builds Discord embeds with action buttons.
+  </Card>
+  <Card title="CLI reference" icon="terminal" href="/development/cli-reference">
+    Full reference for all ollim-bot CLI subcommands.
+  </Card>
+</Columns>
