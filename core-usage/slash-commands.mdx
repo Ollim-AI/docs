@@ -1,6 +1,155 @@
 ---
 title: "Slash commands"
-description: "All Discord slash commands: /clear, /compact, /cost, /model, /thinking, /fork, /interrupt, /permissions, /ping-budget."
+description: "All Discord slash commands available in ollim-bot."
 ---
 
-Content coming soon.
+ollim-bot registers nine slash commands in Discord. All commands are scoped to DMs with the bot.
+
+## Quick reference
+
+| Command | Description | Parameters |
+|---------|-------------|------------|
+| `/clear` | Clear conversation and start fresh | None |
+| `/compact` | Compress conversation context | `instructions` (optional) |
+| `/cost` | Show token usage for this session | None |
+| `/fork` | Start a forked conversation | `topic` (optional) |
+| `/model` | Switch the AI model | `name` (required) |
+| `/thinking` | Toggle extended thinking | `enabled` (required) |
+| `/interrupt` | Stop the current response | None |
+| `/permissions` | Set permission mode | `mode` (required) |
+| `/ping-budget` | View or set ping budget | `capacity`, `refill_rate` (both optional) |
+
+## Session commands
+
+### /clear
+
+Resets the conversation to a blank state. This:
+
+- Resets [permissions](/core-usage/permissions) to default
+- Exits any active [interactive fork](/core-usage/forks)
+- Logs a "cleared" session event
+- Drops the active client connection
+- Deletes the persisted session ID
+
+The next message starts a fresh session with no prior context.
+
+### /compact
+
+Compresses conversation context using the Claude Agent SDK's built-in compaction.
+Useful when a long conversation starts hitting context limits.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instructions` | string | No | Optional focus for the summary (e.g., "keep the routine config details") |
+
+<Tip>
+  Use `instructions` to tell the compactor what information matters most.
+  Without it, the SDK picks what to preserve automatically.
+</Tip>
+
+### /cost
+
+Returns the cumulative token usage and cost for the current session in USD.
+
+## Model commands
+
+### /model
+
+Switches the AI model for subsequent messages. The change applies to both the main session and any active fork.
+
+| Parameter | Type | Required | Choices |
+|-----------|------|----------|---------|
+| `name` | choice | Yes | `opus`, `sonnet`, `haiku` |
+
+The active client connection is updated in-place. The next message uses the new model.
+
+### /thinking
+
+Toggles extended thinking (chain-of-thought reasoning). When enabled, sets `max_thinking_tokens` to 10,000.
+
+| Parameter | Type | Required | Choices |
+|-----------|------|----------|---------|
+| `enabled` | choice | Yes | `on`, `off` |
+
+<Warning>
+  Changing thinking mode drops the active client connection.
+  If you are in a fork, the fork client is interrupted and fork state is cleared.
+</Warning>
+
+## Fork commands
+
+### /fork
+
+Starts an [interactive fork](/core-usage/forks) — a branched conversation that does not affect the main session history.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `topic` | string | No | Optional topic to seed the forked conversation |
+
+Returns an error if you are already inside a fork. Otherwise, creates a forked
+client and sends a fork entry embed with action buttons.
+
+### /interrupt
+
+Stops the bot's current response mid-stream. The command is silent — it defers
+the interaction, interrupts any in-progress generation, then deletes the
+deferred response.
+
+<Note>If the bot is not actively generating a response, `/interrupt` does nothing.</Note>
+
+## Configuration commands
+
+### /permissions
+
+Sets the [permission mode](/core-usage/permissions) that controls how the agent requests tool approval.
+
+| Parameter | Type | Required | Choices |
+|-----------|------|----------|---------|
+| `mode` | choice | Yes | `dontAsk`, `default`, `acceptEdits`, `bypassPermissions` |
+
+| Mode | Behavior |
+|------|----------|
+| `dontAsk` | Suppresses all prompts. Routes as `default` to the SDK while blocking locally. |
+| `default` | The agent asks for approval before using tools. |
+| `acceptEdits` | The agent can make file edits without asking, but other tools still require approval. |
+| `bypassPermissions` | All tools are auto-approved. No permission prompts. |
+
+Permission mode is scoped to the active client. If you are in a fork, only the
+fork client is affected. The main session retains its own permission mode.
+
+### /ping-budget
+
+Views or configures the [ping budget](/scheduling/ping-budget) — a token-bucket
+rate limiter that controls how often background forks can notify you.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `capacity` | integer | No | Maximum number of pings in the bucket |
+| `refill_rate` | integer | No | Minutes between refills (default: 90) |
+
+<Tabs>
+  <Tab title="View budget">
+    Run `/ping-budget` with no parameters to see the current budget status.
+  </Tab>
+  <Tab title="Update budget">
+    Provide `capacity`, `refill_rate`, or both to update the budget.
+    The response confirms the new settings.
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Conversations" icon="comments" href="/core-usage/conversations">
+    How the DM message flow works alongside slash commands.
+  </Card>
+  <Card title="Forks" icon="code-branch" href="/core-usage/forks">
+    Deep dive into interactive and background forks.
+  </Card>
+  <Card title="Permissions" icon="shield" href="/core-usage/permissions">
+    Full guide to permission modes and tool approval.
+  </Card>
+  <Card title="Ping budget" icon="bell" href="/scheduling/ping-budget">
+    How the notification rate limiter works.
+  </Card>
+</Columns>
