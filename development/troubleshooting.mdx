@@ -3,4 +3,310 @@ title: "Troubleshooting"
 description: "Common issues, debugging, log locations, and session recovery."
 ---
 
-Content coming soon.
+When something goes wrong, start with the startup checks below, then look
+through the categorized issues. Most problems trace back to missing
+environment variables, stale PID files, or corrupt data files — all
+recoverable.
+
+## Startup failures
+
+These are the most common blockers when launching `uv run ollim-bot`.
+
+### Missing environment variables
+
+`config.py` validates required variables on import. If any are missing, the
+bot prints a message to stderr and exits immediately.
+
+```
+Missing required env vars: OLLIM_USER_NAME, OLLIM_BOT_NAME
+Set them in .env or your environment.
+```
+
+`DISCORD_TOKEN` is checked separately in `main.py`:
+
+```
+Set DISCORD_TOKEN in .env
+```
+
+Both exit with code 1. Set the missing variables in your `.env` file (at the
+project root) and restart.
+
+| Variable | Required | Where checked |
+|----------|----------|---------------|
+| `DISCORD_TOKEN` | Yes | `main.py` |
+| `OLLIM_USER_NAME` | Yes | `config.py` |
+| `OLLIM_BOT_NAME` | Yes | `config.py` |
+
+### Bot already running
+
+The bot writes its PID to `~/.ollim-bot/bot.pid` on startup and checks
+`/proc/<pid>/cmdline` for the string `ollim-bot`. If a match is found:
+
+```
+ollim-bot is already running (pid 12345)
+```
+
+If the previous process crashed without cleaning up the PID file, delete it
+manually:
+
+```bash
+rm ~/.ollim-bot/bot.pid
+```
+
+The file is normally deleted on exit via `atexit`.
+
+### No owner found
+
+If `bot.application_info()` returns no owner, the bot prints:
+
+```
+warning: no owner found; scheduler and DM disabled
+```
+
+The bot stays online but cannot send DMs, run scheduled routines, or start
+the webhook server. This typically means the Discord application has no owner
+set — check the application settings in the
+[Discord Developer Portal](https://discord.com/developers/applications).
+
+## Session issues
+
+<AccordionGroup>
+  <Accordion title="Session not resuming after restart">
+    The bot reads `~/.ollim-bot/sessions.json` on startup. If the file is
+    missing or empty, it starts a fresh session. Check that the file exists
+    and contains a session ID string:
+
+    ```bash
+    cat ~/.ollim-bot/sessions.json
+    ```
+
+    If the file contains a JSON object (starts with `{`), `load_session_id()`
+    returns `None` and the bot starts fresh. This can happen if another tool
+    writes JSON to the file. Replace it with just the session ID string.
+  </Accordion>
+
+  <Accordion title="Frequent compaction events">
+    The Agent SDK auto-compacts conversations when they grow too long. Each
+    compaction produces a new session ID and a `compacted` event in
+    `session_history.jsonl`. This is normal behavior — the bot detects the
+    ID change in `save_session_id()` and logs it automatically.
+
+    If compaction happens too frequently, the conversation is growing fast.
+    Use `/clear` to start fresh, or use `/compact` to trigger a manual
+    compaction at a natural breakpoint.
+  </Accordion>
+
+  <Accordion title="Recovering session history">
+    The append-only log at `~/.ollim-bot/session_history.jsonl` records every
+    lifecycle event. To inspect it:
+
+    ```bash
+    cat ~/.ollim-bot/session_history.jsonl
+    ```
+
+    Each line is a JSON object with `session_id`, `event`, `timestamp`, and
+    `parent_session_id`. Use this to trace session transitions, find the last
+    known good session ID, or understand what happened before a crash.
+
+    To manually resume a specific session, write its ID to `sessions.json`:
+
+    ```bash
+    echo -n "sess_abc123" > ~/.ollim-bot/sessions.json
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Data directory issues
+
+All persistent state lives in `~/.ollim-bot/`. See the
+[data directory reference](/configuration/data-directory) for the full layout.
+
+<AccordionGroup>
+  <Accordion title="Corrupt markdown files (routines, reminders, webhooks)">
+    `read_md_dir()` catches `ValueError`, `yaml.YAMLError`, `TypeError`, and
+    `KeyError` when parsing `.md` files. Corrupt files are logged as warnings
+    and skipped — they do not crash the bot.
+
+    To find corrupt files, check the bot's log output for warnings, then
+    inspect or delete the offending file from `~/.ollim-bot/routines/`,
+    `reminders/`, or `webhooks/`.
+  </Accordion>
+
+  <Accordion title="Corrupt JSONL files">
+    `read_jsonl()` skips blank lines, non-JSON lines, and malformed entries.
+    It also filters fields to only those known to the target dataclass,
+    providing forward compatibility. Corrupt lines are silently dropped on
+    read.
+
+    If a JSONL file is entirely corrupted, delete it. The bot recreates these
+    files on the next write:
+
+    ```bash
+    rm ~/.ollim-bot/session_history.jsonl
+    ```
+  </Accordion>
+
+  <Accordion title="Do not edit files while the bot is running">
+    All writes use atomic temp-file-then-rename (`tempfile.mkstemp` +
+    `os.replace`). Manual edits to files in `~/.ollim-bot/` while the bot is
+    running risk being overwritten or causing inconsistent state. Stop the bot
+    first, make edits, then restart.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+The `~/.ollim-bot/` directory is a git repository. If you manually edit
+files, the bot's auto-commit on next write will include your changes in
+its commit. Use `git log` inside the directory to review the change history.
+</Warning>
+
+## Google OAuth issues
+
+<AccordionGroup>
+  <Accordion title="Missing credentials.json">
+    The Google integration requires `~/.ollim-bot/credentials.json` from the
+    Google Cloud Console. Without it, all Google-related commands (`tasks`,
+    `cal`, `gmail`) and agent tools fail. Follow the
+    [Google OAuth setup guide](/self-hosting/google-oauth-setup) to create
+    and place this file.
+  </Accordion>
+
+  <Accordion title="Expired or invalid token">
+    `~/.ollim-bot/token.json` is auto-generated on first authentication and
+    refreshed automatically. If the token becomes invalid (revoked scopes,
+    credential rotation), delete it and re-authenticate:
+
+    ```bash
+    rm ~/.ollim-bot/token.json
+    uv run ollim-bot tasks list
+    ```
+
+    The next Google API call triggers a browser-based OAuth flow to generate
+    a new token.
+  </Accordion>
+</AccordionGroup>
+
+## Scheduling issues
+
+<AccordionGroup>
+  <Accordion title="Routines or reminders not firing">
+    The scheduler polls the `routines/` and `reminders/` directories every
+    10 seconds and registers APScheduler jobs. Check:
+
+    1. The bot printed `scheduler started: N jobs` on startup (visible in
+       the console).
+    2. The `.md` file has valid YAML frontmatter with a `cron` (routines) or
+       `when` (reminders) field.
+    3. The `id` field in the YAML is unique — duplicate IDs cause one to
+       overwrite the other.
+    4. The owner was found on startup (no `"warning: no owner found"` message).
+       The scheduler does not start without an owner.
+  </Accordion>
+
+  <Accordion title="Ping budget exhausted">
+    Background forks that exceed the ping budget get tool errors from
+    `ping_user` and `discord_embed`. The user is not notified — the tool
+    returns an error to the agent, which decides how to proceed.
+
+    Check the budget state:
+
+    ```bash
+    cat ~/.ollim-bot/ping_budget.json
+    ```
+
+    The `available` field shows remaining pings. The bucket refills 1 ping
+    per 90 minutes, capped at a capacity of 5. Use `/ping-budget` in Discord
+    to view a formatted status. See
+    [ping budget](/scheduling/ping-budget) for details.
+  </Accordion>
+</AccordionGroup>
+
+## Fork issues
+
+<AccordionGroup>
+  <Accordion title="Reply-to-fork not working">
+    Replying to a background fork message starts an interactive fork that
+    resumes from that fork's session. This relies on
+    `~/.ollim-bot/fork_messages.json`, which maps Discord message IDs to
+    fork session IDs.
+
+    Records older than 7 days are pruned on every read. If the background
+    fork message is older than 7 days, the mapping no longer exists and
+    the reply is treated as a normal message.
+  </Accordion>
+
+  <Accordion title="Fork appears stuck">
+    Interactive forks have an idle timeout. The scheduler checks every 60
+    seconds — after `idle_timeout` minutes of inactivity, it prompts the
+    agent to exit. After another timeout period, it escalates with a
+    stronger prompt. The agent always decides the exit strategy
+    (`save_context`, `report_updates`, or `exit_fork`).
+
+    If the fork is truly stuck, use the exit buttons on the fork embed, or
+    run `/clear` to reset the entire session.
+  </Accordion>
+</AccordionGroup>
+
+## Permission issues
+
+<AccordionGroup>
+  <Accordion title="Tools being silently denied">
+    The default permission mode is `dontAsk`. In this mode, non-whitelisted
+    tools are silently denied without prompting the user in Discord.
+
+    Switch to a more permissive mode with the `/permissions` command:
+
+    | Mode | Behavior |
+    |------|----------|
+    | `dontAsk` | Non-whitelisted tools silently denied (default) |
+    | `default` | Non-whitelisted tools trigger Discord approval prompt |
+    | `acceptEdits` | File edits auto-approved, others prompt |
+    | `bypassPermissions` | All tools approved |
+
+    The `_session_allowed` set persists across interactive forks but resets
+    on `/clear`.
+  </Accordion>
+
+  <Accordion title="Approval prompt not appearing">
+    In `default` or `acceptEdits` mode, the bot sends a Discord message with
+    reaction-based approval. The prompt has a 60-second timeout — if you
+    miss it, the tool is auto-denied. Check that you are in a mode that
+    sends prompts (`default` or `acceptEdits`, not `dontAsk`).
+  </Accordion>
+</AccordionGroup>
+
+## Diagnostic files
+
+Quick reference for where to look when debugging.
+
+| File | What it tells you |
+|------|-------------------|
+| `~/.ollim-bot/sessions.json` | Current session ID (or missing = no active session) |
+| `~/.ollim-bot/session_history.jsonl` | Timeline of session lifecycle events |
+| `~/.ollim-bot/bot.pid` | PID of running bot instance |
+| `~/.ollim-bot/ping_budget.json` | Current ping budget state and counters |
+| `~/.ollim-bot/pending_updates.json` | Queued background fork summaries |
+| `~/.ollim-bot/fork_messages.json` | Discord message to fork session mappings |
+| `~/.ollim-bot/inquiries.json` | Active button inquiry prompts |
+
+<Tip>
+The `~/.ollim-bot/` directory is git-tracked. Run `git log --oneline`
+inside it to see a chronological record of all data changes.
+</Tip>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Data directory" icon="folder-open" href="/configuration/data-directory">
+    Full layout of ~/.ollim-bot/ and file format details.
+  </Card>
+  <Card title="Session management" icon="rotate" href="/architecture/session-management">
+    How sessions persist, compact, and recover across restarts.
+  </Card>
+  <Card title="Development guide" icon="code" href="/development/guide">
+    Dev setup, running locally, and code conventions.
+  </Card>
+  <Card title="Configuration reference" icon="gear" href="/configuration/reference">
+    All environment variables and their defaults.
+  </Card>
+</Columns>
