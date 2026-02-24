@@ -3,4 +3,104 @@ title: "Quickstart"
 description: "Get ollim-bot running in under 5 minutes."
 ---
 
-Content coming soon.
+Get ollim-bot running and send your first message in under 5 minutes.
+
+## Prerequisites
+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) package manager
+- A Discord bot token (see [Discord bot setup](/self-hosting/discord-bot-setup) for a step-by-step guide)
+- A Discord server where you can add the bot
+
+<Note>
+ollim-bot is a single-user bot designed to run as a personal assistant
+in Discord DMs. You do not need a public server — any server where you
+have permission to add a bot will work.
+</Note>
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/literal:your-username/ollim-bot.git
+    cd ollim-bot
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv sync
+    ```
+
+    This installs all Python dependencies into an isolated virtual environment managed by uv.
+  </Step>
+
+  <Step title="Create your .env file">
+    Create a `.env` file in the project root with three required variables:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=literal:your-discord-bot-token
+    OLLIM_USER_NAME=literal:YourName
+    OLLIM_BOT_NAME=Ollim
+    ```
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `DISCORD_TOKEN` | Yes | Your Discord bot token |
+    | `OLLIM_USER_NAME` | Yes | Your display name (how the bot addresses you) |
+    | `OLLIM_BOT_NAME` | Yes | The bot's name (used in its system prompt) |
+  </Step>
+
+  <Step title="Start the bot">
+    ```bash
+    uv run ollim-bot
+    ```
+
+    The bot creates its data directory at `~/.ollim-bot/` on first run
+    and connects to Discord. A PID file at `~/.ollim-bot/bot.pid`
+    prevents duplicate instances.
+  </Step>
+
+  <Step title="Send your first message">
+    Open a DM with your bot in Discord and send a message. The bot
+    responds using Claude, streaming its reply in real time.
+
+    You can also interact via slash commands — try `/cost` to see
+    token usage or `/model sonnet` to switch models.
+  </Step>
+</Steps>
+
+<Tip>
+Google integrations (Tasks, Calendar, Gmail) require additional OAuth
+setup. See the [full setup guide](/getting-started/setup) to configure
+these.
+</Tip>
+
+## CLI commands
+
+Beyond running the bot, `ollim-bot` provides CLI subcommands for
+managing routines, reminders, and Google services:
+
+```bash
+uv run ollim-bot routine list     # Show all routines
+uv run ollim-bot reminder add --delay 30 -m "take a break"
+uv run ollim-bot tasks list       # List Google Tasks
+uv run ollim-bot cal today        # Show today's calendar events
+uv run ollim-bot help             # Show all available commands
+```
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Full setup guide" icon="wrench" href="/getting-started/setup">
+    Configure Google OAuth, webhooks, and all optional features.
+  </Card>
+  <Card title="How ollim-bot works" icon="gears" href="/getting-started/how-it-works">
+    Understand the agent loop, sessions, and fork model.
+  </Card>
+  <Card title="Conversations" icon="comments" href="/core-usage/conversations">
+    Learn how DM conversations, context, and streaming work.
+  </Card>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    Reference for all Discord slash commands.
+  </Card>
+</Columns>
