@@ -3,4 +3,143 @@ title: "Permissions"
 description: "Permission modes, approval flow, and session-allowed tools."
 ---
 
-Content coming soon.
+ollim-bot controls which tools the agent can use through a permission
+system built on top of the Claude Agent SDK's `canUseTool` callback.
+You choose a permission mode, and the bot enforces it — from silent
+denial of unapproved tools all the way to full bypass.
+
+## Permission modes
+
+Switch modes with the `/permissions` slash command. The mode is
+**fork-scoped**: changing it inside an interactive fork does not affect
+the main session, and vice versa.
+
+| Mode | Behavior |
+|------|----------|
+| `dontAsk` | Silent denial of non-whitelisted tools. No prompt. **Default.** |
+| `default` | Discord message with reaction buttons for each tool use. |
+| `acceptEdits` | SDK built-in — file-edit tools auto-approved, others prompt. |
+| `bypassPermissions` | SDK built-in — all tools auto-approved, no prompts. |
+
+<Note>
+`dontAsk` is ollim-bot's own layer. Under the hood, the SDK permission
+mode stays at `default` — the bot's `canUseTool` callback handles the
+silent denial before the SDK ever sees it.
+</Note>
+
+## Approval flow
+
+When the permission mode is anything other than `dontAsk`, unapproved tool
+use triggers an interactive approval prompt in your Discord DM.
+
+<Steps>
+  <Step title="Agent requests a tool">
+    The SDK invokes the `canUseTool` callback with the tool name and input data.
+  </Step>
+  <Step title="Bot sends an approval message">
+    A message appears in your DM showing the tool label
+    (name + arguments). Three emoji reactions are added automatically.
+  </Step>
+  <Step title="You react">
+    React with one of the three emojis to respond:
+
+    | Reaction | Effect |
+    |----------|--------|
+    | ✅ | **Allow** — approve this single tool use |
+    | ❌ | **Deny** — reject this tool use |
+    | 🔓 | **Always** — approve and add the tool to the session-allowed set |
+  </Step>
+  <Step title="Result is applied">
+    The approval message is edited to show the outcome
+    (`allowed`, `denied`, or `always allowed`), and the agent
+    proceeds or receives a denial.
+  </Step>
+</Steps>
+
+Approvals time out after **60 seconds**. An unanswered prompt is treated
+as a denial, and the message is edited to show `timed out`.
+
+## Session-allowed set
+
+When you react with 🔓 (**Always**), the tool is added to a session-allowed
+set. Future uses of that tool are auto-approved without prompting — even
+in `dontAsk` mode.
+
+- The session-allowed set is **shared** across the main session and interactive forks.
+- `/clear` resets the session-allowed set (and cancels any pending approvals).
+- The set is in-memory only — it does not persist across bot restarts.
+
+## Background forks
+
+Background forks always deny tool permission requests, regardless of the
+current mode. The agent in a background fork cannot trigger approval
+prompts. Tools available to background forks are controlled separately
+through `allowed_tools` and `disallowed_tools` in the fork's YAML
+configuration — see [Background forks](/scheduling/background-forks) for
+details.
+
+## Cancellation
+
+Pending approval prompts are automatically cancelled (treated as denials)
+when any of the following occur:
+
+- You use `/clear` — resets the session-allowed set and cancels all pending approvals
+- You interrupt the agent — cancels pending approvals for the current turn
+- You exit an interactive fork — cancels any approvals pending inside the fork
+
+Cancelled prompts are edited to show `cancelled` with strikethrough text.
+
+## Examples
+
+<Tabs>
+  <Tab title="dontAsk (default)">
+    In `dontAsk` mode, the agent works with the tools the SDK whitelists
+    automatically. Any tool not in the whitelist or the session-allowed set
+    is silently denied — no message appears.
+
+    ```
+    /permissions dontAsk
+    ```
+
+    This is the default. The agent operates autonomously within its
+    allowed toolset without interrupting you for approvals.
+  </Tab>
+  <Tab title="default (interactive)">
+    In `default` mode, each non-whitelisted tool use produces an approval
+    message. You review and react.
+
+    ```
+    /permissions default
+    ```
+
+    Use this when you want visibility into what tools the agent is calling.
+    React with 🔓 on tools you trust to avoid repeated prompts.
+  </Tab>
+  <Tab title="bypassPermissions">
+    In `bypassPermissions` mode, all tools are auto-approved. No prompts
+    appear.
+
+    ```
+    /permissions bypassPermissions
+    ```
+
+    <Warning>This mode gives the agent unrestricted tool access. Use with caution.</Warning>
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    Full reference for all slash commands including `/permissions`.
+  </Card>
+  <Card title="Forks" icon="code-branch" href="/core-usage/forks">
+    How interactive and background forks interact with permission scoping.
+  </Card>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Reference for all MCP tools the agent can use.
+  </Card>
+  <Card title="Background forks" icon="clock" href="/scheduling/background-forks">
+    Tool restrictions and allowed/disallowed tool configuration for background forks.
+  </Card>
+</Columns>
