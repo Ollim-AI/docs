@@ -3,4 +3,153 @@ title: "Ping budget"
 description: "Refill-on-read bucket for background fork notifications."
 ---
 
-Content coming soon.
+Background forks run autonomously, but unchecked notifications would
+defeat the purpose of an ADHD-friendly bot. The ping budget is a
+refill-on-read token bucket that limits how many times background forks
+can ping you, so proactive features stay helpful without becoming noisy.
+
+## Overview
+
+The ping budget applies **only to background forks**. Messages sent in
+the main session or interactive forks are user-initiated and never
+counted against the budget.
+
+When a background fork calls `ping_user` or `discord_embed`, the budget
+is checked first. If tokens are available, one is consumed and the
+message goes through. If the budget is exhausted, the tool returns an
+error to the agent (you are not notified), and the agent falls back to
+`report_updates` instead.
+
+<Note>
+  The budget file at `~/.ollim-bot/ping_budget.json` is ephemeral
+  state — it is written atomically but never committed to git.
+</Note>
+
+## How the bucket works
+
+The ping budget uses a **refill-on-read** model. Tokens are not
+refilled on a timer — instead, every time the budget state is loaded,
+elapsed time since the last refill is used to calculate how many tokens
+have accumulated.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `capacity` | `5` | Maximum tokens the bucket can hold |
+| `refill_rate_minutes` | `90` | Minutes to regenerate one token |
+| `available` | `5.0` | Current token count (fractional during refill) |
+| `daily_used` | `0` | Pings consumed today (resets at midnight) |
+| `critical_used` | `0` | Critical pings today (resets at midnight) |
+
+A full bucket of 5 tokens with a 90-minute refill rate means up to 5
+pings can fire in quick succession, then one more becomes available
+every 90 minutes, capped at the capacity.
+
+## Critical bypass
+
+Both `ping_user` and `discord_embed` accept a `critical` parameter.
+When `critical=True`:
+
+- The ping **bypasses the budget entirely** — it is never blocked
+  by an empty bucket
+- The `critical_used` daily counter is incremented for tracking
+- The busy-state check is also bypassed (critical pings go through
+  even during active conversations)
+
+The agent is instructed to reserve `critical=True` for things you
+would be devastated to miss — time-sensitive deadlines, health
+routines, urgent accountability nudges.
+
+<Warning>
+  The `allow_ping: false` setting on a background fork overrides
+  everything, including `critical=True`. When a fork author disables
+  pings, that intent is respected unconditionally.
+</Warning>
+
+## Busy state
+
+When you are mid-conversation (the agent lock is held), background
+forks enter a "quiet when busy" mode:
+
+- **Non-critical** pings are blocked — the agent receives an error
+  telling it to use `report_updates` instead
+- **Critical** pings go through regardless
+- Background forks still run on schedule; only their output delivery
+  is affected
+
+This check happens before the budget check, so a blocked-by-busy
+ping does not consume a token.
+
+## Agent awareness
+
+At job-fire time, the background fork preamble injects the current
+budget status, upcoming schedule, and refill timing. This gives the
+agent enough context to make informed decisions about whether to ping
+or report.
+
+The preamble instructs the agent to:
+
+- Send at most 1 ping or embed per background session
+- Ask "would the user regret missing this?" before pinging
+- Use `report_updates` for informational summaries and low-stakes check-ins
+- Save pings for time-sensitive actions, accountability nudges, and health routines
+- When budget is tight, prioritize tasks you would regret missing
+
+## `/ping-budget` command
+
+View or configure the ping budget from Discord.
+
+<Tabs>
+  <Tab title="View status">
+    ```
+    /ping-budget
+    ```
+    Returns the current budget status: available/capacity, refill
+    rate, daily usage, and critical count.
+  </Tab>
+  <Tab title="Configure">
+    ```
+    /ping-budget capacity:8 refill_rate:60
+    ```
+
+    | Parameter | Type | Description |
+    |-----------|------|-------------|
+    | `capacity` | integer | Maximum tokens the bucket can hold |
+    | `refill_rate` | integer | Minutes per token refill |
+
+    Both parameters are optional. Omit both to view the current status.
+  </Tab>
+</Tabs>
+
+## State format
+
+The budget is stored as a single JSON file:
+
+```json title="~/.ollim-bot/ping_budget.json"
+{
+  "capacity": 5,
+  "available": 3.0,
+  "refill_rate_minutes": 90,
+  "last_refill": "2026-02-24T10:30:00-05:00",
+  "critical_used": 0,
+  "critical_reset_date": "2026-02-24",
+  "daily_used": 2,
+  "daily_used_reset": "2026-02-24"
+}
+```
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Background forks" icon="code-branch" href="/scheduling/background-forks">
+    How background forks run and when the budget applies.
+  </Card>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Reference for `ping_user`, `discord_embed`, and `report_updates`.
+  </Card>
+  <Card title="Scheduling overview" icon="clock" href="/scheduling/overview">
+    How routines and reminders trigger background forks.
+  </Card>
+  <Card title="Routines" icon="arrows-rotate" href="/scheduling/routines">
+    Recurring scheduled tasks that consume the ping budget.
+  </Card>
+</Columns>
