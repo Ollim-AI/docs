@@ -3,4 +3,162 @@ title: "Embeds & buttons"
 description: "Agent-controlled embeds, button actions, and inquiry flow."
 ---
 
-Content coming soon.
+The agent communicates structured information — task lists, calendar events, email digests, status updates — through Discord embeds. Each embed can include interactive buttons that trigger actions directly or route prompts back to the agent. The entire system is persistent: buttons survive bot restarts.
+
+## Overview
+
+ollim-bot uses a single MCP tool, `discord_embed`, to send rich embed messages. The agent decides when and what to send — there is no manual embed API. Buttons attached to embeds follow an action pattern that either performs a direct operation (complete a task, delete an event) or opens a conversation with the agent through the inquiry system.
+
+Embeds sent from [background forks](/scheduling/background-forks) or [interactive forks](/core-usage/forks) are tagged with a footer indicating their source context.
+
+## The `discord_embed` tool
+
+The agent calls `discord_embed` with a title (required) and optional description, color, fields, buttons, and critical flag.
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `title` | string | Yes | — | Embed heading (emoji stripped automatically) |
+| `description` | string | No | — | Body text below the title |
+| `color` | string | No | `"blue"` | Embed accent color |
+| `fields` | array | No | `[]` | Structured name/value pairs |
+| `buttons` | array | No | `[]` | Interactive buttons attached below the embed |
+| `critical` | boolean | No | `false` | Bypasses [ping budget](/scheduling/ping-budget) in background forks |
+
+### Colors
+
+| Value | Meaning |
+|-------|---------|
+| `blue` | Informational (default) |
+| `green` | Success / completion |
+| `red` | Urgent / error |
+| `yellow` | Warning |
+| `purple` | Used internally for fork entry embeds |
+
+### Fields
+
+Each field is an object with `name`, `value`, and optional `inline` (defaults to `true`). Fields render as labeled sections within the embed — inline fields appear side-by-side, non-inline fields stack vertically.
+
+### Buttons
+
+Each button has a `label`, an `action` string, and an optional `style` (defaults to `"secondary"`).
+
+| Style | Appearance |
+|-------|------------|
+| `primary` | Blurple (Discord accent) |
+| `secondary` | Grey |
+| `success` | Green |
+| `danger` | Red |
+
+<Note>Discord limits embeds to 25 buttons. Buttons beyond this limit are silently dropped.</Note>
+
+## Button actions
+
+Button behavior is determined by the `action` string. There are two categories: direct actions that execute immediately, and agent inquiries that route a prompt back through the agent.
+
+<Tabs>
+  <Tab title="Direct actions">
+    Direct actions perform a single operation and respond with an ephemeral message. No agent involvement.
+
+    | Action pattern | Handler | What it does |
+    |----------------|---------|--------------|
+    | `task_done:<task_id>` | `_handle_task_done` | Marks a Google Tasks item complete |
+    | `task_del:<task_id>` | `_handle_task_delete` | Deletes a Google Tasks item |
+    | `event_del:<event_id>` | `_handle_event_delete` | Deletes a Google Calendar event |
+    | `dismiss` | `_handle_dismiss` | Deletes the embed message |
+  </Tab>
+  <Tab title="Agent inquiries">
+    Agent inquiry buttons store a prompt and route it back through the agent when clicked, opening an [interactive fork](/core-usage/forks).
+
+    The action format is `agent:<prompt>`, where `<prompt>` is the instruction the agent receives when the button is pressed.
+
+    Example: a button with action `agent:Show me more details about this task` will, when clicked, enter a fork and stream the agent's response to that prompt.
+  </Tab>
+</Tabs>
+
+All button custom IDs follow the pattern `act:<action>:<data>`, parsed by the `ActionButton` dynamic item handler in `views.py`.
+
+## Inquiry flow
+
+When the agent sends a button with an `agent:` action, the prompt is persisted to disk so it survives bot restarts. Clicking the button enters an interactive fork where the agent processes the stored prompt.
+
+<Steps>
+  <Step title="Agent sends embed with inquiry button">
+    The agent calls `discord_embed` with a button whose action starts with `agent:`. The `build_view` function extracts the prompt, registers it via `inquiries.register()`, and gets back an 8-character hex UUID. The button's custom ID becomes `act:agent:{uid}`.
+  </Step>
+  <Step title="User clicks the button">
+    Discord dispatches the interaction to `ActionButton`, which matches the `act:agent:{uid}` pattern and calls `_handle_agent_inquiry`.
+  </Step>
+  <Step title="Inquiry is popped and validated">
+    The handler calls `inquiries.pop(uid)` to retrieve and remove the stored prompt. If the inquiry has expired (older than 7 days) or was already consumed, the button responds with an expiration notice.
+  </Step>
+  <Step title="Agent processes the prompt in a fork">
+    The handler enters an interactive fork, sends a fork entry embed with buttons, and streams the agent's response to the channel. The fork follows standard [fork lifecycle](/core-usage/forks) rules including idle timeout.
+  </Step>
+</Steps>
+
+Inquiry prompts are stored in `~/.ollim-bot/inquiries.json` with a 7-day TTL. Expired entries are cleaned up on read.
+
+## Fork embeds
+
+Forks produce their own embeds at entry and exit, separate from the `discord_embed` tool.
+
+### Fork entry
+
+When a fork starts (via `/fork`, the `enter_fork` MCP tool, or an inquiry button), a purple "Forked Session" embed is sent with three buttons:
+
+| Button | Style | Action |
+|--------|-------|--------|
+| Save Context | `success` (green) | Promotes fork context to the main session |
+| Report | `primary` (blurple) | Exits the fork and sends a summary to the main session |
+| Exit Fork | `danger` (red) | Discards the fork cleanly |
+
+These buttons map to the `fork_save`, `fork_report`, and `fork_exit` handlers in `views.py`. They are equivalent to the `save_context`, `report_updates`, and `exit_fork` MCP tools.
+
+### Fork exit
+
+When a fork ends, a "Fork Ended" embed is sent with a color indicating the exit strategy:
+
+| Exit strategy | Color |
+|---------------|-------|
+| Save | Green |
+| Report | Blue |
+| Exit (discard) | Grey |
+
+## Persistence
+
+Buttons remain functional across bot restarts through two mechanisms:
+
+- **`DynamicItem[Button]`**: Discord.py reconstructs button handlers from custom IDs using a regex pattern (`act:(?P<action>[a-z_]+):(?P<data>.+)`). The `ActionButton` class matches this pattern and dispatches to the correct handler.
+- **Inquiry storage**: Agent inquiry prompts are written to `~/.ollim-bot/inquiries.json` so the prompt text is available even after a restart. Each entry includes a timestamp for TTL enforcement.
+
+<Tip>Direct action buttons (task operations, dismiss, fork controls) are fully persistent with no expiration — their data is encoded in the custom ID itself. Only agent inquiry buttons expire after 7 days.</Tip>
+
+## Background fork behavior
+
+Embeds sent from the main session or interactive forks are always delivered. In [background forks](/scheduling/background-forks), embeds are subject to additional constraints:
+
+- **Ping budget**: Each embed consumes one ping from the [refill-on-read budget](/scheduling/ping-budget). When the budget is exhausted, `discord_embed` returns an error to the agent.
+- **`critical: true`**: Bypasses the budget. Critical pings are tracked but never blocked.
+- **`allow_ping: false`**: When set in the background fork config, `discord_embed` is disabled entirely — `critical: true` does not override this.
+- **Busy state**: When the main agent is actively responding (lock held), non-critical embeds from background forks return errors. The agent should use `report_updates` instead.
+
+<Warning>Background fork embeds include a "bg" footer to distinguish them from main session messages. Interactive fork embeds show "fork".</Warning>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Forks" icon="code-branch" href="/core-usage/forks">
+    Interactive and background fork lifecycle, exit strategies, and idle timeout.
+  </Card>
+  <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
+    How the refill-on-read budget controls background fork notifications.
+  </Card>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Full reference for all MCP tools including discord_embed.
+  </Card>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    Discord slash commands for managing forks, permissions, and more.
+  </Card>
+</Columns>
