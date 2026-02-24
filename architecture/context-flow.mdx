@@ -3,4 +3,259 @@ title: "Context flow"
 description: "How context flows between main session, forks, background forks, and pending updates."
 ---
 
-Content coming soon.
+Context in ollim-bot moves through a cycle: the main session feeds into
+forks, forks produce pending updates, and pending updates flow back into
+the main session. Background forks receive additional context through a
+preamble that includes ping budgets, forward schedules, and tool
+restrictions.
+
+## Overview
+
+Every interaction starts in the main session. When a fork branches off,
+it inherits the main session's conversation history. When a background
+task fires, it receives an assembled preamble with scheduling awareness.
+When either type of fork finishes, it can feed results back to the main
+session through pending updates — short summaries that get prepended to
+the next interaction.
+
+The flow forms a loop:
+
+1. **Main session** receives user messages with any pending updates
+   prepended
+2. **Interactive forks** branch from main, peek at pending updates
+   (read-only)
+3. **Background forks** branch from main (or start fresh if isolated),
+   receive a preamble with budget and schedule context
+4. Forks write back to the main session via `report_updates`
+5. Main session pops those updates on the next interaction
+
+## Pending updates
+
+Pending updates are the primary channel for passing context from forks
+back to the main session. They are stored in
+`~/.ollim-bot/pending_updates.json` as a JSON array of timestamped
+messages.
+
+Each entry is a `PendingUpdate` with two fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | `str` | ISO 8601 timestamp in `America/Los_Angeles` |
+| `message` | `str` | Summary text written by the agent |
+
+### Write path
+
+Any fork can write a pending update by calling the `report_updates` MCP
+tool. The write is protected by an async lock for concurrent background
+fork safety — multiple forks can safely append updates without
+corruption.
+
+Whether a background fork is allowed or required to call `report_updates`
+depends on its `update_main_session` mode:
+
+| Mode | Behavior |
+|------|----------|
+| `on_ping` | Report if the agent sent a ping or embed (default)|
+| `always` | Must call `report_updates` before fork exits |
+| `freely` | Reporting is optional |
+| `blocked` | `report_updates` returns an error |
+
+A stop hook (`require_report_hook`) enforces these modes. In `always`
+mode, the hook blocks the fork from terminating if `report_updates`
+wasn't called. In `on_ping` mode, it blocks if the agent pinged but
+didn't report.
+
+### Read path
+
+The main session and forks read pending updates differently:
+
+<Tabs>
+  <Tab title="Main session">
+    The main session **pops** pending updates — reads and clears the
+    file atomically. The updates are prepended to the next message the
+    agent sees, giving it context about what happened in the background.
+
+    After the pop, the file is deleted. Each update is consumed exactly
+    once.
+  </Tab>
+  <Tab title="Interactive fork">
+    Interactive forks **peek** at pending updates — read-only, no
+    clearing. This preserves the updates for the main session to
+    consume later. The fork still sees the context, but doesn't
+    consume it.
+  </Tab>
+  <Tab title="Isolated background fork">
+    Isolated background forks (`isolated: true`) do **not** receive
+    pending updates. They start with a clean slate and only get the
+    assembled preamble.
+  </Tab>
+  <Tab title="Forked background fork">
+    Non-isolated background forks prepend pending updates to the
+    prompt, similar to the main session. This gives the background
+    task awareness of what other forks reported.
+  </Tab>
+</Tabs>
+
+## Prompt tags
+
+Every scheduled task and fork injects a tag at the start of its prompt.
+These tags tell the agent what type of session it's in and which task
+triggered it.
+
+| Tag pattern | Session type |
+|-------------|-------------|
+| `[routine:ID]` | Foreground routine (runs in main session) |
+| `[routine-bg:ID]` | Background routine (runs in a fork) |
+| `[reminder:ID]` | Foreground reminder (runs in main session) |
+| `[reminder-bg:ID]` | Background reminder (runs in a fork) |
+| `[fork-started]` | Interactive fork resumed from a bg session |
+
+The agent's system prompt documents how to interpret these tags. For
+foreground tasks, only the tag and the task's markdown body are injected.
+For background tasks, the tag is followed by the full preamble.
+
+## Background fork preamble
+
+Background forks receive an assembled preamble between the prompt tag
+and the task's markdown body. The preamble is built by
+`build_bg_preamble` in `scheduling/preamble.py` and contains several
+sections.
+
+### Preamble sections
+
+<AccordionGroup>
+  <Accordion title="Ping instructions">
+    Tells the agent whether `ping_user` and `discord_embed` are
+    available. When `allow_ping` is `false`, the agent is told these
+    tools are disabled.
+  </Accordion>
+  <Accordion title="Update instructions">
+    Based on the `update_main_session` mode, tells the agent when and
+    whether to call `report_updates`. Each mode has specific
+    instructions (must report, report if pinged, optional, or blocked).
+  </Accordion>
+  <Accordion title="Busy state">
+    If the user is mid-conversation (the agent lock is held), the
+    preamble instructs the agent to use `report_updates` instead of
+    direct pings — unless `critical=True`. This prevents interruptions
+    during active conversations.
+  </Accordion>
+  <Accordion title="Budget and schedule">
+    Included only when `allow_ping` is `true`. Contains:
+
+    - Current ping budget status (available tokens, capacity)
+    - Upcoming schedule: a list of tasks within the schedule window,
+      each with fire time, label, description, and file path
+    - Refill estimation before the last scheduled task
+    - Guidance on when to ping vs. report (the "regret test")
+    - Note about `critical=True` bypass
+  </Accordion>
+  <Accordion title="Tool restrictions">
+    Listed only when `allowed_tools` or `disallowed_tools` are
+    configured. Shows which tools are available or excluded.
+  </Accordion>
+</AccordionGroup>
+
+### Forward schedule
+
+The budget section includes a forward schedule built by
+`build_upcoming_schedule`. This gives the agent awareness of what other
+background tasks are coming, so it can make informed decisions about
+whether to spend a ping budget token now or save it.
+
+Schedule construction uses a dynamic window:
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| Grace window | 15 minutes | Includes recently-fired routines |
+| Base window | 3 hours | Initial forward-looking window |
+| Min forward count | 3 | Extends window if fewer than 3 tasks found |
+| Maximum window | 12 hours | Hard upper limit on lookahead |
+
+Each entry in the schedule includes:
+
+| Field | Description |
+|-------|-------------|
+| `fire_time` | When the task fires |
+| `label` | Display name (e.g., "Chain reminder (2/4)") |
+| `description` | From YAML or truncated message (60 char limit) |
+| `file_path` | Relative path (e.g., `routines/daily-review.md`) |
+| `silent` | Whether `allow_ping=False` for this task |
+| `tag` | `"this task"`, `"just fired"`, or `None` |
+
+## Reply-to-fork context
+
+Replying to a message sent by a background fork starts an interactive
+fork that resumes from that background fork's session. This is how
+context flows from a background task back into an interactive
+conversation.
+
+The mechanism relies on fork session tracking in `sessions.py`:
+
+1. Before a background fork runs, `start_message_collector()`
+   initializes a contextvar-scoped list
+2. When `streamer.py`, `ping_user`, or `discord_embed` sends a
+   Discord message, `track_message(message_id)` records it
+3. After the fork completes,
+   `flush_message_collector(fork_id, parent_id)` writes the mapping
+   to `~/.ollim-bot/fork_messages.json`
+4. When a user replies to one of those messages,
+   `lookup_fork_session(message_id)` returns the fork session ID
+5. The bot creates an interactive fork that resumes from that session
+
+Records in `fork_messages.json` have a 7-day TTL and are pruned on
+read.
+
+<Note>
+Replying to a non-fork message works differently — the replied-to
+message's content is quoted and prepended as context (plain text from
+`.content`, or title + description + fields from the first embed,
+truncated to 500 characters).
+</Note>
+
+## Chain reminder context
+
+Chain reminders inject additional context into their prompts. When a
+reminder has `max_chain > 0`, the preamble includes:
+
+- The current check number and total (e.g., "check 2/4")
+- Whether `follow_up_chain(minutes_from_now=N)` is available
+- On the final check: a warning that this is the last chance and no
+  follow-up can be scheduled
+
+Chain reminders inherit tool restrictions from the parent via
+`ChainContext`, so `allowed_tools` and `disallowed_tools` propagate
+through the entire chain.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card
+    title="Session management"
+    icon="database"
+    href="/architecture/session-management"
+  >
+    Session IDs, lifecycle events, and compaction.
+  </Card>
+  <Card
+    title="Background forks"
+    icon="gears"
+    href="/scheduling/background-forks"
+  >
+    Isolated mode, model overrides, and tool restrictions.
+  </Card>
+  <Card
+    title="Forks"
+    icon="code-branch"
+    href="/core-usage/forks"
+  >
+    Interactive forks, exit strategies, and idle timeout.
+  </Card>
+  <Card
+    title="Ping budget"
+    icon="coins"
+    href="/scheduling/ping-budget"
+  >
+    Refill-on-read budget for background fork pinging.
+  </Card>
+</Columns>
