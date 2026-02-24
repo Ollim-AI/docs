@@ -3,4 +3,214 @@ title: "Architecture overview"
 description: "Module map, dependency diagram, and data flow."
 ---
 
-Content coming soon.
+ollim-bot is a single-process Python application that bridges Discord with
+Claude via the Agent SDK. All modules live under `src/ollim_bot/`, with two
+sub-packages (`google/` and `scheduling/`) for domain-specific functionality.
+
+## Module map
+
+The codebase has 21 modules organized into five layers.
+
+### Core loop
+
+The main path from a Discord message to a streamed response.
+
+| Module | Role |
+|--------|------|
+| `main.py` | CLI entry point — dispatches to bot or subcommands |
+| `bot.py` | Discord interface — DMs, @mentions, slash commands, reaction acks |
+| `agent.py` | Agent SDK wrapper — sessions, MCP tools, subagents, slash routing |
+| `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
+| `prompts.py` | System prompt for the main agent and fork prompt helpers |
+| `subagent_prompts.py` | Subagent prompts (gmail-reader, history-reviewer, responsiveness-reviewer) |
+
+### Tool system
+
+MCP tools and the external trigger server the agent uses to interact with
+Discord and the outside world.
+
+| Module | Role |
+|--------|------|
+| `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
+| `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
+| `forks.py` | Fork state (bg + interactive), pending updates, `run_agent_background` |
+| `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks |
+
+### Storage and state
+
+Persistence, configuration, and cross-cutting concerns.
+
+| Module | Role |
+|--------|------|
+| `storage.py` | Shared JSONL and markdown I/O, git auto-commit for `~/.ollim-bot/` |
+| `sessions.py` | Persists Agent SDK session ID + session history JSONL log |
+| `permissions.py` | Tool approval — `canUseTool` callback, reaction-based approval |
+| `config.py` | Env vars: `OLLIM_USER_NAME`, `OLLIM_BOT_NAME` (from `.env`) |
+| `embeds.py` | Embed/button types and builders shared by `agent_tools` and `views` |
+| `inquiries.py` | Persists button inquiry prompts to disk (7-day TTL, survives restarts) |
+| `ping_budget.py` | Refill-on-read ping budget — capacity 5, refills 1 per 90 min |
+| `formatting.py` | Tool-label formatting helpers shared by agent and permissions |
+
+### Google integration (`google/`)
+
+OAuth2-based integrations with Google services.
+
+| Module | Role |
+|--------|------|
+| `auth.py` | Shared OAuth2 credentials for Tasks + Calendar + Gmail |
+| `tasks.py` | Google Tasks CLI + API helpers (`complete_task`, `delete_task`) |
+| `calendar.py` | Google Calendar CLI + API helpers (`delete_event`) |
+| `gmail.py` | Gmail CLI (`ollim-bot gmail`) — read-only access |
+
+### Scheduling (`scheduling/`)
+
+Proactive routines and reminders via APScheduler.
+
+| Module | Role |
+|--------|------|
+| `scheduler.py` | APScheduler integration — polls files every 10s, registers triggers |
+| `routines.py` | Routine dataclass and markdown I/O — recurring crons in `routines/*.md` |
+| `reminders.py` | Reminder dataclass and markdown I/O — one-shot + chainable |
+| `preamble.py` | Background preamble builder — ping budget, schedule, and config |
+| `routine_cmd.py` | CLI handler for `ollim-bot routine` (add, list, cancel) |
+| `reminder_cmd.py` | CLI handler for `ollim-bot reminder` (add, list, cancel) |
+
+## Data flow
+
+A message from Discord travels through four stages before a response appears.
+
+<Steps>
+  <Step title="Discord event">
+    `bot.py` receives a DM or @mention. It extracts text and image
+    attachments, resolves reply context (including fork session
+    resumption), and acquires the agent lock.
+  </Step>
+  <Step title="Agent processing">
+    `agent.py` injects the message into the active `ClaudeSDKClient`
+    session. Pending updates from background forks are prepended. The
+    SDK streams text deltas and tool-use events back through an
+    `AsyncGenerator`.
+  </Step>
+  <Step title="Streaming to Discord">
+    `streamer.py` consumes the generator, buffering deltas and
+    progressively editing a Discord message. When the message exceeds
+    2000 characters, it finalizes the current message and starts a
+    new one.
+  </Step>
+  <Step title="Post-stream transitions">
+    `bot.py` checks for fork transitions — if the agent called
+    `enter_fork` or `exit_fork` during the response, the bot handles
+    the state change (creating fork embeds, swapping clients, or
+    discarding the fork).
+  </Step>
+</Steps>
+
+## Background fork execution
+
+Scheduled routines, reminders, and webhooks run on disposable forked
+sessions that execute in parallel without blocking the main conversation.
+
+<Tabs>
+  <Tab title="Forked mode">
+    The default. `run_agent_background` creates a client forked from
+    the main session — the fork inherits full conversation history.
+    Output is discarded unless the agent calls `report_updates`
+    (which writes to `pending_updates.json`) or
+    `ping_user`/`discord_embed` (which message the user directly,
+    subject to [ping budget](/scheduling/ping-budget)).
+  </Tab>
+  <Tab title="Isolated mode">
+    When `isolated: true` is set in the routine or reminder YAML,
+    `create_isolated_client` creates a standalone session with no
+    conversation history. Used for tasks that don't need prior
+    context, like email triage.
+  </Tab>
+</Tabs>
+
+Background forks communicate back to the main session through
+**pending updates** — summaries written to
+`~/.ollim-bot/pending_updates.json`. The main session pops these
+updates and prepends them to the next user message. Forks peek at
+updates (read-only) to avoid consuming another fork's output.
+
+<Note>
+Background forks run without the agent lock. Channel references,
+chain context, fork state, busy state, and fork config are all scoped
+via `contextvars` so concurrent forks don't interfere with each other
+or the main session.
+</Note>
+
+## Key architectural patterns
+
+### Session persistence
+
+The bot maintains a single `ClaudeSDKClient` with a session ID
+persisted to `~/.ollim-bot/sessions.json`. On restart, it resumes the
+existing session. All session lifecycle events (created, compacted,
+swapped, cleared, forked) are logged to `session_history.jsonl`.
+
+### Contextvar isolation
+
+Background forks use `ContextVar` instances to scope mutable state:
+`_in_fork_var`, `_busy_var`, `_channel_var`, `_chain_context_var`,
+and `_bg_fork_config_var`. This lets multiple forks run concurrently
+while the main session uses module-level globals for the same values.
+
+### File-based storage
+
+All persistent data lives in `~/.ollim-bot/` as files:
+
+- **Markdown with YAML frontmatter** for human-editable data
+  (routines, reminders, webhooks) — the agent reads and writes these
+- **JSONL** for append-only logs (session history, pending updates)
+- **JSON** for small state files (session ID, ping budget, inquiries)
+
+`storage.py` provides generic I/O with atomic writes (temp file +
+rename) and optional git auto-commit.
+
+### Dual state for tools
+
+MCP tools in `agent_tools.py` maintain two parallel references — a
+module-level global for the main session and a `ContextVar` for
+background forks. Functions like `set_channel` / `set_fork_channel`
+set the appropriate reference based on execution context.
+
+### Persistent buttons
+
+Discord buttons survive bot restarts through two mechanisms:
+`DynamicItem[Button]` in `views.py` reconstructs button handlers from
+`custom_id` patterns on startup, and `inquiries.py` persists
+agent-generated button prompts to disk with a 7-day TTL.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card
+    title="Session management"
+    icon="database"
+    href="/architecture/session-management"
+  >
+    How sessions persist, compact, and recover across restarts.
+  </Card>
+  <Card
+    title="Context flow"
+    icon="arrows-spin"
+    href="/architecture/context-flow"
+  >
+    How context flows between main sessions, forks, and pending updates.
+  </Card>
+  <Card
+    title="Streaming"
+    icon="wave-pulse"
+    href="/architecture/streaming"
+  >
+    How agent responses stream to Discord with throttled edits.
+  </Card>
+  <Card
+    title="Configuration reference"
+    icon="gear"
+    href="/configuration/reference"
+  >
+    All environment variables and data directory structure.
+  </Card>
+</Columns>
