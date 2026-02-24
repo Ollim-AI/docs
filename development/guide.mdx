@@ -3,4 +3,188 @@ title: "Development guide"
 description: "Dev setup, running locally, project structure, and code conventions."
 ---
 
-Content coming soon.
+ollim-bot is a standard Python project managed with
+[uv](https://docs.astral.sh/uv/). This guide covers setting up a development
+environment, running the bot locally, and understanding the project structure
+and conventions.
+
+## Prerequisites
+
+- Python 3.11 or later
+- [uv](https://docs.astral.sh/uv/) package manager
+- A Discord bot token (see [Discord bot setup](/self-hosting/discord-bot-setup))
+- Google OAuth credentials (see [Google OAuth setup](/self-hosting/google-oauth-setup)) if using Google integrations
+
+## Setup
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/your-fork/ollim-bot.git
+    cd ollim-bot
+    ```
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    uv sync
+    ```
+
+    This installs all runtime and dev dependencies defined in `pyproject.toml`.
+  </Step>
+  <Step title="Configure environment variables">
+    Create a `.env` file in the project root:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=your-discord-bot-token
+    OLLIM_USER_NAME=literal:YourName
+    OLLIM_BOT_NAME=Ollim
+    ```
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `DISCORD_TOKEN` | Yes | Discord bot token |
+    | `OLLIM_USER_NAME` | Yes | Your display name (used in the system prompt) |
+    | `OLLIM_BOT_NAME` | Yes | The bot's display name |
+    | `WEBHOOK_PORT` | No | Port for the webhook HTTP server (e.g. `8420`) |
+    | `WEBHOOK_SECRET` | No | Bearer token for webhook auth (required if `WEBHOOK_PORT` is set) |
+  </Step>
+  <Step title="Run the bot">
+    ```bash
+    uv run ollim-bot
+    ```
+
+    The bot checks for an existing instance via a PID file at
+    `~/.ollim-bot/bot.pid` and exits if one is already running.
+  </Step>
+</Steps>
+
+## Running tests
+
+```bash
+uv run pytest
+```
+
+Dev dependencies include `pytest`, `pytest-asyncio`, and `pytest-cov`.
+See [Testing](/development/testing) for the test philosophy and conventions.
+
+## Project structure
+
+The source lives under `src/ollim_bot/`. Each file owns a single domain —
+there are no `utils`, `helpers`, or `common` modules.
+
+```
+src/ollim_bot/
+├── main.py              # CLI entry point and command router
+├── bot.py               # Discord interface (DMs, @mentions, slash commands)
+├── agent.py             # Claude Agent SDK brain (sessions, MCP tools, subagents)
+├── prompts.py           # System prompt for main agent and fork prompt helpers
+├── subagent_prompts.py  # System prompts for subagents
+├── agent_tools.py       # MCP tools (discord_embed, ping_user, enter_fork, etc.)
+├── config.py            # Env vars loaded from .env via dotenv
+├── forks.py             # Fork state (bg + interactive), pending updates I/O
+├── sessions.py          # Session ID persistence and session history JSONL log
+├── permissions.py       # Discord-based tool approval (canUseTool callback)
+├── streamer.py          # Streams agent responses to Discord (throttled edits)
+├── storage.py           # JSONL/markdown I/O and git auto-commit
+├── embeds.py            # Embed/button types, builders, and build_embed/build_view
+├── views.py             # Persistent button handlers via DynamicItem
+├── inquiries.py         # Button inquiry prompt persistence (7-day TTL)
+├── ping_budget.py       # Refill-on-read ping budget for bg fork notifications
+├── formatting.py        # Tool-label formatting helpers
+├── webhook.py           # Webhook HTTP server for external triggers
+├── google/
+│   ├── auth.py          # Shared Google OAuth2 (Tasks + Calendar + Gmail)
+│   ├── tasks.py         # Google Tasks CLI + API helpers
+│   ├── calendar.py      # Google Calendar CLI + API helpers
+│   └── gmail.py         # Gmail CLI (read-only)
+└── scheduling/
+    ├── scheduler.py     # APScheduler-based proactive scheduling
+    ├── routines.py      # Routine dataclass and markdown I/O
+    ├── reminders.py     # Reminder dataclass and markdown I/O
+    ├── preamble.py      # Bg preamble and forward schedule builder
+    ├── routine_cmd.py   # Routines CLI (ollim-bot routine)
+    └── reminder_cmd.py  # Reminders CLI (ollim-bot reminder)
+```
+
+## CLI subcommands
+
+The `ollim-bot` command doubles as both the bot runner and a CLI for managing
+routines, reminders, and Google integrations. Running `ollim-bot` with no
+arguments starts the Discord bot. Subcommands route to their respective modules:
+
+| Command | Description |
+|---------|-------------|
+| `ollim-bot` | Start the Discord bot |
+| `ollim-bot routine add\|list\|cancel` | Manage recurring routines |
+| `ollim-bot reminder add\|list\|cancel` | Manage one-shot reminders |
+| `ollim-bot tasks list\|add\|done\|update\|delete` | Google Tasks operations |
+| `ollim-bot cal today\|upcoming\|show\|add\|update\|delete` | Google Calendar operations |
+| `ollim-bot gmail unread\|read\|search` | Gmail (read-only) |
+| `ollim-bot help` | Show help text |
+
+See the [CLI reference](/development/cli-reference) for full flag documentation.
+
+## Code conventions
+
+These rules come from the project's `CLAUDE.md` and apply to all contributions.
+
+### Hard invariants
+
+<Warning>
+Violating these causes runtime bugs.
+</Warning>
+
+**Channel-sync invariant** — every path into `stream_chat` must call both
+`agent_tools.set_channel` and `permissions.set_channel`. This applies to
+`_dispatch`, `_check_fork_transitions`, `slash_fork`, `send_agent_dm`,
+button handlers in `views.py`, and `check_fork_timeout` in `scheduler.py`.
+
+### Design rules
+
+| Rule | Rationale |
+|------|-----------|
+| No `utils`/`helpers`/`common` files | Every function belongs in a domain module |
+| No catch-all directories | Name for what it does (`google/`, `scheduling/`), not what it is |
+| Max ~400 lines per file | Split by responsibility when approaching the limit |
+| No duplicate logic across modules | If 3 modules share a pattern, extract it |
+| One logging system | `logging.getLogger(__name__)` for library code, `print()` only in CLI commands |
+
+### Dependencies
+
+Key runtime dependencies (from `pyproject.toml`):
+
+| Package | Purpose |
+|---------|---------|
+| `discord.py` | Discord bot framework |
+| `claude-agent-sdk` | Claude Agent SDK for persistent AI sessions |
+| `google-api-python-client` | Google API access (Tasks, Calendar, Gmail) |
+| `google-auth-oauthlib` | Google OAuth2 flow |
+| `apscheduler` | Cron-based scheduling for routines and reminders |
+| `python-dotenv` | `.env` file loading |
+| `pyyaml` | YAML frontmatter parsing |
+| `aiohttp` | Webhook HTTP server |
+| `jsonschema` | Webhook payload validation |
+
+## Data directory
+
+All persistent state lives in `~/.ollim-bot/`, which is automatically
+initialized as a git repository. `storage.py` auto-commits on writes to
+routines, reminders, and other managed files. See
+[Data directory](/configuration/data-directory) for the full layout.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Testing" icon="vial" href="/development/testing">
+    Test philosophy, running tests, and the no-mocks policy.
+  </Card>
+  <Card title="CLI reference" icon="terminal" href="/development/cli-reference">
+    Full documentation of all CLI subcommands and flags.
+  </Card>
+  <Card title="Architecture overview" icon="sitemap" href="/architecture/overview">
+    Module map, dependency diagram, and data flow.
+  </Card>
+  <Card title="Adding integrations" icon="puzzle-piece" href="/extending/adding-integrations">
+    How to add new Google services, MCP tools, and webhook specs.
+  </Card>
+</Columns>
