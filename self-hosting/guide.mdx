@@ -3,4 +3,234 @@ title: "Self-hosting guide"
 description: "Running your own instance: fork, configure, deploy."
 ---
 
-Content coming soon.
+ollim-bot is single-user by design. There is no multi-tenancy, no shared hosting, no
+user accounts. If you want your own instance, you fork the repo, configure it for
+yourself, and run it. This guide covers the full process.
+
+## Prerequisites
+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) package manager
+- [Claude Code](https://claude.ai/code) installed and authenticated
+  (ollim-bot uses Claude Code OAuth — no API key needed)
+- A Discord account with a server where you can add bots
+- Git installed (the data directory is a git repo)
+
+## Installation
+
+<Steps>
+  <Step title="Fork and clone the repository">
+    Fork the repo on GitHub, then clone your fork:
+
+    ```bash
+    git clone https://github.com/your-username/ollim-bot.git
+    cd ollim-bot
+    ```
+
+    Working from a fork lets you customize the system prompt, subagent prompts,
+    and integrations while still pulling upstream changes.
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv sync
+    ```
+
+    This installs all runtime and development dependencies defined in `pyproject.toml`.
+  </Step>
+
+  <Step title="Configure environment variables">
+    Create a `.env` file in the project root with the three required variables:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=literal:your-discord-bot-token
+    OLLIM_USER_NAME=YourName
+    OLLIM_BOT_NAME=YourBot
+    ```
+
+    | Variable | Required | Default | Description |
+    |----------|----------|---------|-------------|
+    | `DISCORD_TOKEN` | Yes | — | Discord bot token |
+    | `OLLIM_USER_NAME` | Yes | — | Your display name (how the bot addresses you) |
+    | `OLLIM_BOT_NAME` | Yes | — | The bot's name (used in its system prompt and startup message) |
+    | `WEBHOOK_PORT` | No | — | Port for the webhook HTTP server (e.g., `8420`). Enables webhooks when set. |
+    | `WEBHOOK_SECRET` | No | — | Bearer token for webhook authentication. Required if `WEBHOOK_PORT` is set. |
+
+    If either `OLLIM_USER_NAME` or `OLLIM_BOT_NAME` is missing, the bot exits immediately.
+  </Step>
+
+  <Step title="Create a Discord bot">
+    Create a Discord application at the [Discord Developer Portal](https://discord.com/developers/applications).
+    You need the bot token, the Message Content privileged intent, and an invite link
+    with `bot` + `applications.commands` scopes.
+
+    See [Discord bot setup](/self-hosting/discord-bot-setup) for the full walkthrough.
+  </Step>
+
+  <Step title="Set up Google OAuth (optional)">
+    Google Tasks, Calendar, and Gmail integration requires OAuth credentials
+    from Google Cloud Console. Download the credentials JSON and save it to
+    `~/.ollim-bot/credentials.json`.
+
+    On first use of any Google service, a browser window opens for consent. The
+    authorized token is saved to `~/.ollim-bot/token.json` and reused automatically.
+
+    See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full walkthrough.
+  </Step>
+
+  <Step title="Run the bot">
+    ```bash
+    uv run ollim-bot
+    ```
+
+    On startup, ollim-bot:
+    1. Validates required environment variables
+    2. Checks that no other instance is running (PID file at `~/.ollim-bot/bot.pid`)
+    3. Connects to Discord and syncs slash commands
+    4. Resolves the bot owner from the Discord application info
+    5. Starts the scheduler (polls routines and reminders every 10 seconds)
+    6. Starts the webhook server if `WEBHOOK_PORT` is set
+    7. Sends you a DM
+
+    <Note>
+      ollim-bot enforces single-instance via a PID file. If the bot crashes without
+      cleaning up `~/.ollim-bot/bot.pid`, delete the file manually before restarting.
+    </Note>
+  </Step>
+</Steps>
+
+## What to customize
+
+ollim-bot is designed to be personalized. The main customization points:
+
+### Names and identity
+
+Set `OLLIM_USER_NAME` and `OLLIM_BOT_NAME` in `.env`. These are woven into the
+system prompt and all bot messages. The bot addresses you by `OLLIM_USER_NAME`
+and refers to itself by `OLLIM_BOT_NAME`.
+
+### System prompt
+
+The system prompt is built in `src/ollim_bot/prompts.py`. It includes tool
+instructions, scheduling context, and behavioral guidelines. Edit this file
+to change the bot's personality, communication style, or default behaviors.
+
+### Subagent prompts
+
+Subagent prompts live in `src/ollim_bot/subagent_prompts.py`. ollim-bot ships
+with three subagents:
+
+| Subagent | Purpose |
+|----------|---------|
+| `gmail-reader` | Read-only email triage |
+| `history-reviewer` | Reviews session history for context |
+| `responsiveness-reviewer` | Evaluates the bot's own proactive behavior |
+
+You can modify these prompts or add new subagents by defining additional
+`AgentDefinition` entries in `agent.py`.
+
+### Integrations
+
+To add a new Google service: add the OAuth scope to `google/auth.py`, create a
+new module in `google/`, and add tool instructions to the system prompt. See
+[Adding integrations](/extending/adding-integrations) for the full pattern.
+
+### Routines and reminders
+
+Routines and reminders are markdown files in `~/.ollim-bot/routines/` and
+`~/.ollim-bot/reminders/`. The agent creates and manages these files directly,
+but you can also create them manually or via the CLI:
+
+```bash
+uv run ollim-bot routine add --cron "0 9 * * 1-5" -m "Morning briefing"
+uv run ollim-bot reminder add --delay 30 -m "Take a break"
+```
+
+## Data directory
+
+All persistent data lives in `~/.ollim-bot/`. This directory is automatically
+initialized as a git repository — `storage.py` auto-commits on every write
+and delete operation.
+
+```
+~/.ollim-bot/
+├── bot.pid                  # PID lock file
+├── credentials.json         # Google OAuth credentials (manual)
+├── token.json               # Google OAuth token (auto-generated)
+├── sessions.json            # Current session ID
+├── session_history.jsonl    # Session lifecycle log
+├── fork_messages.json       # Message → fork session map (7-day TTL)
+├── inquiries.json           # Button inquiry prompts (7-day TTL)
+├── pending_updates.json     # Background fork summaries
+├── ping_budget.json         # Ping budget state (not git-committed)
+├── routines/                # Recurring cron files
+├── reminders/               # One-shot reminder files
+└── webhooks/                # Webhook spec files
+```
+
+<Tip>
+  Back up `~/.ollim-bot/` to preserve your routines, reminders, session history,
+  and Google credentials. Since it is a git repo, you can push it to a private
+  remote for backup.
+</Tip>
+
+See [Data directory](/configuration/data-directory) for details on each file.
+
+## Running as a service
+
+For persistent operation, run ollim-bot as a systemd user service:
+
+```bash title="~/.config/systemd/user/ollim-bot.service"
+[Unit]
+Description=ollim-bot Discord assistant
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/ollim-bot
+ExecStart=/path/to/.local/bin/uv run ollim-bot
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+```
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now ollim-bot
+```
+
+<Warning>
+  Claude Code must be authenticated before starting the service. Run
+  `uv run ollim-bot` interactively first to complete any auth flows, then
+  enable the systemd service.
+</Warning>
+
+## Session persistence
+
+ollim-bot persists its Claude session ID to `~/.ollim-bot/sessions.json`.
+On restart, it resumes the existing conversation — no context is lost. If you
+want a fresh start, use `/clear` in Discord or delete `sessions.json`.
+
+Session history (compactions, forks, clears) is logged to
+`~/.ollim-bot/session_history.jsonl` for debugging. See
+[Session management](/architecture/session-management) for details.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Discord bot setup" icon="discord" href="/self-hosting/discord-bot-setup">
+    Create a Discord application, bot token, and invite link.
+  </Card>
+  <Card title="Google OAuth setup" icon="key" href="/self-hosting/google-oauth-setup">
+    Set up Google Tasks, Calendar, and Gmail integration.
+  </Card>
+  <Card title="Configuration reference" icon="sliders" href="/configuration/reference">
+    All environment variables and configuration options.
+  </Card>
+  <Card title="System prompt" icon="code" href="/extending/system-prompt">
+    How the system prompt is structured and how to customize it.
+  </Card>
+</Columns>
