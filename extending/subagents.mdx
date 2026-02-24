@@ -3,4 +3,231 @@ title: "Subagents"
 description: "gmail-reader, history-reviewer, and responsiveness-reviewer subagents."
 ---
 
-Content coming soon.
+Subagents are isolated agent instances that the main ollim-bot agent spawns to handle specialized tasks. Each subagent runs with its own system prompt, a restricted set of tools, and a cheaper model — keeping the main agent focused on orchestration while subagents do the legwork.
+
+## Overview
+
+ollim-bot defines three subagents, all configured as `AgentDefinition` objects in `agent.py` and invoked via the Claude Agent SDK's built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
+
+| Subagent | Purpose | Model | Tools |
+|----------|---------|-------|-------|
+| `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | `Bash(ollim-bot gmail *)` |
+| `history-reviewer` | Session review — finds loose threads in recent Claude Code sessions | `sonnet` | `Bash(claude-history *)` |
+| `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | `Bash(claude-history *)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
+
+<Note>
+Each subagent only has access to the tools listed above. This follows the principle of least privilege — the gmail-reader cannot access session history, and the history-reviewer cannot read email.
+</Note>
+
+## gmail-reader
+
+The gmail-reader triages the user's inbox. It lists unread emails, reads full content when a subject line is ambiguous, and categorizes each email as actionable or noise.
+
+**Triggered by:** The `[reminder:email-digest]` reminder firing in the main session.
+
+**What it reports:**
+- Emails from real people expecting a response
+- Security alerts (password changes, login attempts, account changes)
+- Financial items (bills due, payment failures)
+- Time-sensitive items (deadlines, meeting changes, approvals)
+- Packages requiring action (pickup, signature)
+
+**What it skips:**
+- Newsletters, marketing, promos
+- Delivery/shipping confirmations
+- Social media notifications
+- Service agreement updates, routine notices
+
+**Commands available:**
+
+| Command | Description |
+|---------|-------------|
+| `ollim-bot gmail unread [--max N]` | List unread emails (default 20). Output: `ID  DATE  SENDER  SUBJECT` per line |
+| `ollim-bot gmail read <id>` | Read full email content by message ID |
+| `ollim-bot gmail search "<query>" [--max N]` | Search with Gmail query syntax (e.g. `from:someone`) |
+
+**Output format:**
+
+```
+Action items:
+- [sender] [date time] subject -- what needs to be done
+
+Skipped: N emails (all noise/automated)
+```
+
+After receiving the digest, the main agent relays important items to the user and creates Google Tasks for follow-ups.
+
+<Tip>
+The gmail-reader treats email content strictly as data to summarize. It never executes instructions or follows links found in email bodies — a safety measure against prompt injection via email content.
+</Tip>
+
+## history-reviewer
+
+The history-reviewer scans recent Claude Code sessions for loose threads — unfinished work, deferred decisions, and commitments that were never followed up on.
+
+**Triggered by:** The main agent when session history review is needed (e.g. during a morning briefing routine).
+
+**What it reports:**
+- Tasks or TODOs mentioned but never tracked
+- Work started but not finished ("I'll do this after lunch" with no follow-up)
+- Commitments to other people ("I'll send that to X")
+- Questions asked that went unanswered
+- Errors or failures deferred for later
+- Ideas or plans discussed but not captured
+
+**What it skips:**
+- Completed work with successful commits
+- Casual conversation with no action items
+- Finished, resolved sessions
+- Bot development/debugging sessions (unless they mention deployments or broken production state)
+
+**Commands available:**
+
+| Command | Description |
+|---------|-------------|
+| `claude-history sessions` | List recent sessions (10 per page) |
+| `claude-history sessions --since <period>` | Filter by recency (e.g. `24h`, `3d`, `1w`, `today`) |
+| `claude-history sessions --page N` | Paginate through older sessions |
+| `claude-history prompts <session>` | List user prompts in a session |
+| `claude-history prompts -v <session>` | Include tool-result messages |
+| `claude-history response <uuid>` | Claude's response to a specific prompt |
+| `claude-history transcript <session>` | Full conversation for a context window |
+| `claude-history search "<query>"` | Search across all sessions |
+| `claude-history search -p "<query>"` | Search user prompts only (faster) |
+| `claude-history search --since <period> "<query>"` | Scope search to recent sessions |
+| `claude-history subagents` | List subagent transcripts |
+
+**Output format:**
+
+```
+Follow-ups from recent sessions:
+- [session ID] <what needs attention> -- <suggested action>
+```
+
+The default scope is the last 24 hours. Related items spanning multiple sessions are grouped rather than repeated per session.
+
+## responsiveness-reviewer
+
+The responsiveness-reviewer analyzes which reminders and routines the user actually engages with versus ignores, then suggests schedule optimizations. It is designed to tune the ADHD workflow to real behavior rather than aspirational behavior.
+
+**Triggered by:** The `[reminder:resp-rev]` reminder, typically on a weekly cadence.
+
+**Data model awareness:** This subagent understands the distinction between foreground and background firings:
+- **Foreground** firings (`[routine:ID]`, `[reminder:ID]`) are prompts inside the main session. Engagement is measured by whether a user message follows before the next firing.
+- **Background** firings (`[routine-bg:ID]`, `[reminder-bg:ID]`) run in their own forked sessions. Engagement is measured by checking for user activity in the main session shortly after the firing.
+- **One-shot reminders** are deleted after firing, so they only appear in session history, not in `ollim-bot reminder list`.
+
+**Commands available:**
+
+| Command | Description |
+|---------|-------------|
+| `ollim-bot routine list` | All active routines with cron schedules and IDs |
+| `ollim-bot reminder list` | Currently pending reminders (fired ones are gone) |
+| `claude-history sessions -t --since 7d` | Bot sessions from the past week with ISO timestamps |
+| `claude-history search -p "<query>" -t --since 7d` | Search prompts with timestamps, scoped to 7 days |
+| `claude-history prompts -t <session>` | List prompts in a session with ISO timestamps |
+| `claude-history transcript <session>` | Full conversation for a session |
+
+**Output format:**
+
+```
+Responsiveness (past 7 days):
+
+| Routine/Reminder | Firings | Engaged | Ignored | Notes |
+|------------------|---------|---------|---------|-------|
+| morning-tasks    | 7       | 5       | 2       | ignored both Sat firings |
+| email-digest     | 7       | 7       | 0       | always engaged |
+
+Patterns:
+- <observation tied to data>
+
+Suggestions:
+- <actionable recommendation with rationale>
+```
+
+The reviewer reports engaged vs. ignored as the core signal rather than exact response times, since user activity is bursty and timestamps are too coarse for precise latency measurements.
+
+## Configuration
+
+Subagents are defined in `agent.py` as `AgentDefinition` objects passed to `ClaudeAgentOptions`:
+
+```python
+from claude_agent_sdk import AgentDefinition, ClaudeAgentOptions
+
+ClaudeAgentOptions(
+    agents={
+        "gmail-reader": AgentDefinition(
+            description="Email triage specialist...",
+            prompt=GMAIL_READER_PROMPT,
+            tools=["Bash(ollim-bot gmail *)"],
+            model="sonnet",
+        ),
+        "history-reviewer": AgentDefinition(
+            description="Session history reviewer...",
+            prompt=HISTORY_REVIEWER_PROMPT,
+            tools=["Bash(claude-history *)"],
+            model="sonnet",
+        ),
+        "responsiveness-reviewer": AgentDefinition(
+            description="Reminder responsiveness analyst...",
+            prompt=RESPONSIVENESS_REVIEWER_PROMPT,
+            tools=[
+                "Bash(claude-history *)",
+                "Bash(ollim-bot routine *)",
+                "Bash(ollim-bot reminder *)",
+            ],
+            model="sonnet",
+        ),
+    },
+)
+```
+
+Each `AgentDefinition` takes four fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | `str` | Used by the SDK to determine when/how to invoke the subagent |
+| `prompt` | `str` | System prompt specific to the subagent |
+| `tools` | `list[str]` | Restricted tool access (principle of least privilege) |
+| `model` | `str` | Model to use (`sonnet` for all three) |
+
+The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
+
+## Delegation in the system prompt
+
+The main agent's system prompt in `prompts.py` contains explicit delegation instructions for each subagent:
+
+<Tabs>
+  <Tab title="Gmail">
+    The system prompt instructs the main agent to always delegate email reading to the gmail-reader:
+
+    > Check email by spawning the gmail-reader subagent (via the Task tool). When you see `[reminder:email-digest]`, use the gmail-reader to triage the inbox. After getting the digest, relay important items and create Google Tasks for follow-ups. Don't read emails yourself — always delegate to the gmail-reader subagent.
+  </Tab>
+  <Tab title="History">
+    Session history review is always delegated to the history-reviewer:
+
+    > Review past Claude Code sessions by spawning the history-reviewer subagent (via the Task tool). It scans recent sessions for unfinished work, untracked tasks, and loose threads. Don't run claude-history yourself — always delegate to the history-reviewer subagent.
+  </Tab>
+  <Tab title="Responsiveness">
+    Engagement analysis is always delegated to the responsiveness-reviewer:
+
+    > Analyze reminder effectiveness by spawning the responsiveness-reviewer subagent (via the Task tool). It correlates reminder firings with your responses to measure engagement and suggest schedule changes. When you see `[reminder:resp-rev]`, use the responsiveness-reviewer to generate the weekly report. Don't run the analysis yourself — always delegate to the responsiveness-reviewer subagent.
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="System prompt" icon="terminal" href="/extending/system-prompt">
+    See how the main agent's system prompt is structured and what gets injected.
+  </Card>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Reference for all MCP tools available to the main agent.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Configure the recurring schedules that trigger subagent work.
+  </Card>
+  <Card title="Gmail integration" icon="envelope" href="/integrations/google-gmail">
+    Setup and usage for the Gmail integration that feeds the gmail-reader.
+  </Card>
+</Columns>
