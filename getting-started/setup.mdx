@@ -14,7 +14,7 @@ required. For a minimal quickstart, see the [quickstart guide](/getting-started/
 | Python 3.11+ | Check with `python3 --version` |
 | [uv](https://docs.astral.sh/uv/) | Install: `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | [Claude Code](https://claude.ai/code) | Install and authenticate — ollim-bot uses Claude Code OAuth, no API key needed |
-| A Discord account | You need a server where you have **Manage Server** permission |
+| A Discord account | The bot runs entirely in DMs — no server required |
 | Git | For cloning the repo and data directory version control |
 
 ## Installation
@@ -33,9 +33,6 @@ required. For a minimal quickstart, see the [quickstart guide](/getting-started/
     2. Click **New Application** and give it a name (e.g. `ollim-bot`)
     3. Go to **Bot** in the sidebar and click **Reset Token** — copy the token
     4. Enable **Message Content Intent** under Privileged Gateway Intents
-    5. Go to **OAuth2 → URL Generator**, select scopes `bot` + `applications.commands`
-    6. Select permissions: **Send Messages**, **Read Message History**, **Add Reactions**, **Embed Links**
-    7. Open the generated URL to invite the bot to your server
 
     See [Discord bot setup](/self-hosting/discord-bot-setup) for a detailed walkthrough.
   </Step>

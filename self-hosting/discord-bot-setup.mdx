@@ -1,16 +1,15 @@
 ---
 title: "Discord bot setup"
-description: "Create a Discord application, bot token, intents, and invite link."
+description: "Create a Discord application, bot token, and enable required intents."
 ---
 
 This tutorial walks through creating a Discord application,
-generating a bot token, enabling the required privileged intent,
-and inviting the bot to your server.
+generating a bot token, and enabling the required privileged intent.
+ollim-bot runs entirely in DMs — no server invite is needed.
 
 ## Prerequisites
 
 - A [Discord account](https://discord.com)
-- A Discord server where you have the **Manage Server** permission
 
 <Steps>
   <Step title="Create a Discord application">
@@ -18,7 +17,7 @@ and inviting the bot to your server.
     and click **New Application**. Give it a name (e.g. `ollim-bot`)
     and click **Create**.
 
-    Note the **Application ID** on the General Information page — you will need it for the invite link.
+    Note the **Application ID** on the General Information page.
   </Step>
 
   <Step title="Create a bot and copy the token">
@@ -55,21 +54,6 @@ and inviting the bot to your server.
     On startup, the bot calls `bot.application_info()` and sends
     a DM to the owner. If no owner is found, the scheduler, webhook server,
     and DM functionality are disabled.
-  </Step>
-
-  <Step title="Generate an invite link">
-    Go to **OAuth2** in the left sidebar. Under **OAuth2 URL Generator**:
-
-    1. Select scopes: **`bot`** and **`applications.commands`**
-    2. Select bot permissions: **Send Messages**, **Read Message History**, **Add Reactions**, **Embed Links**
-
-    Copy the generated URL and open it in your browser to invite the bot to your server.
-
-    <Note>
-      The `applications.commands` scope is required for slash
-      commands (`/clear`, `/fork`, `/model`, etc.) to appear
-      in your server.
-    </Note>
   </Step>
 
   <Step title="Configure remaining environment variables">
@@ -111,7 +95,7 @@ and inviting the bot to your server.
   </Step>
 </Steps>
 
-<Tip>Send a DM to your bot or @mention it in your server to verify it responds.</Tip>
+<Tip>Send a DM to your bot to verify it responds.</Tip>
 
 ## Slash commands
 
