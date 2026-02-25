@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 10 / 40
+Pages audited: 11 / 40
 
 ## Getting Started
 
@@ -21,7 +21,7 @@ Pages audited: 10 / 40
 
 ## Scheduling
 
-- [ ] `scheduling/overview.mdx` — Sources: `scheduling/scheduler.py`, `scheduling/preamble.py`
+- [x] `scheduling/overview.mdx` — Sources: `scheduling/scheduler.py`, `scheduling/preamble.py`
 - [ ] `scheduling/routines.mdx` — Sources: `scheduling/routines.py`, `scheduling/routine_cmd.py`
 - [ ] `scheduling/reminders.mdx` — Sources: `scheduling/reminders.py`, `scheduling/reminder_cmd.py`
 - [ ] `scheduling/background-forks.mdx` — Sources: `forks.py`, `agent_tools.py`
