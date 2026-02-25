@@ -34,7 +34,7 @@ Discord and the outside world.
 | `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
 | `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
 | `forks.py` | Fork state (bg + interactive), pending updates, `run_agent_background` |
-| `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks |
+| `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks, and streamer |
 
 ### Storage and state
 
@@ -147,7 +147,7 @@ or the main session.
 The bot maintains a single `ClaudeSDKClient` with a session ID
 persisted to `~/.ollim-bot/state/sessions.json`. On restart, it resumes the
 existing session. All session lifecycle events (created, compacted,
-swapped, cleared, forked) are logged to `session_history.jsonl`.
+swapped, cleared, interactive_fork, bg_fork, isolated_bg) are logged to `session_history.jsonl`.
 
 ### Contextvar isolation
 
