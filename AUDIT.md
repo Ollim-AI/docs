@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 35 / 40
+Pages audited: 36 / 40
 
 ## Getting Started
 
@@ -61,7 +61,7 @@ Pages audited: 35 / 40
 - [x] `development/guide.mdx` — Sources: `CLAUDE.md`, `pyproject.toml`
 - [x] `development/testing.mdx` — Sources: `tests/` directory
 - [x] `development/cli-reference.mdx` — Sources: `main.py`, `scheduling/routine_cmd.py`, `scheduling/reminder_cmd.py`
-- [ ] `development/troubleshooting.mdx` — Sources: `sessions.py`, `config.py`, `storage.py`
+- [x] `development/troubleshooting.mdx` — Sources: `sessions.py`, `config.py`, `storage.py`
 
 ## Self-Hosting
 
