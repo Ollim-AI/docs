@@ -70,14 +70,23 @@ Every test that touches the filesystem uses the `data_dir` fixture from
 @pytest.fixture()
 def data_dir(tmp_path, monkeypatch):
     """Redirect all data file paths to a temp directory."""
-    import ollim_bot.storage as storage_mod
+    import ollim_bot.forks as forks_mod
+    import ollim_bot.inquiries as inquiries_mod
+    import ollim_bot.ping_budget as ping_budget_mod
+    import ollim_bot.scheduling.reminders as reminders_mod
     import ollim_bot.scheduling.routines as routines_mod
-    # ... other module imports
+    import ollim_bot.sessions as sessions_mod
+    import ollim_bot.storage as storage_mod
+    import ollim_bot.webhook as webhook_mod
 
     monkeypatch.setattr(storage_mod, "DATA_DIR", tmp_path)
     monkeypatch.setattr(routines_mod, "ROUTINES_DIR", tmp_path / "routines")
     monkeypatch.setattr(reminders_mod, "REMINDERS_DIR", tmp_path / "reminders")
-    # ... other path redirects
+    monkeypatch.setattr(inquiries_mod, "INQUIRIES_FILE", tmp_path / "inquiries.json")
+    monkeypatch.setattr(ping_budget_mod, "BUDGET_FILE", tmp_path / "ping_budget.json")
+    monkeypatch.setattr(sessions_mod, "SESSIONS_FILE", tmp_path / "sessions.json")
+    monkeypatch.setattr(forks_mod, "_UPDATES_FILE", tmp_path / "pending_updates.json")
+    monkeypatch.setattr(webhook_mod, "WEBHOOKS_DIR", tmp_path / "webhooks")
     return tmp_path
 ```
 
@@ -88,24 +97,24 @@ directory that is cleaned up automatically.
 
 All tests live in `tests/` as module-level functions — no test classes. Each file maps to a source module:
 
-| Test file | Source module | Tests |
-|-----------|-------------|-------|
-| `test_agent_tools.py` | `agent_tools.py` | 52 |
-| `test_cli.py` | `main.py`, `routine_cmd.py`, `reminder_cmd.py` | 10 |
-| `test_config.py` | `config.py` | 3 |
-| `test_embeds.py` | `embeds.py`, `views.py` | 7 |
-| `test_forks.py` | `forks.py` | 67 |
-| `test_formatting.py` | `agent_tools.py` | 7 |
-| `test_inquiries.py` | `inquiries.py` | 7 |
-| `test_permissions.py` | `permissions.py` | 21 |
-| `test_ping_budget.py` | `ping_budget.py` | 27 |
-| `test_reminders.py` | `scheduling/reminders.py` | 24 |
-| `test_routines.py` | `scheduling/routines.py` | 21 |
-| `test_scheduler_prompts.py` | `scheduling/preamble.py`, `prompts.py` | 43 |
-| `test_sessions.py` | `sessions.py` | 16 |
-| `test_storage.py` | `storage.py` | 32 |
-| `test_tool_restrictions.py` | `agent_tools.py` | 7 |
-| `test_webhook.py` | `webhook.py` | 35 |
+| Test file | Source module |
+|-----------|-------------|
+| `test_agent_tools.py` | `agent_tools.py` |
+| `test_cli.py` | `main.py`, `routine_cmd.py`, `reminder_cmd.py` |
+| `test_config.py` | `config.py` |
+| `test_embeds.py` | `embeds.py`, `views.py` |
+| `test_forks.py` | `forks.py` |
+| `test_formatting.py` | `agent_tools.py` |
+| `test_inquiries.py` | `inquiries.py` |
+| `test_permissions.py` | `permissions.py` |
+| `test_ping_budget.py` | `ping_budget.py` |
+| `test_reminders.py` | `scheduling/reminders.py` |
+| `test_routines.py` | `scheduling/routines.py` |
+| `test_scheduler_prompts.py` | `scheduling/preamble.py`, `prompts.py` |
+| `test_sessions.py` | `sessions.py` |
+| `test_storage.py` | `storage.py` |
+| `test_tool_restrictions.py` | `agent_tools.py` |
+| `test_webhook.py` | `webhook.py` |
 
 ## Writing tests
 
@@ -138,26 +147,29 @@ pytest's built-in `tmp_path`.
     @pytest.mark.asyncio
     async def test_concurrent_appends(data_dir):
         async def append_one(i):
-            await pending_updates.append(f"update-{i}")
+            await append_update(f"update-{i}")
 
         async with anyio.create_task_group() as tg:
             for i in range(10):
                 tg.start_soon(append_one, i)
 
-        updates = await pending_updates.read_all()
+        updates = await pop_pending_updates()
         assert len(updates) == 10
     ```
   </Tab>
-  <Tab title="run_until_complete">
-    For sync test functions that call a single async operation:
+  <Tab title="sync test with real objects">
+    For sync test functions that work with synchronous APIs:
 
     ```python
-    def test_save_and_load_roundtrip(data_dir):
-        routine = Routine(id="morning", cron="0 9 * * *", description="Morning check-in")
-        asyncio.get_event_loop().run_until_complete(save(routine))
+    def test_append_and_list_routines(data_dir):
+        r1 = Routine.new(message="morning", cron="0 8 * * *")
+        r2 = Routine.new(message="evening", cron="0 18 * * *")
 
-        loaded = asyncio.get_event_loop().run_until_complete(load("morning"))
-        assert loaded == routine
+        append_routine(r1)
+        append_routine(r2)
+        result = list_routines()
+
+        assert len(result) == 2
     ```
   </Tab>
 </Tabs>
