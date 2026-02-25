@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 15 / 40
+Pages audited: 16 / 40
 
 ## Getting Started
 
@@ -29,7 +29,7 @@ Pages audited: 15 / 40
 
 ## Integrations
 
-- [ ] `integrations/google-overview.mdx` — Sources: `google/auth.py`, `google/__init__.py`
+- [x] `integrations/google-overview.mdx` — Sources: `google/auth.py`, `google/__init__.py`
 - [ ] `integrations/google-tasks.mdx` — Sources: `google/tasks.py`
 - [ ] `integrations/google-calendar.mdx` — Sources: `google/calendar.py`
 - [ ] `integrations/google-gmail.mdx` — Sources: `google/gmail.py`, `subagent_prompts.py`
