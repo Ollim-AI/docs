@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 9 / 40
+Pages audited: 10 / 40
 
 ## Getting Started
 
@@ -17,7 +17,7 @@ Pages audited: 9 / 40
 - [x] `core-usage/slash-commands.mdx` — Sources: `agent.py`, `bot.py`
 - [x] `core-usage/forks.mdx` — Sources: `forks.py`, `agent.py`, `views.py`
 - [x] `core-usage/embeds-and-buttons.mdx` — Sources: `embeds.py`, `agent_tools.py`, `views.py`, `inquiries.py`
-- [ ] `core-usage/permissions.mdx` — Sources: `permissions.py`
+- [x] `core-usage/permissions.mdx` — Sources: `permissions.py`
 
 ## Scheduling
 
