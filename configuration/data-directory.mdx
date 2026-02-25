@@ -3,4 +3,249 @@ title: "Data directory"
 description: "Layout of ~/.ollim-bot/: routines, reminders, webhooks, sessions, and more."
 ---
 
-Content coming soon.
+All persistent state lives in `~/.ollim-bot/`. The directory is created on first
+use and automatically managed as a git repository — `storage.py` auto-commits
+after most writes.
+
+```
+~/.ollim-bot/
+├── bot.pid                  # PID file for single-instance check
+├── credentials.json         # Google OAuth credentials (from Cloud Console)
+├── token.json               # Google OAuth token (auto-generated)
+├── sessions.json            # Current session ID (plain string)
+├── session_history.jsonl    # Append-only session lifecycle events
+├── pending_updates.json     # Background fork updates queued for main session
+├── inquiries.json           # Button inquiry prompts (7-day TTL)
+├── fork_messages.json       # Discord message → fork session mapping (7-day TTL)
+├── ping_budget.json         # Ping budget state (ephemeral, no git commit)
+├── routines/
+│   └── *.md                 # Recurring routine specs
+├── reminders/
+│   └── *.md                 # One-shot reminder specs
+└── webhooks/
+    └── *.md                 # Webhook specs
+```
+
+## Session files
+
+These files track the agent's conversation state across restarts.
+
+| File | Format | Description |
+|------|--------|-------------|
+| `sessions.json` | Plain string | Active Agent SDK session ID. A raw string, not JSON. Read on startup to resume. |
+| `session_history.jsonl` | JSONL | Append-only log of session lifecycle events. One JSON object per line. |
+
+### Session events
+
+Each line in `session_history.jsonl` contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `session_id` | `str` | The Agent SDK session ID |
+| `event` | `str` | One of: `created`, `compacted`, `swapped`, `cleared`, `interactive_fork`, `bg_fork`, `isolated_bg` |
+| `timestamp` | `str` | ISO 8601 datetime in `America/Los_Angeles` timezone |
+| `parent_session_id` | `str \| null` | Set for `compacted`, `swapped`, and fork events |
+
+```json title="session_history.jsonl"
+{"session_id": "sess_abc", "event": "created", "timestamp": "2026-02-24T10:00:00-08:00", "parent_session_id": null}
+{"session_id": "sess_def", "event": "bg_fork", "timestamp": "2026-02-24T10:05:00-08:00",
+ "parent_session_id": "sess_abc"}
+```
+
+<Info>
+`save_session_id()` auto-detects lifecycle transitions: it logs `created`
+when no prior ID exists, and `compacted` when the ID changes
+(SDK auto-compaction). A `_swap_in_progress` flag suppresses false
+`compacted` events during `swap_client()`.
+</Info>
+
+## Fork and inquiry files
+
+These files track ephemeral Discord interaction state. Both use a 7-day
+TTL — entries older than 7 days are pruned on every read.
+
+| File | Format | Description |
+|------|--------|-------------|
+| `fork_messages.json` | JSON array | Maps Discord message IDs to fork session IDs, enabling reply-to-fork. |
+| `inquiries.json` | JSON object | Maps 8-char hex keys to inquiry prompts. Persists button actions across restarts. |
+
+### fork_messages.json
+
+```json title="fork_messages.json"
+[
+  {
+    "message_id": 1234567890123456789,
+    "fork_session_id": "sess_fork_abc",
+    "parent_session_id": "sess_main",
+    "ts": 1740000000.0
+  }
+]
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `message_id` | `int` | Discord message snowflake ID |
+| `fork_session_id` | `str` | Agent SDK session ID for the fork |
+| `parent_session_id` | `str \| null` | Session the fork branched from |
+| `ts` | `float` | Unix timestamp for TTL pruning |
+
+### inquiries.json
+
+```json title="inquiries.json"
+{
+  "a1b2c3d4": {"prompt": "Can you summarize my emails?", "ts": 1740000000.0}
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| *(key)* | `str` | 8-character hex UUID |
+| `prompt` | `str` | The full prompt string for the button inquiry |
+| `ts` | `float` | Unix timestamp for TTL pruning |
+
+## Pending updates
+
+Background forks write summaries to `pending_updates.json` via the
+`report_updates` MCP tool. The main session reads and clears these on
+its next turn.
+
+```json title="pending_updates.json"
+[
+  {
+    "ts": "2026-02-24T10:15:00-08:00",
+    "message": "Checked your morning emails — 3 need replies, none urgent."
+  }
+]
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | `str` | ISO 8601 datetime in `America/Los_Angeles` timezone |
+| `message` | `str` | Summary from the background fork |
+
+<Note>
+Concurrent background forks use an `asyncio.Lock` to protect the
+read-modify-write cycle on this file, preventing lost updates.
+</Note>
+
+## Ping budget
+
+`ping_budget.json` stores the refill-on-read token bucket state for
+proactive pings. This file is **not** git-committed — it is ephemeral
+state that resets naturally.
+
+```json title="ping_budget.json"
+{
+  "capacity": 5,
+  "available": 3.7,
+  "refill_rate_minutes": 90,
+  "last_refill": "2026-02-24T09:30:00-08:00",
+  "critical_used": 1,
+  "critical_reset_date": "2026-02-24",
+  "daily_used": 2,
+  "daily_used_reset": "2026-02-24"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `capacity` | `int` | `5` | Maximum pings in the bucket |
+| `available` | `float` | — | Current fractional ping count |
+| `refill_rate_minutes` | `int` | `90` | Minutes per 1 ping refill |
+| `last_refill` | `str` | — | ISO 8601 datetime of last refill computation |
+| `critical_used` | `int` | — | Critical pings used today (resets daily) |
+| `critical_reset_date` | `str` | — | ISO date for `critical_used` reset |
+| `daily_used` | `int` | — | Total pings used today |
+| `daily_used_reset` | `str` | — | ISO date for `daily_used` reset |
+
+On every `load()`, time-based refill is computed and daily counters are
+reset if the date has changed. The updated state is saved back
+immediately.
+
+## Scheduling directories
+
+Routines, reminders, and webhooks are each stored as `.md` files in
+their own subdirectory. Filenames are auto-generated slugs from the
+message content (max 50 characters). The `id` field in YAML frontmatter
+is authoritative — filenames are for human readability.
+
+| Directory | Contents | Description |
+|-----------|----------|-------------|
+| `routines/` | `*.md` | Recurring cron-scheduled routines |
+| `reminders/` | `*.md` | One-shot and chainable reminders |
+| `webhooks/` | `*.md` | Webhook endpoint specs with prompt templates |
+
+All three use the same storage format: YAML frontmatter delimited by
+`---`, followed by a markdown body. See
+[File formats](/configuration/file-formats) for the full field specs.
+
+```yaml title="routines/morning-briefing.md"
+---
+id: abc123
+cron: "30 8 * * 1-5"
+description: Morning briefing
+---
+Review my tasks and calendar for today, then give me a summary.
+```
+
+<Tip>
+The agent has direct file access to `routines/` and `reminders/` — it
+creates and manages these files without going through CLI commands.
+</Tip>
+
+## Google credentials
+
+| File | Source | Description |
+|------|--------|-------------|
+| `credentials.json` | Manual — [Google Cloud Console](/self-hosting/google-oauth-setup) | OAuth 2.0 client creds |
+| `token.json` | Auto-generated on first auth flow | OAuth refresh and access tokens |
+
+`credentials.json` is not git-committed. `token.json` is auto-generated
+when you first authenticate and is git-committed.
+
+## Process lock
+
+`bot.pid` contains the PID of the running bot process. On startup,
+`_check_already_running()` reads this file and checks
+`/proc/<pid>/cmdline` to prevent duplicate instances. The file is
+deleted on exit via `atexit`.
+
+## Git tracking
+
+The `~/.ollim-bot/` directory is initialized as a git repository.
+`storage.py` auto-commits after writes to most files. Files that are
+**not** git-committed:
+
+| File | Reason |
+|------|--------|
+| `ping_budget.json` | Ephemeral state that refills over time |
+| `bot.pid` | Process lock deleted on exit |
+| `credentials.json` | Sensitive OAuth client credentials |
+| `fork_messages.json` | Ephemeral mapping with 7-day TTL |
+
+All other files — session state, history, routines, reminders, webhooks,
+pending updates, inquiries, and OAuth tokens — are auto-committed on
+every write.
+
+<Warning>
+All writes use atomic temp-file-then-rename
+(`tempfile.mkstemp` + `os.replace`) to prevent data corruption.
+Do not manually edit files while the bot is running.
+</Warning>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="File formats" icon="file-code" href="/configuration/file-formats">
+    YAML frontmatter specs for routines, reminders, and webhooks.
+  </Card>
+  <Card title="Configuration reference" icon="gear" href="/configuration/reference">
+    Environment variables and .env file setup.
+  </Card>
+  <Card title="Ping budget" icon="bell" href="/scheduling/ping-budget">
+    How the refill-on-read token bucket controls proactive pings.
+  </Card>
+  <Card title="Google OAuth setup" icon="key" href="/self-hosting/google-oauth-setup">
+    Setting up Google Cloud credentials for integration.
+  </Card>
+</Columns>

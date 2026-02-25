@@ -3,4 +3,95 @@ title: "ollim-bot overview"
 description: "ADHD-friendly Discord bot with proactive reminders, powered by Claude."
 ---
 
-Content coming soon.
+An AI assistant that lives in your Discord DMs, powered by the Claude Agent SDK.
+ollim-bot is designed for ADHD — it reaches out to you proactively instead of
+waiting to be asked, integrates with tools you already use, and maintains
+persistent context across conversations.
+
+ollim-bot is single-user by design. It serves one human deeply rather than many
+shallowly. There is no auth, no multi-tenancy, no per-user config. Others fork
+the repo and make it their own.
+
+## Key features
+
+<Columns cols={3}>
+  <Card title="Conversations" icon="comments" href="/core-usage/conversations">
+    Persistent DM conversations with Claude. Context carries across sessions with automatic compaction.
+  </Card>
+  <Card title="Routines & reminders" icon="clock" href="/scheduling/overview">
+    Recurring cron-based routines and one-shot chainable reminders that run as background forks.
+  </Card>
+  <Card title="Forks" icon="code-branch" href="/core-usage/forks">
+    Branch conversations into interactive or background forks. Save context back, report updates, or discard.
+  </Card>
+  <Card title="Google integration" icon="google" href="/integrations/google-overview">
+    Google Tasks, Calendar, and Gmail (read-only) via shared OAuth. Manage tasks and events from Discord.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
+    HTTP endpoints for external triggers. JSON Schema validation, Haiku screening, and bearer token auth.
+  </Card>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    Discord commands for model switching, context management, forking, permissions, and ping budget control.
+  </Card>
+</Columns>
+
+## How it works
+
+ollim-bot runs as a Discord bot that routes messages through the Claude
+Agent SDK. Each message enters a persistent session — the agent remembers
+prior conversations and picks up where it left off.
+
+The bot operates on three surfaces:
+
+- **DM conversations** — direct messages and @mentions flow through the
+  main agent session. Responses stream back to Discord in real time with
+  throttled edits and 2000-character overflow handling.
+- **Scheduled tasks** — routines (recurring crons) and reminders
+  (one-shot, chainable) fire on schedule. Each runs as a background fork
+  with its own disposable session, using `ping_user` or `discord_embed`
+  to reach out.
+- **Webhooks** — external HTTP triggers dispatch through the same
+  background fork path as scheduled tasks.
+
+Background forks run independently of the main session. They can report
+updates back via `report_updates`, which queues a summary that gets
+prepended to the next main session interaction. A
+[ping budget](/scheduling/ping-budget) controls how often background forks
+can notify you — refill-on-read with configurable capacity and refill rate.
+
+The agent has MCP tools for sending embeds, pinging the user, managing
+forks, and persisting context. Discord buttons on embeds route back through
+the agent for actions like completing Google Tasks or exiting forks.
+
+<Note>ollim-bot uses Claude Code OAuth for authentication — no Anthropic API key is needed.</Note>
+
+## Core design principles
+
+1. **Context quality is the product** — every design decision asks whether
+   it improves or degrades contextual understanding. Autonomy, features,
+   and integrations are secondary.
+2. **Proactive over reactive** — the bot reaches out, not the other way
+   around. Features that wait to be invoked solve nothing for ADHD.
+3. **Meet the user where they are** — integrate with existing tools
+   (Discord, Google), don't add new surfaces.
+4. **Files as shared language** — markdown for anything both human and
+   agent touch (routines, reminders, config). JSONL for code-only data.
+   No databases.
+5. **Single-user by design** — built to serve one human deeply. Others fork the repo.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Get ollim-bot running in under 5 minutes.
+  </Card>
+  <Card title="Setup guide" icon="gear" href="/getting-started/setup">
+    Full setup with Discord bot creation, Google OAuth, and environment configuration.
+  </Card>
+  <Card title="How it works" icon="diagram-project" href="/getting-started/how-it-works">
+    Understand the agent loop, session persistence, fork model, and context flow.
+  </Card>
+  <Card title="Design philosophy" icon="lightbulb" href="/getting-started/design-philosophy">
+    The rationale behind framework choices, patterns, and architecture.
+  </Card>
+</Columns>

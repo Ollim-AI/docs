@@ -3,4 +3,405 @@ title: "CLI reference"
 description: "ollim-bot subcommands: bot, routine, reminder, tasks, cal, gmail."
 ---
 
-Content coming soon.
+The `ollim-bot` CLI is the single entry point for running the bot and managing
+routines, reminders, Google Tasks, Google Calendar, and Gmail from the terminal.
+With no subcommand, it starts the Discord bot. With a subcommand, it runs the
+corresponding operation and exits.
+
+```bash
+ollim-bot [command] [subcommand] [options]
+```
+
+## Command overview
+
+| Command | Description |
+|---------|-------------|
+| `ollim-bot` | Start the Discord bot |
+| `ollim-bot routine` | Manage recurring routines (cron-based) |
+| `ollim-bot reminder` | Manage one-shot reminders |
+| `ollim-bot tasks` | Manage Google Tasks |
+| `ollim-bot cal` | Manage Google Calendar events |
+| `ollim-bot gmail` | Read and search Gmail |
+| `ollim-bot help` | Show help message |
+
+## `routine`
+
+Manage recurring routines stored as markdown files in `~/.ollim-bot/routines/`.
+
+### `routine add`
+
+Create a new routine with a cron schedule.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--message`, `-m` | string | Yes | — | Agent prompt to execute on each trigger |
+| `--cron` | string | Yes | — | 5-field cron expression (minute hour day month weekday) |
+| `--description`, `-d` | string | No | `""` | Short summary shown in `routine list` |
+| `--background` | flag | No | `false` | Run in a background fork instead of the main session |
+
+<Note>
+  The `--cron` value must have exactly 5 space-separated fields.
+  The command exits with code 1 if the expression is invalid.
+</Note>
+
+When `--background` is set, additional options become available.
+See [Background mode options](#background-mode-options).
+
+### `routine list`
+
+List all routines. No arguments.
+
+```bash
+ollim-bot routine list
+```
+
+Output format:
+
+```
+  abc123  cron '0 9 * * 1-5'              Morning briefing
+  def456  [bg] cron '30 8 * * *'          Check inbox
+```
+
+Background routines display tags like `[bg]`, `[isolated]`, the model name, and thinking status.
+
+### `routine cancel`
+
+Remove a routine by ID.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Routine ID (shown in `routine list`) |
+
+```bash
+ollim-bot routine cancel abc123
+```
+
+Exits with code 1 if the routine is not found.
+
+## `reminder`
+
+Manage one-shot reminders stored as markdown files in `~/.ollim-bot/reminders/`.
+
+### `reminder add`
+
+Schedule a one-shot reminder that fires after a delay.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--message`, `-m` | string | Yes | — | Reminder message |
+| `--delay` | int | Yes | — | Fire in N minutes from now |
+| `--description`, `-d` | string | No | `""` | Short summary shown in `reminder list` |
+| `--background` | flag | No | `false` | Run in a background fork |
+| `--max-chain` | int | No | `0` | Maximum follow-up chain depth |
+
+When `--background` is set, additional options become available.
+See [Background mode options](#background-mode-options).
+
+### `reminder list`
+
+List all pending reminders. No arguments.
+
+```bash
+ollim-bot reminder list
+```
+
+Output format:
+
+```
+  xyz789  at 2026-02-25 14:30                             Take a break
+  uvw456  [bg,isolated] at 2026-02-25 15:00 (chain 1/3)  Check email
+```
+
+### `reminder cancel`
+
+Remove a reminder by ID.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Reminder ID (shown in `reminder list`) |
+
+```bash
+ollim-bot reminder cancel xyz789
+```
+
+Exits with code 1 if the reminder is not found.
+
+## `tasks`
+
+Manage Google Tasks. Requires [Google OAuth setup](/self-hosting/google-oauth-setup).
+
+### `tasks list`
+
+List tasks from your default task list.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--all` | flag | No | `false` | Include completed tasks |
+
+```bash
+ollim-bot tasks list
+ollim-bot tasks list --all
+```
+
+### `tasks add`
+
+Create a new task.
+
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `title` | positional | Yes | — | Task title |
+| `--due` | string | No | — | Due date in `YYYY-MM-DD` format |
+| `--notes` | string | No | — | Task notes |
+
+```bash
+ollim-bot tasks add "Fix login bug" --due 2026-02-15
+ollim-bot tasks add "Buy groceries" --notes "Milk, eggs, bread"
+```
+
+### `tasks done`
+
+Mark a task as completed.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Task ID |
+
+### `tasks update`
+
+Update an existing task. At least one of `--title`, `--due`, or `--notes` is required.
+
+| Argument / Flag | Type | Required | Description |
+|-----------------|------|----------|-------------|
+| `id` | positional | Yes | Task ID |
+| `--title` | string | No | New title |
+| `--due` | string | No | New due date in `YYYY-MM-DD` format |
+| `--notes` | string | No | New notes |
+
+### `tasks delete`
+
+Delete a task.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Task ID |
+
+## `cal`
+
+Manage Google Calendar events. Requires
+[Google OAuth setup](/self-hosting/google-oauth-setup).
+All times use the `America/Los_Angeles` timezone.
+
+### `cal today`
+
+Show today's calendar events. No arguments.
+
+```bash
+ollim-bot cal today
+```
+
+### `cal upcoming`
+
+Show upcoming events.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--days` | int | No | `7` | Number of days to look ahead |
+
+```bash
+ollim-bot cal upcoming
+ollim-bot cal upcoming --days 14
+```
+
+### `cal show`
+
+Show details for a specific event.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Event ID |
+
+### `cal add`
+
+Create a calendar event.
+
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `summary` | positional | Yes | — | Event title |
+| `--start` | string | Yes | — | Start time in `YYYY-MM-DDTHH:MM` format |
+| `--end` | string | Yes | — | End time in `YYYY-MM-DDTHH:MM` format |
+| `--description` | string | No | — | Event description |
+
+```bash
+ollim-bot cal add "Team standup" --start 2026-02-25T09:00 --end 2026-02-25T09:30
+```
+
+### `cal update`
+
+Update an existing event. At least one of `--summary`, `--start`,
+`--end`, or `--description` is required.
+
+| Argument / Flag | Type | Required | Description |
+|-----------------|------|----------|-------------|
+| `id` | positional | Yes | Event ID |
+| `--summary` | string | No | New title |
+| `--start` | string | No | New start time in `YYYY-MM-DDTHH:MM` format |
+| `--end` | string | No | New end time in `YYYY-MM-DDTHH:MM` format |
+| `--description` | string | No | New description |
+
+### `cal delete`
+
+Delete a calendar event.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Event ID |
+
+## `gmail`
+
+Read and search Gmail messages. Requires
+[Google OAuth setup](/self-hosting/google-oauth-setup).
+Read-only access — no sending or modifying emails.
+
+### `gmail unread`
+
+List unread emails.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--max` | int | No | `20` | Maximum number of results |
+
+```bash
+ollim-bot gmail unread
+ollim-bot gmail unread --max 5
+```
+
+### `gmail read`
+
+Read a specific email by ID. Message bodies longer than 3000 characters are truncated.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Message ID |
+
+### `gmail search`
+
+Search emails using Gmail query syntax.
+
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `query` | positional | Yes | — | Gmail search query |
+| `--max` | int | No | `20` | Maximum number of results |
+
+```bash
+ollim-bot gmail search "from:boss subject:urgent"
+ollim-bot gmail search "after:2026/02/01 has:attachment"
+```
+
+### `gmail labels`
+
+List all Gmail labels. No arguments.
+
+```bash
+ollim-bot gmail labels
+```
+
+## Background mode options
+
+Both `routine add` and `reminder add` accept these flags when `--background`
+is set. These options control how the background fork executes.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--model` | string | — | Model override for this fork |
+| `--no-thinking` | flag | `false` | Disable extended thinking |
+| `--isolated` | flag | `false` | Fresh context, no session history |
+| `--update-main-session` | choice | `on_ping` | When to report to main session |
+| `--no-ping` | flag | `false` | Disable `ping_user` and `discord_embed` |
+
+<Info>
+  The `reminder add` command also supports `--allowed-tools` and
+  `--disallowed-tools` for restricting which SDK tools the background
+  fork can use. Each accepts one or more tool name patterns.
+</Info>
+
+### `--update-main-session` modes
+
+| Mode | Behavior |
+|------|----------|
+| `always` | Fork must report results to main session |
+| `on_ping` | Report only if the fork pings the user (default) |
+| `freely` | Reporting is optional |
+| `blocked` | `report_updates` returns an error — no reporting |
+
+<Warning>
+  The `--no-ping` flag completely disables ping and embed tools.
+  Even the critical bypass mechanism cannot override it.
+</Warning>
+
+## Examples
+
+<Tabs>
+  <Tab title="Routines">
+    ```bash
+    # Morning briefing every weekday at 9 AM
+    ollim-bot routine add --cron "0 9 * * 1-5" -m "Morning briefing"
+
+    # Background email check every hour, isolated context
+    ollim-bot routine add --cron "0 * * * *" -m "Check inbox for urgent emails" \
+      --background --isolated --model haiku -d "Hourly inbox check"
+
+    # List all routines
+    ollim-bot routine list
+
+    # Cancel a routine
+    ollim-bot routine cancel abc123
+    ```
+  </Tab>
+  <Tab title="Reminders">
+    ```bash
+    # Remind in 30 minutes
+    ollim-bot reminder add --delay 30 -m "Take a break"
+
+    # Background reminder with follow-up chain
+    ollim-bot reminder add --delay 60 -m "Check build status" \
+      --background --max-chain 3 -d "Build check"
+
+    # List pending reminders
+    ollim-bot reminder list
+    ```
+  </Tab>
+  <Tab title="Google Services">
+    ```bash
+    # Tasks
+    ollim-bot tasks add "Review PR" --due 2026-02-25
+    ollim-bot tasks list
+    ollim-bot tasks done abc123
+
+    # Calendar
+    ollim-bot cal today
+    ollim-bot cal upcoming --days 14
+    ollim-bot cal add "Focus time" --start 2026-02-25T14:00 --end 2026-02-25T16:00
+
+    # Gmail
+    ollim-bot gmail unread --max 10
+    ollim-bot gmail search "from:github subject:review"
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Learn about the routine file format and cron scheduling.
+  </Card>
+  <Card title="Reminders" icon="bell" href="/scheduling/reminders">
+    One-shot reminders and follow-up chains.
+  </Card>
+  <Card title="Background forks" icon="code-branch" href="/scheduling/background-forks">
+    How background mode works under the hood.
+  </Card>
+  <Card title="Configuration reference" icon="gear" href="/configuration/reference">
+    Environment variables and data directory layout.
+  </Card>
+</Columns>
