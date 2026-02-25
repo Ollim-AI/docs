@@ -79,7 +79,7 @@ auto-commit.
 | `ping_budget.json` | JSON | No | Ephemeral ping budget counters |
 | `bot.pid` | Plain text | No | PID for duplicate-instance detection |
 | `credentials.json` | JSON | No | Google OAuth client credentials |
-| `token.json` | JSON | Yes | Google OAuth token (auto-generated) |
+| `token.json` | JSON | No | Google OAuth token (auto-generated) |
 
 ## Storage patterns
 
@@ -112,7 +112,7 @@ ollim-bot uses two storage formats with shared conventions:
     {"event": "compacted", "session_id": "sess_abc", "timestamp": "2026-02-24T11:30:00"}
     ```
 
-    - Lines not starting with `{` and corrupt JSON lines are silently skipped
+    - Lines not starting with `{` are skipped; malformed JSON raises `json.JSONDecodeError`
     - Field filtering ensures forward compatibility — unknown fields are ignored when reading
     - Removals use atomic rewrite (read all, filter, write temp file, rename)
     - Each write triggers a git commit
