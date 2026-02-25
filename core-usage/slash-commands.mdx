@@ -27,7 +27,7 @@ via `application_info()` at startup). Non-owners receive "not authorized".
 
 Resets the conversation to a blank state. This:
 
-- Resets [permissions](/core-usage/permissions) to default
+- Clears session-level tool approvals and cancels pending [permission](/core-usage/permissions) prompts
 - Exits any active [interactive fork](/core-usage/forks)
 - Logs a "cleared" session event
 - Drops the active client connection
