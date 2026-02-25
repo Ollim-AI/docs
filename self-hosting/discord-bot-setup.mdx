@@ -3,4 +3,145 @@ title: "Discord bot setup"
 description: "Create a Discord application, bot token, intents, and invite link."
 ---
 
-Content coming soon.
+This tutorial walks through creating a Discord application,
+generating a bot token, enabling the required privileged intent,
+and inviting the bot to your server.
+
+## Prerequisites
+
+- A [Discord account](https://discord.com)
+- A Discord server where you have the **Manage Server** permission
+
+<Steps>
+  <Step title="Create a Discord application">
+    Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+    and click **New Application**. Give it a name (e.g. `ollim-bot`)
+    and click **Create**.
+
+    Note the **Application ID** on the General Information page — you will need it for the invite link.
+  </Step>
+
+  <Step title="Create a bot and copy the token">
+    In the left sidebar, click **Bot**. Click **Reset Token** (or **Add Bot** if prompted), then copy the token.
+
+    Add it to your `.env` file:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=MTE5...your-token
+    ```
+
+    <Warning>The token is shown only once. If you lose it, you must reset it to generate a new one.</Warning>
+  </Step>
+
+  <Step title="Enable the Message Content intent">
+    On the same **Bot** page, scroll down to **Privileged Gateway Intents**. Enable **Message Content Intent**.
+
+    ollim-bot requires this intent to read message content in DMs
+    and @mentions. The bot initialization enables it explicitly:
+
+    ```python
+    intents = discord.Intents.default()
+    intents.message_content = True
+    ```
+
+    Without this intent enabled, the bot cannot see what you type.
+  </Step>
+
+  <Step title="Set the bot owner">
+    ollim-bot identifies its user via the application owner.
+    On the **General Information** page, verify that your Discord
+    account is listed under **Owner**.
+
+    On startup, the bot calls `bot.application_info()` and sends
+    a DM to the owner. If no owner is found, the scheduler, webhook server,
+    and DM functionality are disabled.
+  </Step>
+
+  <Step title="Generate an invite link">
+    Go to **OAuth2** in the left sidebar. Under **OAuth2 URL Generator**:
+
+    1. Select scopes: **`bot`** and **`applications.commands`**
+    2. Select bot permissions: **Send Messages**, **Read Message History**, **Add Reactions**, **Embed Links**
+
+    Copy the generated URL and open it in your browser to invite the bot to your server.
+
+    <Note>
+      The `applications.commands` scope is required for slash
+      commands (`/clear`, `/fork`, `/model`, etc.) to appear
+      in your server.
+    </Note>
+  </Step>
+
+  <Step title="Configure remaining environment variables">
+    In addition to `DISCORD_TOKEN`, ollim-bot requires two more environment variables:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=MTE5...your-token
+    OLLIM_USER_NAME=literal:YourName
+    OLLIM_BOT_NAME=ollim
+    ```
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `DISCORD_TOKEN` | Yes | Bot token from step 2 |
+    | `OLLIM_USER_NAME` | Yes | Your display name |
+    | `OLLIM_BOT_NAME` | Yes | The bot's name |
+
+    If either `OLLIM_USER_NAME` or `OLLIM_BOT_NAME` is missing, the bot exits immediately with an error.
+  </Step>
+
+  <Step title="Start the bot">
+    ```bash
+    uv run ollim-bot
+    ```
+
+    Required environment variables are validated at import time (before the bot starts).
+    Once running, the bot:
+    1. Checks that no other instance is running (via PID file at `~/.ollim-bot/bot.pid`)
+    2. Connects to Discord and syncs slash commands
+    3. Sends a DM to the application owner
+    4. Starts the scheduler and webhook server (if configured)
+
+    You should see output like:
+
+    ```
+    ollim online as ollim#1234
+    synced 9 slash commands
+    ```
+  </Step>
+</Steps>
+
+<Tip>Send a DM to your bot or @mention it in your server to verify it responds.</Tip>
+
+## Slash commands
+
+Once the bot is online, these slash commands are available:
+
+| Command | Description |
+|---------|-------------|
+| `/clear` | Reset conversation history |
+| `/compact` | Compress conversation context |
+| `/cost` | Show token usage for the session |
+| `/model` | Switch model (opus, sonnet, haiku) |
+| `/thinking` | Toggle extended thinking (on, off) |
+| `/fork` | Start a forked conversation |
+| `/interrupt` | Stop the current response |
+| `/permissions` | Set permission mode |
+| `/ping-budget` | View or configure ping budget |
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Google OAuth setup" icon="key" href="/self-hosting/google-oauth-setup">
+    Connect Google Tasks, Calendar, and Gmail.
+  </Card>
+  <Card title="Setup guide" icon="book" href="/getting-started/setup">
+    Full setup walkthrough including data directory and all integrations.
+  </Card>
+  <Card title="Conversations" icon="message" href="/core-usage/conversations">
+    Learn how to interact with the bot via DMs and mentions.
+  </Card>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    Full reference for all slash commands.
+  </Card>
+</Columns>
