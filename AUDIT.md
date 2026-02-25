@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 39 / 40
+Pages audited: 40 / 40
 
 ## Getting Started
 
@@ -71,4 +71,4 @@ Pages audited: 39 / 40
 
 ## Changelog
 
-- [ ] `changelog.mdx` — Sources: git log
+- [x] `changelog.mdx` — Sources: git log
