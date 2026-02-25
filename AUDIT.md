@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 19 / 40
+Pages audited: 20 / 40
 
 ## Getting Started
 
@@ -33,7 +33,7 @@ Pages audited: 19 / 40
 - [x] `integrations/google-tasks.mdx` — Sources: `google/tasks.py`
 - [x] `integrations/google-calendar.mdx` — Sources: `google/calendar.py`
 - [x] `integrations/google-gmail.mdx` — Sources: `google/gmail.py`, `subagent_prompts.py`
-- [ ] `integrations/webhooks.mdx` — Sources: `webhook.py`
+- [x] `integrations/webhooks.mdx` — Sources: `webhook.py`
 
 ## Extending
 
