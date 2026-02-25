@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 20 / 40
+Pages audited: 21 / 40
 
 ## Getting Started
 
@@ -37,7 +37,7 @@ Pages audited: 20 / 40
 
 ## Extending
 
-- [ ] `extending/overview.mdx` — Sources: `agent_tools.py`, `prompts.py`, `CLAUDE.md`
+- [x] `extending/overview.mdx` — Sources: `agent_tools.py`, `prompts.py`, `CLAUDE.md`
 - [ ] `extending/mcp-tools.mdx` — Sources: `agent_tools.py`
 - [ ] `extending/subagents.mdx` — Sources: `subagent_prompts.py`, `agent.py`
 - [ ] `extending/system-prompt.mdx` — Sources: `prompts.py`, `subagent_prompts.py`

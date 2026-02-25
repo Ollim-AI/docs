@@ -57,14 +57,14 @@ Routines, reminders, and webhooks all dispatch through the same background fork 
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `background` | boolean | `false` | Run in a background fork instead of the main session |
+| `background` | boolean | `false` | Run in a background fork instead of the main session (routines and reminders only — webhooks are always background) |
 | `model` | string | — | Override the default model (`haiku`, `sonnet`, `opus`) |
 | `thinking` | boolean | `true` | Enable extended thinking |
 | `isolated` | boolean | `false` | Run without main session history or fork state |
 | `update_main_session` | string | `on_ping` | `always`, `on_ping`, `freely`, or `blocked` — controls `report_updates` behavior |
 | `allow_ping` | boolean | `true` | Whether `ping_user` and `discord_embed` are available |
-| `allowed_tools` | list | — | Allowlist of tools (overrides defaults, mutually exclusive with `disallowed_tools`) |
-| `disallowed_tools` | list | — | Blocklist of tools (mutually exclusive with `allowed_tools`) |
+| `allowed_tools` | list | — | Allowlist of tools — routines and reminders only (overrides defaults, mutually exclusive with `disallowed_tools`) |
+| `disallowed_tools` | list | — | Blocklist of tools — routines and reminders only (mutually exclusive with `allowed_tools`) |
 
 <Tip>All three mechanisms are markdown files with YAML frontmatter stored in `~/.ollim-bot/`. The agent can create and manage them directly using Glob, Read, Write, and Edit tools — no CLI required.</Tip>
 
