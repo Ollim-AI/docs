@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 36 / 40
+Pages audited: 37 / 40
 
 ## Getting Started
 
@@ -65,7 +65,7 @@ Pages audited: 36 / 40
 
 ## Self-Hosting
 
-- [ ] `self-hosting/guide.mdx` — Sources: `config.py`, `main.py`, `CLAUDE.md`
+- [x] `self-hosting/guide.mdx` — Sources: `config.py`, `main.py`, `CLAUDE.md`
 - [ ] `self-hosting/discord-bot-setup.mdx` — Sources: `bot.py`, `config.py`
 - [ ] `self-hosting/google-oauth-setup.mdx` — Sources: `google/auth.py`
 

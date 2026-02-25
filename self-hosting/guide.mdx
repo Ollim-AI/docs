@@ -91,8 +91,9 @@ yourself, and run it. This guide covers the full process.
     6. Sends you a startup DM
 
     <Note>
-      ollim-bot enforces single-instance via a PID file. If the bot crashes without
-      cleaning up `~/.ollim-bot/state/bot.pid`, delete the file manually before restarting.
+      ollim-bot enforces single-instance via a PID file. On startup, it checks whether
+      the recorded PID is still alive, so stale PID files from crashes are handled
+      automatically.
     </Note>
   </Step>
 </Steps>
