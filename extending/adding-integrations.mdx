@@ -60,13 +60,13 @@ Existing services (Tasks, Calendar, Gmail) all follow the same structure: a scop
     - Functions called from embed button actions (like `complete_task` and `delete_event`) are module-level and return the affected item's name for confirmation messages
   </Step>
   <Step title="Register the CLI subcommand">
-    Add a lazy import and dispatch case in `src/ollim_bot/main.py`:
+    Add an entry to the `routes` dict in `_dispatch_subcommand()` in `src/ollim_bot/main.py`:
 
     ```python title="src/ollim_bot/main.py"
-    if cmd == "drive":
-        from ollim_bot.google.drive import run_drive_command
-        run_drive_command(sys.argv[2:])
-        return
+    routes: dict[str, tuple[str, str]] = {
+        ...
+        "drive": ("ollim_bot.google.drive", "run_drive_command"),
+    }
     ```
 
     Add the subcommand to the `HELP` string in the same file.
@@ -190,16 +190,16 @@ CLI commands are dispatched from `src/ollim_bot/main.py`. Each subcommand is a s
     ```
   </Step>
   <Step title="Register in main.py">
-    Add a dispatch branch with a lazy import in the `main()` function of `src/ollim_bot/main.py`:
+    Add an entry to the `routes` dict in `_dispatch_subcommand()` in `src/ollim_bot/main.py`:
 
     ```python title="src/ollim_bot/main.py"
-    if cmd == "example":
-        from ollim_bot.example import run_example_command
-        run_example_command(sys.argv[2:])
-        return
+    routes: dict[str, tuple[str, str]] = {
+        ...
+        "example": ("ollim_bot.example", "run_example_command"),
+    }
     ```
 
-    Lazy imports keep startup fast — subcommand modules are only loaded when invoked.
+    Lazy imports keep startup fast — subcommand modules are only loaded when invoked via `importlib.import_module`.
 
     Update the `HELP` string to include the new subcommand.
   </Step>
@@ -266,7 +266,7 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
     When a webhook fires:
 
     1. **Validation** — the payload is checked against the `fields` JSON Schema. Invalid payloads return `400`.
-    2. **Haiku screening** — string fields are screened by a fast Claude Haiku call for prompt injection. Flagged fields are redacted.
+    2. **Haiku screening** — string fields are screened by a fast Claude Haiku call for prompt injection. If any fields are flagged, the webhook is not dispatched.
     3. **Prompt construction** — `build_webhook_prompt` combines the scheduling preamble (active routines and reminders) with the webhook's `message` and fenced payload data.
     4. **Background fork** — the prompt is dispatched as a background fork with the spec's configured behavior (isolated, model, allow_ping, etc.).
   </Step>
