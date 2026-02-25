@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 14 / 40
+Pages audited: 15 / 40
 
 ## Getting Started
 
@@ -25,7 +25,7 @@ Pages audited: 14 / 40
 - [x] `scheduling/routines.mdx` — Sources: `scheduling/routines.py`, `scheduling/routine_cmd.py`
 - [x] `scheduling/reminders.mdx` — Sources: `scheduling/reminders.py`, `scheduling/reminder_cmd.py`
 - [x] `scheduling/background-forks.mdx` — Sources: `forks.py`, `agent_tools.py`
-- [ ] `scheduling/ping-budget.mdx` — Sources: `ping_budget.py`, `agent_tools.py`
+- [x] `scheduling/ping-budget.mdx` — Sources: `ping_budget.py`, `agent_tools.py`
 
 ## Integrations
 
