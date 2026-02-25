@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 31 / 40
+Pages audited: 32 / 40
 
 ## Getting Started
 
@@ -54,7 +54,7 @@ Pages audited: 31 / 40
 - [x] `architecture/overview.mdx` — Sources: `CLAUDE.md`
 - [x] `architecture/session-management.mdx` — Sources: `sessions.py`, `agent.py`
 - [x] `architecture/context-flow.mdx` — Sources: `forks.py`, `prompts.py`, `scheduling/preamble.py`
-- [ ] `architecture/streaming.mdx` — Sources: `streamer.py`
+- [x] `architecture/streaming.mdx` — Sources: `streamer.py`
 
 ## Development
 
