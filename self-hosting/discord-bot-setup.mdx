@@ -46,16 +46,6 @@ ollim-bot runs entirely in DMs — no server invite is needed.
     Without this intent enabled, the bot cannot see what you type.
   </Step>
 
-  <Step title="Set the bot owner">
-    ollim-bot identifies its user via the application owner.
-    On the **General Information** page, verify that your Discord
-    account is listed under **Owner**.
-
-    On startup, the bot calls `bot.application_info()` and sends
-    a DM to the owner. If no owner is found, the scheduler, webhook server,
-    and DM functionality are disabled.
-  </Step>
-
   <Step title="Configure remaining environment variables">
     In addition to `DISCORD_TOKEN`, ollim-bot requires two more environment variables:
 
@@ -83,7 +73,7 @@ ollim-bot runs entirely in DMs — no server invite is needed.
     Once running, the bot:
     1. Checks that no other instance is running (via PID file at `~/.ollim-bot/bot.pid`)
     2. Connects to Discord and syncs slash commands
-    3. Sends a DM to the application owner
+    3. Sends you a startup DM
     4. Starts the scheduler and webhook server (if configured)
 
     You should see output like:
