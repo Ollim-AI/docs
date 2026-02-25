@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 25 / 40
+Pages audited: 26 / 40
 
 ## Getting Started
 
@@ -45,7 +45,7 @@ Pages audited: 25 / 40
 
 ## Configuration
 
-- [ ] `configuration/reference.mdx` — Sources: `config.py`, `storage.py`, `CLAUDE.md`
+- [x] `configuration/reference.mdx` — Sources: `config.py`, `storage.py`, `CLAUDE.md`
 - [ ] `configuration/data-directory.mdx` — Sources: `storage.py`
 - [ ] `configuration/file-formats.mdx` — Sources: `scheduling/routines.py`, `scheduling/reminders.py`, `webhook.py`, `sessions.py`
 

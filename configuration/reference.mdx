@@ -74,10 +74,10 @@ auto-commit.
 
 | File | Format | Git | Description |
 |------|--------|-----|-------------|
-| `sessions.json` | Plain string | Yes | Active Agent SDK session ID |
+| `sessions.json` | Plain string | No | Active Agent SDK session ID |
 | `session_history.jsonl` | JSONL | Yes | Session lifecycle events |
-| `pending_updates.json` | JSON | Yes | Background fork updates for main session |
-| `inquiries.json` | JSON | Yes | Button inquiry prompts (7-day TTL) |
+| `pending_updates.json` | JSON | No | Background fork updates for main session |
+| `inquiries.json` | JSON | No | Button inquiry prompts (7-day TTL) |
 | `fork_messages.json` | JSON | No | Fork message references (7-day TTL) |
 | `ping_budget.json` | JSON | No | Ephemeral ping budget counters |
 | `bot.pid` | Plain text | No | PID for duplicate-instance detection |
