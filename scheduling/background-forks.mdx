@@ -3,4 +3,252 @@ title: "Background forks"
 description: "Isolated mode, model overrides, tool restrictions, and update modes."
 ---
 
-Content coming soon.
+Background forks run agent tasks on disposable sessions that don't pollute
+your main conversation. Routines and reminders with `background: true`
+execute this way — the agent does its work, optionally pings you or reports
+findings, and the fork is discarded.
+
+## Overview
+
+When a background routine or reminder fires, `run_agent_background` creates
+a temporary agent session. The agent's text output is discarded — it
+communicates only through MCP tools like `ping_user`, `discord_embed`, and `report_updates`.
+After the task completes (or times out after 30 minutes), the forked
+session is thrown away.
+
+Background forks run without the agent lock. They execute concurrently
+with your main conversation and with other background forks. State
+isolation is handled through context variables — each fork gets its own
+channel reference, config, and output tracking.
+
+<Note>
+When you're mid-conversation (the agent lock is held), background forks
+enter "quiet mode." Non-critical pings return an error suggesting the agent
+use `report_updates` instead. Set `critical: true` on a ping to bypass this.
+</Note>
+
+## Execution modes
+
+Background forks support two execution modes that determine how the
+agent session is created.
+
+<Tabs>
+  <Tab title="Forked (default)">
+    The default mode calls `create_forked_client`, which branches from
+    your current main session. The agent has access to your full
+    conversation history and context.
+
+    ```yaml title="routines/daily-review.md"
+    ---
+    id: daily-review
+    cron: "0 9 * * 1-5"
+    background: true
+    description: Morning task review
+    ---
+    Check my Google Tasks and calendar for today.
+    Ping me with a summary if there's anything actionable.
+    ```
+
+    Forked mode is best when the task needs conversational context —
+    the agent knows what you've been working on and can make informed
+    decisions.
+  </Tab>
+  <Tab title="Isolated">
+    Setting `isolated: true` calls `create_isolated_client`, which
+    starts a fresh session with no conversation history. This also
+    unlocks model and thinking overrides.
+
+    ```yaml title="routines/email-triage.md"
+    ---
+    id: email-triage
+    cron: "0 8 * * 1-5"
+    background: true
+    isolated: true
+    model: haiku
+    thinking: false
+    description: Morning email triage
+    ---
+    Check Gmail for unread messages.
+    Send an embed if anything needs attention.
+    ```
+
+    Isolated mode is best for self-contained tasks that don't need
+    prior context — email triage, calendar checks, or data lookups.
+    Using `model: haiku` and `thinking: false` reduces cost for
+    simple tasks.
+  </Tab>
+</Tabs>
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `isolated` | `false` | No conversation history instead of forking |
+| `model` | — | Model override. Isolated mode only |
+| `thinking` | `true` | Extended thinking. Isolated mode only |
+
+## Communication
+
+Background forks have two output channels: **pinging** (sending a visible
+Discord message) and **reporting** (queueing a summary for the main
+session). These are controlled independently.
+
+### Pinging
+
+The agent's text output is discarded. To reach you, it must call
+`ping_user` (plain text) or `discord_embed` (rich embed). These calls
+are subject to the [ping budget](/scheduling/ping-budget) — each
+non-critical ping consumes one token from the budget.
+
+Set `allow_ping: false` to disable both tools entirely. Unlike the ping
+budget, this is absolute — `critical: true` does **not** bypass it. Use
+this for tasks that should never produce visible output.
+
+### Reporting to the main session
+
+The `report_updates` tool queues a short summary to
+`~/.ollim-bot/pending_updates.json`. These updates are prepended to the
+next main session interaction, giving the agent context about what
+happened in the background.
+
+The `update_main_session` field controls when and whether the agent
+must report:
+
+| Mode | Behavior | Stop hook |
+|------|----------|-----------|
+| `on_ping` | Report if a ping/embed was sent | Blocks if pinged without reporting |
+| `always` | Must call `report_updates` | Blocks if not called |
+| `freely` | Reporting is optional | Never blocks |
+| `blocked` | `report_updates` returns error | Never blocks |
+
+<Tip>
+Use `update_main_session: always` for tasks where the main session needs
+the outcome regardless of whether a ping was sent — like checking if a
+deadline passed.
+</Tip>
+
+## Tool restrictions
+
+You can limit which MCP tools a background fork has access to. The agent
+never sees restricted tools — they're removed at the SDK level.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `allowed_tools` | — | Whitelist. `Bash(ollim-bot help)` auto-included. |
+| `disallowed_tools` | — | Blacklist. Subtracted from default set. |
+
+<Warning>
+`allowed_tools` and `disallowed_tools` are mutually exclusive. Setting
+both raises a validation error.
+</Warning>
+
+Tool names use the SDK format:
+
+```yaml title="routines/email-check.md"
+---
+id: email-check
+cron: "0 8,12 * * 1-5"
+background: true
+isolated: true
+model: haiku
+allowed_tools:
+  - "Bash(ollim-bot gmail *)"
+  - "mcp__discord__discord_embed"
+  - "mcp__discord__ping_user"
+  - "mcp__discord__report_updates"
+description: Email check (restricted tools)
+---
+Check Gmail for unread messages from today.
+Send an embed summary if anything needs attention.
+```
+
+Tool restrictions are inherited by chain reminders — `follow_up_chain`
+propagates `allowed_tools` and `disallowed_tools` to child reminders
+via `ChainContext`.
+
+## Configuration
+
+All background fork fields available in routine and reminder YAML
+frontmatter:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `background` | `bool` | `false` | Run as a background fork |
+| `isolated` | `bool` | `false` | Fresh session, no history |
+| `model` | `string` | — | Model override (isolated only) |
+| `thinking` | `bool` | `true` | Extended thinking (isolated only) |
+| `update_main_session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
+| `allow_ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
+| `allowed_tools` | `list[string]` | — | Tool whitelist (SDK format) |
+| `disallowed_tools` | `list[string]` | — | Tool blacklist (SDK format) |
+
+## Examples
+
+A fully configured background routine with all options:
+
+```yaml title="routines/accountability-checkin.md"
+---
+id: accountability-checkin
+cron: "30 14 * * 1-5"
+background: true
+isolated: true
+model: haiku
+thinking: false
+update_main_session: always
+allow_ping: true
+description: Afternoon accountability check-in
+---
+Check my Google Tasks for items due today.
+If anything is overdue or due within 2 hours, ping me.
+Always report what you found.
+```
+
+A silent background routine that only reports to the main session:
+
+```yaml title="routines/quiet-sync.md"
+---
+id: quiet-sync
+cron: "0 7 * * *"
+background: true
+allow_ping: false
+update_main_session: always
+description: Silent morning context sync
+---
+Check my calendar and tasks for today.
+Report a summary to the main session — do not ping.
+```
+
+A background reminder with chain follow-ups and restricted tools:
+
+```yaml title="reminders/take-medication.md"
+---
+id: take-medication
+run_at: "2026-02-24T09:00:00-08:00"
+background: true
+max_chain: 3
+update_main_session: freely
+allowed_tools:
+  - "mcp__discord__ping_user"
+  - "mcp__discord__discord_embed"
+  - "mcp__discord__report_updates"
+  - "mcp__discord__follow_up_chain"
+description: Medication reminder
+---
+Remind me to take my medication.
+If I haven't acknowledged, schedule a follow-up in 30 minutes.
+```
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Ping budget" icon="coins" href="/scheduling/ping-budget">
+    How the refill-on-read budget controls background fork pinging.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Recurring cron-scheduled tasks that trigger background forks.
+  </Card>
+  <Card title="Reminders" icon="bell" href="/scheduling/reminders">
+    One-shot and chainable reminders with follow-up chains.
+  </Card>
+  <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
+    Reference for ping_user, discord_embed, and report_updates.
+  </Card>
+</Columns>
