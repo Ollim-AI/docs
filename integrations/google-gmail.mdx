@@ -96,7 +96,8 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
     1. Runs `ollim-bot gmail unread` to get the inbox snapshot
     2. Reads the full content of any email that might be actionable (subject lines alone are unreliable)
     3. Uses `ollim-bot gmail search` to narrow results if the unread list is large
-    4. Reports findings in a structured format
+    4. If a command fails (auth error, network issue), reports the error and stops — no retries or guessing
+    5. Reports findings in a structured format
 
     ### What gets surfaced
 
@@ -104,7 +105,7 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
 
     - **Replies expected** — a real person is waiting for a response
     - **Security alerts** — password changes, login attempts, or account modifications not initiated by you
-    - **Financial** — bills due, failed payments, payment confirmations requiring review
+    - **Financial** — bills due, payments failed, accounts needing attention
     - **Time-sensitive** — deadlines, meeting changes, approval requests
     - **Packages needing action** — delivery issues, signature required (not routine tracking confirmations)
 
@@ -116,7 +117,7 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
     - Promotional offers and event promotions
     - Delivery/shipping confirmations and order receipts
     - Social media notifications
-    - Political emails
+    - Political emails, event promotions, and concert announcements
     - Service agreement updates and routine account notices
 
     Ambiguous emails are read in full and included with a note explaining why they might need attention.
