@@ -3,4 +3,189 @@ title: "Forks"
 description: "Interactive forks, background forks, and exit strategies."
 ---
 
-Content coming soon.
+Forks let you branch your conversation into an isolated context.
+Explore a tangent, research something, or do focused work — then
+choose whether to keep the results, report a summary, or discard
+everything. Your main session stays clean either way.
+
+## Overview
+
+ollim-bot has two fork types:
+
+- **Interactive forks** — you enter a branched conversation, talk to
+  the agent, and choose how to exit. All messages route to the fork
+  until you end it.
+- **Background forks** — the scheduler runs a task on a disposable
+  forked session. Output is discarded by default; the agent uses
+  `ping_user`, `discord_embed`, or `report_updates` to surface results.
+
+Forks cannot be nested. You can only have one interactive fork at a
+time, though background forks run concurrently without blocking
+anything.
+
+## Interactive forks
+
+<Tabs>
+  <Tab title="Slash command">
+    Use `/fork` to start an interactive fork with an optional topic:
+
+    ```
+    /fork topic:research meal prep options
+    ```
+
+    If no topic is given, the agent waits for you to lead.
+  </Tab>
+  <Tab title="MCP tool">
+    The agent can start a fork itself by calling the `enter_fork` MCP tool:
+
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `topic` | string | — | Optional topic for the fork |
+    | `idle_timeout` | integer | `10` | Minutes of inactivity before idle timeout prompt |
+  </Tab>
+</Tabs>
+
+When a fork starts, the bot sends a purple embed showing the topic
+(or "Open session") along with three buttons for exiting:
+
+| Button | Style | Action |
+|--------|-------|--------|
+| **Save Context** | Green | Promotes fork to main session |
+| **Report** | Blurple | Reports summary, discards fork |
+| **Exit Fork** | Red | Discards fork, returns to main |
+
+While inside a fork, all your messages route to the forked session.
+Pending updates from background tasks are peeked (read-only) rather
+than cleared, so the main session still receives them when the fork
+ends.
+
+<Note>
+  Replying to a message sent by a background fork starts an
+  interactive fork that resumes from that background fork's session.
+  This lets you pick up where a background task left off and continue
+  the conversation interactively.
+</Note>
+
+## Exit strategies
+
+Every interactive fork ends with one of three actions. You can trigger
+them via the buttons on the fork embed, or the agent can call the
+corresponding MCP tools directly.
+
+<AccordionGroup>
+  <Accordion title="Save context">
+    Promotes the fork to the main session. The forked client replaces
+    the main client, and the old main session is disconnected. All
+    conversation history from the fork becomes the new main session.
+
+    - **Button**: Save Context
+    - **MCP tool**: `save_context` (no parameters)
+  </Accordion>
+  <Accordion title="Report updates">
+    Appends a short summary to `~/.ollim-bot/pending_updates.json`
+    and discards the fork. The summary is injected into the next
+    main-session message, so you get the findings without the full
+    context.
+
+    - **Button**: Report (agent is prompted to call
+      `report_updates` before exit)
+    - **MCP tool**: `report_updates(message)` — `message` is
+      required
+  </Accordion>
+  <Accordion title="Exit fork">
+    Clean discard. The fork is disconnected and the main session
+    resumes as if the fork never happened. No context is preserved.
+
+    - **Button**: Exit Fork
+    - **MCP tool**: `exit_fork` (no parameters)
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Use **save** when the fork produced context worth keeping
+  (e.g., a plan, research results). Use **report** for lightweight
+  findings. Use **exit** for throwaway exploration.
+</Tip>
+
+## Idle timeout
+
+Interactive forks have an idle timeout to prevent abandoned forks
+from blocking normal conversation. The default is 10 minutes,
+configurable via the `idle_timeout` parameter on `enter_fork`.
+
+The timeout works in two stages:
+
+1. **First timeout** — after `idle_timeout` minutes of inactivity,
+   the scheduler prompts the agent to decide on an exit strategy.
+   The agent may choose to save, report, or exit.
+2. **Second timeout** — if another `idle_timeout` period passes
+   with no activity after the prompt, the agent receives a
+   "you MUST exit" message. The agent always decides the final
+   exit strategy; there is no forced auto-exit.
+
+Activity is tracked by `touch_activity()`, which is called after
+each user interaction in the fork.
+
+## Background forks
+
+Background forks run scheduled tasks (routines, reminders) on
+disposable forked sessions. They differ from interactive forks in
+several ways:
+
+| Aspect | Interactive | Background |
+|--------|-------------|------------|
+| Started by | User (`/fork`) or agent (`enter_fork`) | Scheduler (routines/reminders) |
+| Lock | Requires `agent.lock()` | Runs without lock |
+| Output | Streamed to Discord | Discarded (use `ping_user`/`discord_embed` to alert) |
+| Timeout | Idle timeout (default 10 min) | Hard timeout (30 minutes) |
+| `save_context` | Available | Blocked |
+| `report_updates` | Available | Available (controlled by `update_main_session` mode) |
+| Concurrency | One at a time | Multiple can run concurrently |
+
+When the main session is busy at the time a background fork starts
+(lock held at launch), the fork runs in quiet mode — non-critical
+`ping_user` and `discord_embed` calls return errors, and the agent
+uses `report_updates` instead.
+
+For full background fork configuration (isolated mode, model
+overrides, tool restrictions, `update_main_session` modes,
+`allow_ping`), see [Background forks](/scheduling/background-forks).
+
+## Pending updates
+
+Pending updates are the bridge between forks and the main session.
+When a fork calls `report_updates(message)`, the summary is written
+to `~/.ollim-bot/pending_updates.json` with a timestamp.
+
+The main session **pops** pending updates (reads and clears) at the
+start of each interaction. Forked sessions **peek** (read-only), so
+updates are preserved for the main session.
+
+Background forks can also write pending updates via
+`report_updates`, controlled by the `update_main_session`
+configuration:
+
+| Mode | Behavior |
+|------|----------|
+| `always` | Fork must call `report_updates` before finishing |
+| `on_ping` | Report if the agent pinged the user (default) |
+| `freely` | Reporting is optional |
+| `blocked` | `report_updates` returns an error |
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Background forks" icon="gears" href="/scheduling/background-forks">
+    Background fork configuration — isolated mode, model overrides,
+    tool restrictions, and reporting modes.
+  </Card>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    All Discord commands, including `/fork` and `/interrupt`.
+  </Card>
+  <Card title="Conversations" icon="comments" href="/core-usage/conversations">
+    How the main conversation works, including reply-to-fork behavior.
+  </Card>
+  <Card title="Ping budget" icon="bell" href="/scheduling/ping-budget">
+    How background forks manage notification limits.
+  </Card>
+</Columns>
