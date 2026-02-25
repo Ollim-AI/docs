@@ -61,7 +61,8 @@
               "scheduling/routines",
               "scheduling/reminders",
               "scheduling/background-forks",
-              "scheduling/ping-budget"
+              "scheduling/ping-budget",
+              "scheduling/examples"
             ]
           },
           {
