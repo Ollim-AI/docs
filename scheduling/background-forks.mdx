@@ -100,14 +100,16 @@ The agent's text output is discarded. To reach you, it must call
 are subject to the [ping budget](/scheduling/ping-budget) — each
 non-critical ping consumes one token from the budget.
 
-Set `allow_ping: false` to disable both tools entirely. Unlike the ping
-budget, this is absolute — `critical: true` does **not** bypass it. Use
-this for tasks that should never produce visible output.
+Set `allow_ping: false` to disable both tools entirely. This is enforced
+at two levels: the tools are removed from the SDK's tool list (the agent
+never sees them), and the MCP handlers return errors as a fallback.
+Unlike the ping budget, this is absolute — `critical: true` does **not**
+bypass it. Use this for tasks that should never produce visible output.
 
 ### Reporting to the main session
 
 The `report_updates` tool queues a short summary to
-`~/.ollim-bot/pending_updates.json`. These updates are prepended to the
+`~/.ollim-bot/state/pending_updates.json`. These updates are prepended to the
 next main session interaction, giving the agent context about what
 happened in the background.
 

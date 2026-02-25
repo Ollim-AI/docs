@@ -59,7 +59,7 @@ Button behavior is determined by the `action` string. There are two categories: 
 
 <Tabs>
   <Tab title="Direct actions">
-    Direct actions perform a single operation and respond with an ephemeral message. No agent involvement.
+    Direct actions perform a single operation and respond with an ephemeral message. No agent involvement. If the Google API returns an error, the error reason is shown as an ephemeral message.
 
     | Action pattern | Handler | What it does |
     |----------------|---------|--------------|
@@ -98,7 +98,7 @@ When the agent sends a button with an `agent:` action, the prompt is persisted t
   </Step>
 </Steps>
 
-Inquiry prompts are stored in `~/.ollim-bot/inquiries.json` with a 7-day TTL. Expired entries are cleaned up on read.
+Inquiry prompts are stored in `~/.ollim-bot/state/inquiries.json` with a 7-day TTL. Expired entries are cleaned up on read.
 
 ## Fork embeds
 
@@ -131,7 +131,7 @@ When a fork ends, a "Fork Ended" embed is sent with a color indicating the exit 
 Buttons remain functional across bot restarts through two mechanisms:
 
 - **`DynamicItem[Button]`**: Discord.py reconstructs button handlers from custom IDs using a regex pattern (`act:(?P<action>[a-z_]+):(?P<data>.+)`). The `ActionButton` class matches this pattern and dispatches to the correct handler.
-- **Inquiry storage**: Agent inquiry prompts are written to `~/.ollim-bot/inquiries.json` so the prompt text is available even after a restart. Each entry includes a timestamp for TTL enforcement.
+- **Inquiry storage**: Agent inquiry prompts are written to `~/.ollim-bot/state/inquiries.json` so the prompt text is available even after a restart. Each entry includes a timestamp for TTL enforcement.
 
 <Tip>Direct action buttons (task operations, dismiss, fork controls) are fully persistent with no expiration — their data is encoded in the custom ID itself. Only agent inquiry buttons expire after 7 days.</Tip>
 

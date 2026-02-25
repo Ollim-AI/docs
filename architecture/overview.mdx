@@ -129,7 +129,7 @@ sessions that execute in parallel without blocking the main conversation.
 
 Background forks communicate back to the main session through
 **pending updates** — summaries written to
-`~/.ollim-bot/pending_updates.json`. The main session pops these
+`~/.ollim-bot/state/pending_updates.json`. The main session pops these
 updates and prepends them to the next user message. Forks peek at
 updates (read-only) to avoid consuming another fork's output.
 
@@ -145,7 +145,7 @@ or the main session.
 ### Session persistence
 
 The bot maintains a single `ClaudeSDKClient` with a session ID
-persisted to `~/.ollim-bot/sessions.json`. On restart, it resumes the
+persisted to `~/.ollim-bot/state/sessions.json`. On restart, it resumes the
 existing session. All session lifecycle events (created, compacted,
 swapped, cleared, forked) are logged to `session_history.jsonl`.
 

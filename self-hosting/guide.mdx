@@ -69,10 +69,10 @@ yourself, and run it. This guide covers the full process.
   <Step title="Set up Google OAuth (optional)">
     Google Tasks, Calendar, and Gmail integration requires OAuth credentials
     from Google Cloud Console. Download the credentials JSON and save it to
-    `~/.ollim-bot/credentials.json`.
+    `~/.ollim-bot/state/credentials.json`.
 
     On first use of any Google service, a browser window opens for consent. The
-    authorized token is saved to `~/.ollim-bot/token.json` and reused automatically.
+    authorized token is saved to `~/.ollim-bot/state/token.json` and reused automatically.
 
     See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full walkthrough.
   </Step>
@@ -84,7 +84,7 @@ yourself, and run it. This guide covers the full process.
 
     On startup, ollim-bot:
     1. Validates required environment variables
-    2. Checks that no other instance is running (PID file at `~/.ollim-bot/bot.pid`)
+    2. Checks that no other instance is running (PID file at `~/.ollim-bot/state/bot.pid`)
     3. Connects to Discord and syncs slash commands
     4. Starts the scheduler (polls routines and reminders every 10 seconds)
     5. Starts the webhook server if `WEBHOOK_PORT` is set
@@ -92,7 +92,7 @@ yourself, and run it. This guide covers the full process.
 
     <Note>
       ollim-bot enforces single-instance via a PID file. If the bot crashes without
-      cleaning up `~/.ollim-bot/bot.pid`, delete the file manually before restarting.
+      cleaning up `~/.ollim-bot/state/bot.pid`, delete the file manually before restarting.
     </Note>
   </Step>
 </Steps>
@@ -152,18 +152,21 @@ and delete operation.
 
 ```
 ~/.ollim-bot/
-├── bot.pid                  # PID lock file
-├── credentials.json         # Google OAuth credentials (manual)
-├── token.json               # Google OAuth token (auto-generated)
-├── sessions.json            # Current session ID
-├── session_history.jsonl    # Session lifecycle log
-├── fork_messages.json       # Message → fork session map (7-day TTL)
-├── inquiries.json           # Button inquiry prompts (7-day TTL)
-├── pending_updates.json     # Background fork summaries
-├── ping_budget.json         # Ping budget state (not git-committed)
-├── routines/                # Recurring cron files
-├── reminders/               # One-shot reminder files
-└── webhooks/                # Webhook spec files
+├── routine-reminder-spec.md →  # Symlink to docs/routine-reminder-spec.md
+├── webhook-spec.md →           # Symlink to docs/webhook-spec.md
+├── routines/                   # Recurring cron files
+├── reminders/                  # One-shot reminder files
+├── webhooks/                   # Webhook spec files
+└── state/
+    ├── bot.pid                 # PID lock file
+    ├── credentials.json        # Google OAuth credentials (manual)
+    ├── token.json              # Google OAuth token (auto-generated)
+    ├── sessions.json           # Current session ID
+    ├── session_history.jsonl   # Session lifecycle log
+    ├── fork_messages.json      # Message → fork session map (7-day TTL)
+    ├── inquiries.json          # Button inquiry prompts (7-day TTL)
+    ├── pending_updates.json    # Background fork summaries
+    └── ping_budget.json        # Ping budget state (not git-committed)
 ```
 
 <Tip>
@@ -208,12 +211,12 @@ systemctl --user enable --now ollim-bot
 
 ## Session persistence
 
-ollim-bot persists its Claude session ID to `~/.ollim-bot/sessions.json`.
+ollim-bot persists its Claude session ID to `~/.ollim-bot/state/sessions.json`.
 On restart, it resumes the existing conversation — no context is lost. If you
 want a fresh start, use `/clear` in Discord or delete `sessions.json`.
 
 Session history (compactions, forks, clears) is logged to
-`~/.ollim-bot/session_history.jsonl` for debugging. See
+`~/.ollim-bot/state/session_history.jsonl` for debugging. See
 [Session management](/architecture/session-management) for details.
 
 ## Next steps

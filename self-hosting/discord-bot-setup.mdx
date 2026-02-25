@@ -71,7 +71,7 @@ ollim-bot runs entirely in DMs — no server invite is needed.
 
     Required environment variables are validated at import time (before the bot starts).
     Once running, the bot:
-    1. Checks that no other instance is running (via PID file at `~/.ollim-bot/bot.pid`)
+    1. Checks that no other instance is running (via PID file at `~/.ollim-bot/state/bot.pid`)
     2. Connects to Discord and syncs slash commands
     3. Sends you a startup DM
     4. Starts the scheduler and webhook server (if configured)

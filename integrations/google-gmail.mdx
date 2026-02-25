@@ -149,7 +149,7 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
   <Accordion title="Gmail commands return no messages">
     Verify that your OAuth token includes the `gmail.readonly` scope.
     If you added Gmail after the initial OAuth flow, delete
-    `~/.ollim-bot/token.json` and re-authenticate to pick up the new scope.
+    `~/.ollim-bot/state/token.json` and re-authenticate to pick up the new scope.
   </Accordion>
   <Accordion title="Body shows '(no text body)'">
     Some emails use only HTML with embedded images and no text content.

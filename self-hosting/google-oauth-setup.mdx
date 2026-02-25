@@ -85,22 +85,22 @@ authentication flow.
   </Step>
 
   <Step title="Save credentials to the data directory">
-    Move the downloaded file to `~/.ollim-bot/credentials.json`:
+    Move the downloaded file to `~/.ollim-bot/state/credentials.json`:
 
     ```bash
     mkdir -p ~/.ollim-bot
-    mv ~/Downloads/client_secret_*.json ~/.ollim-bot/credentials.json
+    mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
     ```
 
     ollim-bot looks for credentials at this exact path:
 
     ```
-    ~/.ollim-bot/credentials.json
+    ~/.ollim-bot/state/credentials.json
     ```
 
     If the file is missing when a Google API call is made, the bot exits with:
     ```
-    Missing ~/.ollim-bot/credentials.json -- download OAuth client credentials
+    Missing ~/.ollim-bot/state/credentials.json -- download OAuth client credentials
     from Google Cloud Console and save at that path
     ```
   </Step>
@@ -114,12 +114,12 @@ authentication flow.
 
     On the first Google API call, ollim-bot:
 
-    1. Reads `~/.ollim-bot/credentials.json`
+    1. Reads `~/.ollim-bot/state/credentials.json`
     2. Starts a local HTTP server on `127.0.0.1` (random port)
     3. Opens your browser to Google's OAuth consent page
     4. After you grant access, captures the authorization code
     5. Exchanges the code for access and refresh tokens
-    6. Saves the tokens to `~/.ollim-bot/token.json`
+    6. Saves the tokens to `~/.ollim-bot/state/token.json`
 
     On subsequent runs, the saved token is reused automatically.
     Expired tokens are refreshed in the background without
@@ -144,7 +144,7 @@ in `google/auth.py`:
 | `token.json` missing | Full OAuth flow — opens browser for consent |
 | `credentials.json` missing | Exits with an error message |
 
-The token file at `~/.ollim-bot/token.json` stores the access token,
+The token file at `~/.ollim-bot/state/token.json` stores the access token,
 refresh token, and granted scopes. Do not edit it manually.
 
 ## Adding or changing scopes
@@ -162,7 +162,7 @@ SCOPES = [
 If you add a new Google service and need additional scopes:
 
 1. Add the scope string to the `SCOPES` list
-2. Delete `~/.ollim-bot/token.json`
+2. Delete `~/.ollim-bot/state/token.json`
 3. Restart the bot — the OAuth consent flow runs again with
    the updated scopes
 

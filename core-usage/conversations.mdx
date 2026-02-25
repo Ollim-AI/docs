@@ -17,7 +17,9 @@ All message processing is serialized through an async lock. Only one message is 
 
 ## Talking to ollim-bot
 
-Send a direct message to the bot. The full message content is forwarded to the agent.
+Send a direct message to the bot. Only the **bot owner** (resolved via
+`application_info()` at startup) can interact — messages from other
+users are silently ignored, and guild messages are dropped.
 
 The bot requires the `message_content` intent to read DM content. This is configured at startup:
 
@@ -91,11 +93,11 @@ During pauses (such as tool execution), the bot sends typing indicators to show 
 
 ## Session persistence
 
-ollim-bot maintains a single persistent session with the Claude Agent SDK. The session ID is stored at `~/.ollim-bot/sessions.json` and is resumed on every bot restart.
+ollim-bot maintains a single persistent session with the Claude Agent SDK. The session ID is stored at `~/.ollim-bot/state/sessions.json` and is resumed on every bot restart.
 
 Every message builds on the full conversation history. The SDK handles auto-compaction when the context grows too large — ollim-bot detects this by tracking session ID changes and logs a `compacted` event with the parent session ID for lineage tracking.
 
-Session lifecycle events are recorded in `~/.ollim-bot/session_history.jsonl`:
+Session lifecycle events are recorded in `~/.ollim-bot/state/session_history.jsonl`:
 
 | Event | Trigger |
 |-------|---------|

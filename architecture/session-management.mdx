@@ -22,7 +22,7 @@ ID string.
 
 ## Session persistence
 
-The main session ID is stored at `~/.ollim-bot/sessions.json`. Despite the
+The main session ID is stored at `~/.ollim-bot/state/sessions.json`. Despite the
 `.json` extension, this file contains a plain session ID string, not JSON.
 
 | Function | Behavior |
@@ -48,7 +48,7 @@ await client.connect()
 
 ## Session lifecycle events
 
-Every session transition is recorded in `~/.ollim-bot/session_history.jsonl`. Each line is a `SessionEvent`:
+Every session transition is recorded in `~/.ollim-bot/state/session_history.jsonl`. Each line is a `SessionEvent`:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -76,15 +76,16 @@ so that the swap is logged as `swapped` rather than `compacted`.
 
 ## Compaction
 
-The Claude Agent SDK automatically compacts conversations when they grow
-too long. From ollim-bot's perspective, compaction manifests as a changed
-session ID — the SDK returns a new ID pointing to a compacted version of
-the conversation.
+Compaction is detected through two paths:
 
-`save_session_id()` detects this: if a session ID already exists on disk
-and the new ID differs, it logs a `compacted` event with
-`parent_session_id` set to the old ID, then writes the new ID. No explicit
-compaction logic exists in ollim-bot — the SDK handles it transparently.
+- **Manual** (`/compact`): `Agent.compact()` streams the SDK response and
+  looks for a `compact_boundary` SystemMessage. When found, it extracts
+  `pre_tokens` from the compact metadata, logs a `compacted` event, and
+  returns productivity stats (turns, session age, tokens compacted).
+- **Automatic**: The SDK may auto-compact during normal conversation.
+  `save_session_id()` detects this by comparing the new session ID against
+  the one on disk — if they differ, it logs a `compacted` event with the
+  old ID as `parent_session_id`.
 
 ## The `/clear` lifecycle
 
@@ -105,7 +106,7 @@ When a user runs `/clear`, `Agent.clear()` executes the following sequence:
     Errors are suppressed since the subprocess may have already exited.
   </Step>
   <Step title="Delete the session file">
-    Removes `~/.ollim-bot/sessions.json`. The next message will start a fresh session.
+    Removes `~/.ollim-bot/state/sessions.json`. The next message will start a fresh session.
   </Step>
 </Steps>
 
@@ -126,7 +127,7 @@ Tracking uses a contextvar-based collector pattern:
 | `cancel_message_collector()` | Discards collected IDs without writing |
 | `lookup_fork_session(message_id)` | Returns the fork session ID for a Discord message, or `None` |
 
-The mapping is stored in `~/.ollim-bot/fork_messages.json` as a JSON array of records:
+The mapping is stored in `~/.ollim-bot/state/fork_messages.json` as a JSON array of records:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -141,9 +142,9 @@ The mapping is stored in `~/.ollim-bot/fork_messages.json` as a JSON array of re
 
 | File | Format | Purpose |
 |------|--------|---------|
-| `~/.ollim-bot/sessions.json` | Plain string | Current main session ID |
-| `~/.ollim-bot/session_history.jsonl` | JSONL (`SessionEvent`) | Append-only lifecycle event log |
-| `~/.ollim-bot/fork_messages.json` | JSON array | Discord message to fork session mapping |
+| `~/.ollim-bot/state/sessions.json` | Plain string | Current main session ID |
+| `~/.ollim-bot/state/session_history.jsonl` | JSONL (`SessionEvent`) | Append-only lifecycle event log |
+| `~/.ollim-bot/state/fork_messages.json` | JSON array | Discord message to fork session mapping |
 
 ## Next steps
 

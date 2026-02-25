@@ -3,33 +3,40 @@ title: "Data directory"
 description: "Layout of ~/.ollim-bot/: routines, reminders, webhooks, sessions, and more."
 ---
 
-All persistent state lives in `~/.ollim-bot/`. The directory is created on first
-use and automatically managed as a git repository — `storage.py` auto-commits
-after most writes.
+All persistent data lives in `~/.ollim-bot/`. The directory is created on
+first use and automatically managed as a git repository — `storage.py`
+auto-commits after most writes.
+
+The root contains agent-facing files (routines, reminders, webhooks, spec
+symlinks) that the agent reads and writes directly. Infrastructure state
+(sessions, credentials, ping budget, etc.) lives in the `state/`
+subdirectory, keeping the agent's working directory clean.
 
 ```
 ~/.ollim-bot/
-├── bot.pid                      # PID file for single-instance check
-├── credentials.json             # Google OAuth credentials (from Cloud Console)
-├── token.json                   # Google OAuth token (auto-generated)
-├── sessions.json                # Current session ID (plain string)
-├── session_history.jsonl        # Append-only session lifecycle events
-├── pending_updates.json         # Background fork updates queued for main session
-├── inquiries.json               # Button inquiry prompts (7-day TTL)
-├── fork_messages.json           # Discord message → fork session mapping (7-day TTL)
-├── ping_budget.json             # Ping budget state (ephemeral, no git commit)
-├── routine-reminder-spec.md →   # Symlink to docs/routine-reminder-spec.md
-├── webhook-spec.md →            # Symlink to docs/webhook-spec.md
+├── routine-reminder-spec.md →       # Symlink to docs/routine-reminder-spec.md
+├── webhook-spec.md →                # Symlink to docs/webhook-spec.md
 ├── routines/
-│   └── *.md                     # Recurring routine specs
+│   └── *.md                         # Recurring routine specs
 ├── reminders/
-│   └── *.md                     # One-shot reminder specs
-└── webhooks/
-    └── *.md                     # Webhook specs
+│   └── *.md                         # One-shot reminder specs
+├── webhooks/
+│   └── *.md                         # Webhook specs
+└── state/
+    ├── bot.pid                      # PID file for single-instance check
+    ├── credentials.json             # Google OAuth credentials (from Cloud Console)
+    ├── token.json                   # Google OAuth token (auto-generated)
+    ├── sessions.json                # Current session ID (plain string)
+    ├── session_history.jsonl        # Append-only session lifecycle events
+    ├── pending_updates.json         # Background fork updates queued for main session
+    ├── inquiries.json               # Button inquiry prompts (7-day TTL)
+    ├── fork_messages.json           # Discord message → fork session mapping (7-day TTL)
+    └── ping_budget.json             # Ping budget state (ephemeral, no git commit)
 ```
 
 ## Session files
 
+All files in this section and below live in the `state/` subdirectory.
 These files track the agent's conversation state across restarts.
 
 | File | Format | Description |
@@ -55,10 +62,11 @@ Each line in `session_history.jsonl` contains:
 ```
 
 <Info>
-`save_session_id()` auto-detects lifecycle transitions: it logs `created`
-when no prior ID exists, and `compacted` when the ID changes
-(SDK auto-compaction). A `_swap_in_progress` flag suppresses false
-`compacted` events during `swap_client()`.
+Compaction is detected two ways: the `/compact` command detects it
+via the `compact_boundary` SystemMessage from the SDK, while
+`save_session_id()` catches SDK auto-compaction by detecting session
+ID changes. A `_swap_in_progress` flag suppresses false `compacted`
+events during `swap_client()`.
 </Info>
 
 ## Fork and inquiry files
@@ -240,10 +248,10 @@ The `~/.ollim-bot/` directory is initialized as a git repository.
 
 | File | Reason |
 |------|--------|
-| `ping_budget.json` | Ephemeral state that refills over time |
-| `bot.pid` | Process lock deleted on exit |
-| `credentials.json` | Sensitive OAuth client credentials |
-| `fork_messages.json` | Ephemeral mapping with 7-day TTL |
+| `state/ping_budget.json` | Ephemeral state that refills over time |
+| `state/bot.pid` | Process lock deleted on exit |
+| `state/credentials.json` | Sensitive OAuth client credentials |
+| `state/fork_messages.json` | Ephemeral mapping with 7-day TTL |
 
 All other files — session state, history, routines, reminders, webhooks,
 pending updates, inquiries, and OAuth tokens — are auto-committed on

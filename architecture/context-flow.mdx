@@ -33,7 +33,7 @@ The flow forms a loop:
 
 Pending updates are the primary channel for passing context from forks
 back to the main session. They are stored in
-`~/.ollim-bot/pending_updates.json` as a JSON array of timestamped
+`~/.ollim-bot/state/pending_updates.json` as a JSON array of timestamped
 messages.
 
 Each entry is a `PendingUpdate` with two fields:
@@ -198,7 +198,7 @@ The mechanism relies on fork session tracking in `sessions.py`:
    Discord message, `track_message(message_id)` records it
 3. After the fork completes,
    `flush_message_collector(fork_id, parent_id)` writes the mapping
-   to `~/.ollim-bot/fork_messages.json`
+   to `~/.ollim-bot/state/fork_messages.json`
 4. When a user replies to one of those messages,
    `lookup_fork_session(message_id)` returns the fork session ID
 5. The bot creates an interactive fork that resumes from that session

@@ -21,7 +21,7 @@ error to the agent (you are not notified) suggesting it use
 `report_updates` to pass findings to the main session instead.
 
 <Note>
-  The budget file at `~/.ollim-bot/ping_budget.json` is ephemeral
+  The budget file at `~/.ollim-bot/state/ping_budget.json` is ephemeral
   state — it is written atomically but never committed to git.
 </Note>
 
@@ -130,7 +130,7 @@ View or configure the ping budget from Discord.
 
 The budget is stored as a single JSON file:
 
-```json title="~/.ollim-bot/ping_budget.json"
+```json title="~/.ollim-bot/state/ping_budget.json"
 {
   "capacity": 5,
   "available": 3.0,

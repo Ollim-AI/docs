@@ -86,7 +86,7 @@ corresponding MCP tools directly.
     - **MCP tool**: `save_context` (no parameters)
   </Accordion>
   <Accordion title="Report updates">
-    Appends a short summary to `~/.ollim-bot/pending_updates.json`
+    Appends a short summary to `~/.ollim-bot/state/pending_updates.json`
     and discards the fork. The summary is injected into the next
     main-session message, so you get the findings without the full
     context.
@@ -159,7 +159,7 @@ overrides, tool restrictions, `update_main_session` modes,
 
 Pending updates are the bridge between forks and the main session.
 When a fork calls `report_updates(message)`, the summary is written
-to `~/.ollim-bot/pending_updates.json` with a timestamp.
+to `~/.ollim-bot/state/pending_updates.json` with a timestamp.
 
 The main session **pops** pending updates (reads and clears) at the
 start of each interaction. Forked sessions **peek** (read-only), so

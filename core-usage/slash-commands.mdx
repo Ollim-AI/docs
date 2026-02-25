@@ -3,7 +3,9 @@ title: "Slash commands"
 description: "All Discord slash commands available in ollim-bot."
 ---
 
-ollim-bot registers nine slash commands in Discord. All commands are scoped to DMs with the bot.
+ollim-bot registers nine slash commands in Discord. All commands are
+scoped to DMs with the bot and restricted to the **bot owner** (resolved
+via `application_info()` at startup). Non-owners receive "not authorized".
 
 ## Quick reference
 
@@ -41,6 +43,16 @@ Useful when a long conversation starts hitting context limits.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `instructions` | string | No | Optional focus for the summary (e.g., "keep the routine config details") |
+
+The command responds immediately with "compacting..." (to avoid Discord's
+interaction timeout), then sends a followup with productivity stats:
+
+```
+15 turns · 3h 12m · 45k tokens compacted
+```
+
+Stats include: number of turns in the session, session age, and
+pre-compaction token count.
 
 <Tip>
   Use `instructions` to tell the compactor what information matters most.

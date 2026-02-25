@@ -52,7 +52,7 @@ understanding.
 ### How sessions work
 
 The Claude Agent SDK assigns a session ID to each conversation.
-ollim-bot persists this ID to `~/.ollim-bot/sessions.json` (a
+ollim-bot persists this ID to `~/.ollim-bot/state/sessions.json` (a
 plain text file containing just the session ID string). On
 restart, the bot resumes from this saved session using
 `resume=session_id`.
@@ -65,7 +65,7 @@ detects and logs this automatically.
 ### Session lifecycle events
 
 Every session state change is logged to
-`~/.ollim-bot/session_history.jsonl` as an append-only record:
+`~/.ollim-bot/state/session_history.jsonl` as an append-only record:
 
 | Event | Trigger |
 |-------|---------|
@@ -148,7 +148,7 @@ calendar checks.
 ## Context flow
 
 Context flows between the main session and forks through a
-file-based bridge at `~/.ollim-bot/pending_updates.json`.
+file-based bridge at `~/.ollim-bot/state/pending_updates.json`.
 
 ### The pending updates cycle
 
@@ -178,7 +178,7 @@ Replying to a message sent by a background fork starts an
 interactive fork that resumes from that background fork's
 session. This lets you drill into a background task's context
 without disrupting the main conversation. Discord message IDs are
-mapped to fork session IDs in `~/.ollim-bot/fork_messages.json`
+mapped to fork session IDs in `~/.ollim-bot/state/fork_messages.json`
 with a 7-day TTL.
 
 ## Next steps

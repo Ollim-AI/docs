@@ -40,7 +40,7 @@ initial consent flow:
 Two functions handle all authentication:
 
 - **`get_credentials()`** — loads cached credentials from
-  `~/.ollim-bot/token.json`, refreshes expired tokens automatically,
+  `~/.ollim-bot/state/token.json`, refreshes expired tokens automatically,
   or starts a new browser-based consent flow on first run.
 - **`get_service(api, version)`** — builds a Google API client for
   any service using the shared credentials. Each service module calls
@@ -50,19 +50,19 @@ Two functions handle all authentication:
 <Note>
 On first run, the OAuth flow opens a browser window bound to
 `127.0.0.1` for consent. After granting access, the token is
-cached at `~/.ollim-bot/token.json` and refreshed automatically.
+cached at `~/.ollim-bot/state/token.json` and refreshed automatically.
 </Note>
 
 ## Credential files
 
 | File | Path | Purpose |
 |------|------|---------|
-| OAuth client credentials | `~/.ollim-bot/credentials.json` | Downloaded from Google Cloud Console |
-| Cached token | `~/.ollim-bot/token.json` | Auto-generated after first OAuth consent |
+| OAuth client credentials | `~/.ollim-bot/state/credentials.json` | Downloaded from Google Cloud Console |
+| Cached token | `~/.ollim-bot/state/token.json` | Auto-generated after first OAuth consent |
 
 <Warning>
 If you add a new Google service scope to `google/auth.py`, delete
-`~/.ollim-bot/token.json` to trigger re-consent with the updated
+`~/.ollim-bot/state/token.json` to trigger re-consent with the updated
 scopes.
 </Warning>
 
@@ -72,7 +72,7 @@ To integrate an additional Google service:
 
 1. Add the new scope to the `SCOPES` list in `google/auth.py`.
 2. Create a new module in `google/` with CLI handlers and any helper functions.
-3. Delete `~/.ollim-bot/token.json` so the next run prompts for consent with the expanded scopes.
+3. Delete `~/.ollim-bot/state/token.json` so the next run prompts for consent with the expanded scopes.
 4. Add commands to the system prompt so the agent knows about the new service.
 
 See [Adding new integrations](/extending/adding-integrations) for the full walkthrough.

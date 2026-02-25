@@ -39,7 +39,7 @@ project root) and restart.
 
 ### Bot already running
 
-The bot writes its PID to `~/.ollim-bot/bot.pid` on startup and checks
+The bot writes its PID to `~/.ollim-bot/state/bot.pid` on startup and checks
 `/proc/<pid>/cmdline` for the string `ollim-bot`. If a match is found:
 
 ```
@@ -50,7 +50,7 @@ If the previous process crashed without cleaning up the PID file, delete it
 manually:
 
 ```bash
-rm ~/.ollim-bot/bot.pid
+rm ~/.ollim-bot/state/bot.pid
 ```
 
 The file is normally deleted on exit via `atexit`.
@@ -72,12 +72,12 @@ created by a team with no members.
 
 <AccordionGroup>
   <Accordion title="Session not resuming after restart">
-    The bot reads `~/.ollim-bot/sessions.json` on startup. If the file is
+    The bot reads `~/.ollim-bot/state/sessions.json` on startup. If the file is
     missing or empty, it starts a fresh session. Check that the file exists
     and contains a session ID string:
 
     ```bash
-    cat ~/.ollim-bot/sessions.json
+    cat ~/.ollim-bot/state/sessions.json
     ```
 
     If the file contains a JSON object (starts with `{`), `load_session_id()`
@@ -97,11 +97,11 @@ created by a team with no members.
   </Accordion>
 
   <Accordion title="Recovering session history">
-    The append-only log at `~/.ollim-bot/session_history.jsonl` records every
+    The append-only log at `~/.ollim-bot/state/session_history.jsonl` records every
     lifecycle event. To inspect it:
 
     ```bash
-    cat ~/.ollim-bot/session_history.jsonl
+    cat ~/.ollim-bot/state/session_history.jsonl
     ```
 
     Each line is a JSON object with `session_id`, `event`, `timestamp`, and
@@ -111,7 +111,7 @@ created by a team with no members.
     To manually resume a specific session, write its ID to `sessions.json`:
 
     ```bash
-    echo -n "sess_abc123" > ~/.ollim-bot/sessions.json
+    echo -n "sess_abc123" > ~/.ollim-bot/state/sessions.json
     ```
   </Accordion>
 </AccordionGroup>
@@ -142,7 +142,7 @@ All persistent state lives in `~/.ollim-bot/`. See the
     files on the next write:
 
     ```bash
-    rm ~/.ollim-bot/session_history.jsonl
+    rm ~/.ollim-bot/state/session_history.jsonl
     ```
   </Accordion>
 
@@ -164,7 +164,7 @@ its commit. Use `git log` inside the directory to review the change history.
 
 <AccordionGroup>
   <Accordion title="Missing credentials.json">
-    The Google integration requires `~/.ollim-bot/credentials.json` from the
+    The Google integration requires `~/.ollim-bot/state/credentials.json` from the
     Google Cloud Console. Without it, all Google-related commands (`tasks`,
     `cal`, `gmail`) and agent tools fail. Follow the
     [Google OAuth setup guide](/self-hosting/google-oauth-setup) to create
@@ -172,12 +172,12 @@ its commit. Use `git log` inside the directory to review the change history.
   </Accordion>
 
   <Accordion title="Expired or invalid token">
-    `~/.ollim-bot/token.json` is auto-generated on first authentication and
+    `~/.ollim-bot/state/token.json` is auto-generated on first authentication and
     refreshed automatically. If the token becomes invalid (revoked scopes,
     credential rotation), delete it and re-authenticate:
 
     ```bash
-    rm ~/.ollim-bot/token.json
+    rm ~/.ollim-bot/state/token.json
     uv run ollim-bot tasks list
     ```
 
@@ -211,7 +211,7 @@ its commit. Use `git log` inside the directory to review the change history.
     Check the budget state:
 
     ```bash
-    cat ~/.ollim-bot/ping_budget.json
+    cat ~/.ollim-bot/state/ping_budget.json
     ```
 
     The `available` field shows remaining pings. The bucket refills 1 ping
@@ -227,7 +227,7 @@ its commit. Use `git log` inside the directory to review the change history.
   <Accordion title="Reply-to-fork not working">
     Replying to a background fork message starts an interactive fork that
     resumes from that fork's session. This relies on
-    `~/.ollim-bot/fork_messages.json`, which maps Discord message IDs to
+    `~/.ollim-bot/state/fork_messages.json`, which maps Discord message IDs to
     fork session IDs.
 
     Records older than 7 days are pruned on every read. If the background
@@ -281,13 +281,13 @@ Quick reference for where to look when debugging.
 
 | File | What it tells you |
 |------|-------------------|
-| `~/.ollim-bot/sessions.json` | Current session ID (or missing = no active session) |
-| `~/.ollim-bot/session_history.jsonl` | Timeline of session lifecycle events |
-| `~/.ollim-bot/bot.pid` | PID of running bot instance |
-| `~/.ollim-bot/ping_budget.json` | Current ping budget state and counters |
-| `~/.ollim-bot/pending_updates.json` | Queued background fork summaries |
-| `~/.ollim-bot/fork_messages.json` | Discord message to fork session mappings |
-| `~/.ollim-bot/inquiries.json` | Active button inquiry prompts |
+| `~/.ollim-bot/state/sessions.json` | Current session ID (or missing = no active session) |
+| `~/.ollim-bot/state/session_history.jsonl` | Timeline of session lifecycle events |
+| `~/.ollim-bot/state/bot.pid` | PID of running bot instance |
+| `~/.ollim-bot/state/ping_budget.json` | Current ping budget state and counters |
+| `~/.ollim-bot/state/pending_updates.json` | Queued background fork summaries |
+| `~/.ollim-bot/state/fork_messages.json` | Discord message to fork session mappings |
+| `~/.ollim-bot/state/inquiries.json` | Active button inquiry prompts |
 
 <Tip>
 The `~/.ollim-bot/` directory is git-tracked. Run `git log --oneline`
