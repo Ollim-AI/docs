@@ -3,42 +3,40 @@ title: "Setup guide"
 description: "Full setup: Discord bot, Google OAuth, environment, and first run."
 ---
 
-Complete setup for ollim-bot including Discord bot creation, Google OAuth,
-environment configuration, and optional webhooks. For a minimal quickstart,
-see the [quickstart guide](/getting-started/quickstart).
+Complete setup for ollim-bot from scratch — Discord bot creation, Google OAuth,
+environment configuration, and optional webhooks. No existing infrastructure
+required. For a minimal quickstart, see the [quickstart guide](/getting-started/quickstart).
 
 ## Prerequisites
 
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) package manager
-- A Discord account with a server where you can add bots
-- [Claude Code](https://claude.ai/code) installed and authenticated
-  (ollim-bot uses Claude Code OAuth — no API key needed)
+| Requirement | Notes |
+|-------------|-------|
+| Python 3.11+ | Check with `python3 --version` |
+| [uv](https://docs.astral.sh/uv/) | Install: `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| [Claude Code](https://claude.ai/code) | Install and authenticate — ollim-bot uses Claude Code OAuth, no API key needed |
+| A Discord account | You need a server where you have **Manage Server** permission |
+| Git | For cloning the repo and data directory version control |
 
 ## Installation
 
 <Steps>
   <Step title="Clone and install">
     ```bash
-    git clone https://github.com/literal:your-username/ollim-bot.git
+    git clone https://github.com/your-username/ollim-bot.git
     cd ollim-bot
     uv sync
     ```
   </Step>
 
   <Step title="Create a Discord bot">
-    Create a Discord application and bot at the [Discord Developer Portal](https://discord.com/developers/applications).
+    1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+    2. Click **New Application** and give it a name (e.g. `ollim-bot`)
+    3. Go to **Bot** in the sidebar and click **Reset Token** — copy the token
+    4. Enable **Message Content Intent** under Privileged Gateway Intents
+    5. Go to **OAuth2 → URL Generator**, select scopes `bot` + `applications.commands`
+    6. Select permissions: **Send Messages**, **Read Message History**, **Add Reactions**, **Embed Links**
+    7. Open the generated URL to invite the bot to your server
 
-    The bot requires these privileged gateway intents:
-    - **Message Content Intent** — required for reading DMs and @mentions
-
-    And these bot permissions:
-    - Send Messages
-    - Embed Links
-    - Add Reactions
-    - Read Message History
-
-    Copy the bot token for the next step.
     See [Discord bot setup](/self-hosting/discord-bot-setup) for a detailed walkthrough.
   </Step>
 
@@ -46,10 +44,13 @@ see the [quickstart guide](/getting-started/quickstart).
     Create a `.env` file in the project root:
 
     ```bash title=".env"
-    DISCORD_TOKEN=literal:your-discord-bot-token
-    OLLIM_USER_NAME=literal:YourName
+    DISCORD_TOKEN=your-discord-bot-token
+    OLLIM_USER_NAME=YourName
     OLLIM_BOT_NAME=Ollim
     ```
+
+    Replace `your-discord-bot-token` with the token from step 2, and `YourName`
+    with whatever name you want the bot to call you.
 
     See the [full environment variable reference](#environment-variables) below for optional variables.
   </Step>

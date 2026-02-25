@@ -5,7 +5,7 @@ MODEL="${MODEL:-opus}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-42}"
 PROMPT_FILE="PROMPT.md"
 DOCS_DIR="$(cd "$(dirname "$0")" && pwd)"
-SOURCE_DIR="literal:../ollim-bot"
+SOURCE_DIR="$(cd "$DOCS_DIR/.." && pwd)/ollim-bot"
 
 ITERATION=0
 TMPFILE=$(mktemp)

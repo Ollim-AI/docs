@@ -1,6 +1,6 @@
 # ollim-bot-docs
 
-Documentation site for [ollim-bot](literal:https://github.com/your-username/ollim-bot), built with [Mintlify](https://mintlify.com).
+Documentation site for [ollim-bot](https://github.com/your-username/ollim-bot), built with [Mintlify](https://mintlify.com).
 
 ## Development
 

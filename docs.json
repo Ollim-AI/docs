@@ -11,19 +11,19 @@
   "logo": {
     "light": "/images/logo-light.svg",
     "dark": "/images/logo-dark.svg",
-    "href": "literal:https://github.com/your-username/ollim-bot"
+    "href": "https://github.com/your-username/ollim-bot"
   },
   "navbar": {
     "links": [
       {
         "label": "GitHub",
-        "href": "literal:https://github.com/your-username/ollim-bot"
+        "href": "https://github.com/your-username/ollim-bot"
       }
     ]
   },
   "footer": {
     "socials": {
-      "github": "literal:https://github.com/your-username/ollim-bot"
+      "github": "https://github.com/your-username/ollim-bot"
     }
   },
   "navigation": {

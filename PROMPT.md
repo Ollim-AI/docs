@@ -2,7 +2,7 @@
 
 You are writing documentation for **ollim-bot**, an ADHD-friendly Discord bot with proactive reminders, powered by Claude. You will write exactly ONE documentation page per invocation.
 
-The docs site is built with **Mintlify** (MDX + YAML frontmatter). The source code lives at `literal:../ollim-bot/`. The docs repo is your working directory.
+The docs site is built with **Mintlify** (MDX + YAML frontmatter). The source code lives at `../ollim-bot/`. The docs repo is your working directory.
 
 ---
 
@@ -32,7 +32,7 @@ Then stop. Do nothing else.
 
 Look up this page's entry in `AGENTS.md` § Source Mapping to find which source files to read.
 
-Using **up to 5 parallel subagents**, read those source files from `literal:../ollim-bot/`. Also read the relevant sections of `literal:../ollim-bot/CLAUDE.md` — it contains authoritative architecture documentation.
+Using **up to 5 parallel subagents**, read those source files from `../ollim-bot/`. Also read the relevant sections of `../ollim-bot/CLAUDE.md` — it contains authoritative architecture documentation.
 
 **You must read the actual source code.** Extract:
 - Function signatures, class fields, dataclass definitions
@@ -77,7 +77,7 @@ Keep the existing YAML frontmatter (`title` and `description`). Replace only the
 
 ### Special case: design-philosophy page
 
-For `getting-started/design-philosophy.mdx`, adapt `literal:../ollim-bot/docs/design-philosophy.md` to the Mintlify template format. Preserve the original voice and substance — restructure for the template, do not rewrite.
+For `getting-started/design-philosophy.mdx`, adapt `../ollim-bot/docs/design-philosophy.md` to the Mintlify template format. Preserve the original voice and substance — restructure for the template, do not rewrite.
 
 ---
 

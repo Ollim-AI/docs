@@ -4,9 +4,9 @@ Operational context for documentation authoring. Read this file at the start of 
 
 ## Source Mapping
 
-Each doc page maps to specific source files in `literal:../ollim-bot/`. Read these files (and the relevant sections of `CLAUDE.md` at the repo root) before writing each page.
+Each doc page maps to specific source files in `../ollim-bot/`. Read these files (and the relevant sections of `CLAUDE.md` at the repo root) before writing each page.
 
-All source paths are relative to `literal:../ollim-bot/` unless noted otherwise.
+All source paths are relative to `../ollim-bot/` unless noted otherwise.
 
 ### Getting Started
 
@@ -96,7 +96,7 @@ All source paths are relative to `literal:../ollim-bot/` unless noted otherwise.
 
 | Page | Source Files |
 |------|-------------|
-| `changelog` | Git log (`git log --oneline` in `literal:../ollim-bot/`) |
+| `changelog` | Git log (`git log --oneline` in `../ollim-bot/`) |
 
 ---
 
