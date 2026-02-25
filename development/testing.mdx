@@ -77,7 +77,6 @@ def data_dir(tmp_path, monkeypatch):
     import ollim_bot.scheduling.routines as routines_mod
     import ollim_bot.sessions as sessions_mod
     import ollim_bot.storage as storage_mod
-    import ollim_bot.webhook as webhook_mod
 
     monkeypatch.setattr(storage_mod, "DATA_DIR", tmp_path)
     monkeypatch.setattr(routines_mod, "ROUTINES_DIR", tmp_path / "routines")
@@ -85,7 +84,16 @@ def data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(inquiries_mod, "INQUIRIES_FILE", tmp_path / "inquiries.json")
     monkeypatch.setattr(ping_budget_mod, "BUDGET_FILE", tmp_path / "ping_budget.json")
     monkeypatch.setattr(sessions_mod, "SESSIONS_FILE", tmp_path / "sessions.json")
+    monkeypatch.setattr(
+        sessions_mod, "HISTORY_FILE", tmp_path / "session_history.jsonl"
+    )
+    monkeypatch.setattr(
+        sessions_mod, "FORK_MESSAGES_FILE", tmp_path / "fork_messages.json"
+    )
     monkeypatch.setattr(forks_mod, "_UPDATES_FILE", tmp_path / "pending_updates.json")
+
+    import ollim_bot.webhook as webhook_mod
+
     monkeypatch.setattr(webhook_mod, "WEBHOOKS_DIR", tmp_path / "webhooks")
     return tmp_path
 ```
@@ -104,7 +112,7 @@ All tests live in `tests/` as module-level functions — no test classes. Each f
 | `test_config.py` | `config.py` |
 | `test_embeds.py` | `embeds.py`, `views.py` |
 | `test_forks.py` | `forks.py` |
-| `test_formatting.py` | `agent_tools.py` |
+| `test_formatting.py` | `formatting.py` |
 | `test_inquiries.py` | `inquiries.py` |
 | `test_permissions.py` | `permissions.py` |
 | `test_ping_budget.py` | `ping_budget.py` |

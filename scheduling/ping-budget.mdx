@@ -76,8 +76,14 @@ forks enter a "quiet when busy" mode:
 - Background forks still run on schedule; only their output delivery
   is affected
 
-This check happens before the budget check, so a blocked-by-busy
-ping does not consume a token.
+Non-critical pings are checked in this order:
+
+1. **Per-session limit** — each background fork is hard-limited to 1 ping
+   (`bg_ping_count() >= 1`). This is enforced in code, not just advisory.
+2. **Busy check** — if the user is mid-conversation, the ping is blocked.
+3. **Budget check** — if no tokens remain, the ping is blocked.
+
+A ping blocked at any stage does not consume a budget token.
 
 ## Agent awareness
 
@@ -88,7 +94,7 @@ or report.
 
 The preamble instructs the agent to:
 
-- Send at most 1 ping or embed per background session
+- Send at most 1 ping or embed per background session (enforced by the per-session limit above)
 - Ask "would the user regret missing this?" before pinging
 - Use `report_updates` for informational summaries and low-stakes check-ins
 - Save pings for time-sensitive actions, accountability nudges, and health routines

@@ -81,7 +81,7 @@ All button custom IDs follow the pattern `act:<action>:<data>`, parsed by the `A
 
 ## Inquiry flow
 
-When the agent sends a button with an `agent:` action, the prompt is persisted to disk so it survives bot restarts. Clicking the button enters an interactive fork where the agent processes the stored prompt.
+When the agent sends a button with an `agent:` action, the prompt is persisted to disk so it survives bot restarts. Clicking the button sends the stored prompt to the agent. If the button was sent by a background fork, clicking it enters an interactive fork that resumes that fork's session; otherwise the prompt is processed in the current session.
 
 <Steps>
   <Step title="Agent sends embed with inquiry button">
@@ -93,8 +93,8 @@ When the agent sends a button with an `agent:` action, the prompt is persisted t
   <Step title="Inquiry is popped and validated">
     The handler calls `inquiries.pop(uid)` to retrieve and remove the stored prompt. If the inquiry has expired (older than 7 days) or was already consumed, the button responds with an expiration notice.
   </Step>
-  <Step title="Agent processes the prompt in a fork">
-    The handler enters an interactive fork, sends a fork entry embed with buttons, and streams the agent's response to the channel. The fork follows standard [fork lifecycle](/core-usage/forks) rules including idle timeout.
+  <Step title="Agent processes the prompt">
+    If the button's message has a fork session ID (i.e., it was sent by a background fork), the handler enters an interactive fork that resumes that session, sends a fork entry embed, and streams the agent's response. Otherwise, the prompt is sent directly to the agent in the current session prefixed with `[button]`. Either way, the agent streams its response to the channel.
   </Step>
 </Steps>
 

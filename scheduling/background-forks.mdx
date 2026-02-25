@@ -22,9 +22,11 @@ isolation is handled through context variables — each fork gets its own
 channel reference, config, and output tracking.
 
 <Note>
-When you're mid-conversation (the agent lock is held), background forks
-enter "quiet mode." Non-critical pings return an error suggesting the agent
-use `report_updates` instead. Set `critical: true` on a ping to bypass this.
+Each background fork session is limited to 1 ping (hard-enforced in code).
+Additionally, when you're mid-conversation (the agent lock is held),
+non-critical pings return an error suggesting the agent use
+`report_updates` instead. Set `critical: true` on a ping to bypass the
+busy check, but not the per-session limit.
 </Note>
 
 ## Execution modes

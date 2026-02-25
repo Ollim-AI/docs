@@ -16,21 +16,20 @@ updates, and background preambles — is injected dynamically at runtime.
 | Section | Lines | Purpose |
 |---------|-------|---------|
 | Personality | 6-15 | Tone, ADHD-awareness, honest pushback |
-| Task capture | 17-27 | When and how to capture tasks |
-| Scheduled prompt tags | 28-34 | How to recognize scheduled prompt tags |
-| Configuration notes | 35-43 | CLI invocation style, tool whitelisting |
-| Google Tasks | 47-62 | Commands, conventions |
-| Google Calendar | 64-79 | Commands, timezone |
-| Routines | 81-134 | Full YAML frontmatter spec |
-| Reminders | 136-170 | CLI commands, chain follow-ups |
-| Gmail | 172-178 | Delegation to gmail-reader subagent |
-| Claude History | 180-186 | Delegation to history-reviewer subagent |
-| Responsiveness | 188-196 | Delegation to responsiveness-reviewer |
-| Discord embeds | 198-205 | When to use embeds vs plain text |
-| Web | 207-211 | `WebSearch` and `WebFetch` availability |
-| Interactive forks | 213-230 | Fork rules, idle timeout, exit options |
-| Background sessions | 232-256 | Ping budget, reporting modes |
-| Webhooks | 258-300 | Webhook spec format, security rules |
+| Task capture | 17-24 | When and how to capture tasks |
+| Output budget | 26-31 | Guidance on one-thing-at-a-time and lists |
+| Configuration notes | 32-48 | CLI invocation style, tool whitelisting, prompt tags |
+| Google Tasks | 52-67 | Commands, conventions |
+| Google Calendar | 69-84 | Commands, timezone |
+| Routines and Reminders | 86-113 | YAML frontmatter spec, CLI commands, chain follow-ups |
+| Gmail | 115-121 | Delegation to gmail-reader subagent |
+| Claude History | 123-129 | Delegation to history-reviewer subagent |
+| Responsiveness | 131-139 | Delegation to responsiveness-reviewer |
+| Discord embeds | 141-148 | When to use embeds vs plain text |
+| Web | 150-154 | `WebSearch` and `WebFetch` availability |
+| Interactive forks | 156-174 | Fork rules, idle timeout, exit options |
+| Background sessions | 176-201 | Ping budget, reporting modes |
+| Webhooks | 202-206 | Webhook spec format reference |
 
 <Note>
 The entire prompt is a string literal — no template rendering or
@@ -285,7 +284,7 @@ in `prompts.py` generates the transition prompt:
 
 ```
 [fork-started] You are now inside an interactive fork resumed from a
-background session. Your conversation history is available.
+background session. Your conversation history from that session is available.
 
 {USER_NAME} clicked a button on your output: {inquiry_prompt}
 

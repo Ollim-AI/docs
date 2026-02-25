@@ -151,10 +151,12 @@ swapped, cleared, forked) are logged to `session_history.jsonl`.
 
 ### Contextvar isolation
 
-Background forks use `ContextVar` instances to scope mutable state:
-`_in_fork_var`, `_busy_var`, `_channel_var`, `_chain_context_var`,
-and `_bg_fork_config_var`. This lets multiple forks run concurrently
-while the main session uses module-level globals for the same values.
+Background forks use `ContextVar` instances to scope mutable state.
+Key variables include `_in_fork_var`, `_busy_var`, `_channel_var`,
+`_chain_context_var`, `_bg_fork_config_var`, `_bg_output_flag`,
+`_bg_reported_flag`, `_bg_ping_count`, and `_msg_collector`. This lets
+multiple forks run concurrently while the main session uses module-level
+globals for the same values.
 
 ### File-based storage
 
@@ -162,7 +164,7 @@ All persistent data lives in `~/.ollim-bot/` as files:
 
 - **Markdown with YAML frontmatter** for human-editable data
   (routines, reminders, webhooks) — the agent reads and writes these
-- **JSONL** for append-only logs (session history, pending updates)
+- **JSONL** for append-only logs (session history)
 - **JSON** for small state files (session ID, ping budget, inquiries)
 
 `storage.py` provides generic I/O with atomic writes (temp file +

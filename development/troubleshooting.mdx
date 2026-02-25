@@ -196,7 +196,7 @@ its commit. Use `git log` inside the directory to review the change history.
     1. The bot printed `scheduler started: N jobs` on startup (visible in
        the console).
     2. The `.md` file has valid YAML frontmatter with a `cron` (routines) or
-       `when` (reminders) field.
+       `run_at` (reminders) field.
     3. The `id` field in the YAML is unique — duplicate IDs cause one to
        overwrite the other.
     4. The owner was found on startup (no `"warning: no owner found"` message).
