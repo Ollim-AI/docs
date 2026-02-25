@@ -251,11 +251,14 @@ The `~/.ollim-bot/` directory is initialized as a git repository.
 | `state/ping_budget.json` | Ephemeral state that refills over time |
 | `state/bot.pid` | Process lock deleted on exit |
 | `state/credentials.json` | Sensitive OAuth client credentials |
+| `state/token.json` | Sensitive OAuth tokens |
+| `state/sessions.json` | Frequent overwrites on every agent turn |
 | `state/fork_messages.json` | Ephemeral mapping with 7-day TTL |
+| `state/pending_updates.json` | Ephemeral cross-fork messaging |
+| `state/inquiries.json` | Ephemeral button state with 7-day TTL |
 
-All other files — session state, history, routines, reminders, webhooks,
-pending updates, inquiries, and OAuth tokens — are auto-committed on
-every write.
+All other files — session history, routines, reminders, and webhooks —
+are auto-committed on every write.
 
 <Warning>
 All writes use atomic temp-file-then-rename
