@@ -69,11 +69,9 @@ Button behavior is determined by the `action` string. There are two categories: 
     | `dismiss` | `_handle_dismiss` | Deletes the embed message |
   </Tab>
   <Tab title="Agent inquiries">
-    Agent inquiry buttons store a prompt and route it back through the agent when clicked, opening an [interactive fork](/core-usage/forks).
+    Agent inquiry buttons store a prompt and route it back through the agent when clicked. If the button was sent by a background fork, clicking it opens an [interactive fork](/core-usage/forks) that resumes that session; otherwise the prompt is processed in the current session.
 
     The action format is `agent:<prompt>`, where `<prompt>` is the instruction the agent receives when the button is pressed.
-
-    Example: a button with action `agent:Show me more details about this task` will, when clicked, enter a fork and stream the agent's response to that prompt.
   </Tab>
 </Tabs>
 
