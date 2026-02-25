@@ -3,4 +3,93 @@ title: "Google integration"
 description: "OAuth setup, shared auth, and available Google services."
 ---
 
-Content coming soon.
+ollim-bot integrates with three Google services through a shared OAuth2
+flow. A single set of credentials handles authentication for Google
+Tasks, Google Calendar, and Gmail — no per-service setup needed.
+
+All three services are available as both CLI subcommands and agent
+capabilities. The agent uses MCP tools and embed buttons to interact
+with Tasks and Calendar, and a dedicated subagent for Gmail.
+
+## Available services
+
+<Columns cols={3}>
+  <Card title="Google Tasks" icon="list-check" href="/integrations/google-tasks">
+    Full task management — list, add, complete, update, and delete tasks via CLI or agent.
+  </Card>
+  <Card title="Google Calendar" icon="calendar" href="/integrations/google-calendar">
+    Event management — list, show, add, update, and delete calendar events via CLI or agent.
+  </Card>
+  <Card title="Gmail" icon="envelope" href="/integrations/google-gmail">
+    Read-only email access — list and read messages via CLI or the gmail-reader subagent.
+  </Card>
+</Columns>
+
+## How it works
+
+All Google services share a single OAuth2 credential managed by
+`google/auth.py`. The module requests three scopes during the
+initial consent flow:
+
+| Scope | Service | Access level |
+|-------|---------|--------------|
+| `https://www.googleapis.com/auth/tasks` | Google Tasks | Read/write |
+| `https://www.googleapis.com/auth/calendar.events` | Google Calendar | Read/write |
+| `https://www.googleapis.com/auth/gmail.readonly` | Gmail | Read-only |
+
+Two functions handle all authentication:
+
+- **`get_credentials()`** — loads cached credentials from
+  `~/.ollim-bot/token.json`, refreshes expired tokens automatically,
+  or starts a new browser-based consent flow on first run.
+- **`get_service(api, version)`** — builds a Google API client for
+  any service using the shared credentials. Each service module calls
+  this with its API name and version
+  (e.g., `get_service("tasks", "v1")`).
+
+<Note>
+On first run, the OAuth flow opens a browser window bound to
+`127.0.0.1` for consent. After granting access, the token is
+cached at `~/.ollim-bot/token.json` and refreshed automatically.
+</Note>
+
+## Credential files
+
+| File | Path | Purpose |
+|------|------|---------|
+| OAuth client credentials | `~/.ollim-bot/credentials.json` | Downloaded from Google Cloud Console |
+| Cached token | `~/.ollim-bot/token.json` | Auto-generated after first OAuth consent |
+
+<Warning>
+If you add a new Google service scope to `google/auth.py`, delete
+`~/.ollim-bot/token.json` to trigger re-consent with the updated
+scopes.
+</Warning>
+
+## Adding a new scope
+
+To integrate an additional Google service:
+
+1. Add the new scope to the `SCOPES` list in `google/auth.py`.
+2. Create a new module in `google/` with CLI handlers and any helper functions.
+3. Delete `~/.ollim-bot/token.json` so the next run prompts for consent with the expanded scopes.
+4. Add commands to the system prompt so the agent knows about the new service.
+
+See [Adding new integrations](/extending/adding-integrations) for the full walkthrough.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Google Tasks" icon="list-check" href="/integrations/google-tasks">
+    Manage your task list through CLI commands and agent interactions.
+  </Card>
+  <Card title="Google Calendar" icon="calendar" href="/integrations/google-calendar">
+    View and manage calendar events.
+  </Card>
+  <Card title="Gmail" icon="envelope" href="/integrations/google-gmail">
+    Read emails and triage your inbox with the gmail-reader subagent.
+  </Card>
+  <Card title="Google OAuth setup" icon="key" href="/self-hosting/google-oauth-setup">
+    Step-by-step guide to creating OAuth credentials in Google Cloud Console.
+  </Card>
+</Columns>

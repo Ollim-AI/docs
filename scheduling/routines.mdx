@@ -3,4 +3,267 @@ title: "Routines"
 description: "Recurring cron-based schedules with YAML frontmatter."
 ---
 
-Content coming soon.
+Routines are recurring cron-scheduled prompts that define the bot's
+daily and weekly rhythm. Each routine is a markdown file with YAML
+frontmatter, stored in `~/.ollim-bot/routines/`. The scheduler picks
+them up automatically and fires them on their cron schedule.
+
+## Overview
+
+A routine tells ollim-bot to run a prompt on a recurring schedule.
+Routines can run in the foreground (sending a DM) or in the background
+(running silently in a fork, only notifying you when the agent decides
+to). The agent also has direct file access to create and edit routines
+itself.
+
+The scheduler polls the routines directory every 10 seconds, so changes
+take effect almost immediately — no restart required.
+
+## File format
+
+Each routine is a `.md` file in `~/.ollim-bot/routines/`. The `message`
+field is the markdown body after the closing `---`; all other fields go
+in the YAML frontmatter. Only non-default fields are written to the
+frontmatter.
+
+```yaml title="routines/morning-task-review.md"
+---
+id: "a1b2c3d4"
+cron: "0 9 * * 1-5"
+description: "Morning task review"
+background: true
+---
+Review my Google Tasks and Calendar for today.
+Summarize what's on my plate and flag anything urgent.
+```
+
+<Note>
+  The `message` field does not appear in the frontmatter — it is the
+  markdown body below the closing `---`.
+</Note>
+
+### Frontmatter fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | — | Auto-generated 8-char hex ID |
+| `cron` | `str` | — | 5-field cron expression |
+| `description` | `str` | `""` | Short summary for `routine list` |
+| `background` | `bool` | `false` | Run in a background fork |
+| `model` | `str` | `null` | Model override (bg only) |
+| `thinking` | `bool` | `true` | Extended thinking (bg only) |
+| `isolated` | `bool` | `false` | Fresh context, not forked (bg only) |
+| `update_main_session` | `str` | `"on_ping"` | Sync mode: `always` / `on_ping` / `freely` / `blocked` |
+| `allow_ping` | `bool` | `true` | Allow pings and embeds (bg only) |
+| `allowed_tools` | `list[str]` | `null` | MCP tool whitelist (bg only) |
+| `disallowed_tools` | `list[str]` | `null` | MCP tool blacklist (bg only) |
+
+<Warning>
+  `allowed_tools` and `disallowed_tools` cannot both be set on the same
+  routine.
+</Warning>
+
+### File naming
+
+Filenames are slugified from the message text (lowercase, hyphens, max
+50 characters). The `id` field in the YAML frontmatter is authoritative
+— filenames are for human readability only. Collisions append `-2`,
+`-3`, etc.
+
+## Managing routines
+
+<Tabs>
+  <Tab title="CLI">
+    The `ollim-bot routine` subcommand manages routines from the
+    terminal.
+
+    **Add a routine:**
+
+    ```bash
+    ollim-bot routine add \
+      --message "Review my Google Tasks and flag overdue items" \
+      --cron "0 9 * * 1-5" \
+      --description "Morning task review" \
+      --background
+    ```
+
+    Additional flags for background routines:
+
+    | Flag | Description |
+    |------|-------------|
+    | `--model <model>` | Model override |
+    | `--no-thinking` | Disable extended thinking |
+    | `--isolated` | Run with fresh context |
+    | `--update-main-session <mode>` | `always`, `on_ping`, `freely`, or `blocked` |
+    | `--no-ping` | Disable `ping_user` and `discord_embed` |
+
+    **List all routines:**
+
+    ```bash
+    ollim-bot routine list
+    ```
+
+    Output:
+
+    ```
+      a1b2c3d4  [bg] cron '0 9 * * 1-5'    Morning task review
+      e5f6a7b8  cron '0 20 * * *'            Evening wind-down
+    ```
+
+    **Cancel a routine:**
+
+    ```bash
+    ollim-bot routine cancel a1b2c3d4
+    ```
+  </Tab>
+  <Tab title="Agent">
+    The agent has direct file access to `~/.ollim-bot/routines/`
+    and can create, edit, or delete routine files. You can ask the
+    agent in conversation:
+
+    - "Set up a morning routine that checks my calendar at 9am"
+    - "Change my daily review to run at 8:30 instead"
+    - "Delete the weekend check-in routine"
+
+    The agent writes the markdown file directly. Changes are picked
+    up by the scheduler within 10 seconds.
+  </Tab>
+</Tabs>
+
+## Background vs foreground
+
+By default, routines run in the **foreground** — the agent sends you
+a DM when the routine fires, running the prompt in the main session
+context.
+
+Set `background: true` to run the routine silently in a background
+fork. Text output is discarded — the agent must use `ping_user` or
+`discord_embed` to reach you.
+
+<Tabs>
+  <Tab title="Foreground">
+    The routine fires and the agent sends you a DM with its response,
+    just like a normal conversation.
+
+    ```yaml title="routines/evening-wind-down.md"
+    ---
+    id: "e5f6a7b8"
+    cron: "0 20 * * *"
+    description: "Evening wind-down"
+    ---
+    What did I accomplish today?
+    Anything I should move to tomorrow?
+    ```
+  </Tab>
+  <Tab title="Background">
+    The routine runs in a forked session. Background routines support
+    additional configuration for model, thinking, isolation, and tool
+    restrictions.
+
+    ```yaml title="routines/morning-task-review.md"
+    ---
+    id: "a1b2c3d4"
+    cron: "0 9 * * 1-5"
+    description: "Morning task review"
+    background: true
+    isolated: true
+    model: "haiku"
+    ---
+    Review my Google Tasks and Calendar for today.
+    Summarize what's on my plate and flag anything urgent.
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Use `isolated: true` for routines that don't need the main session's
+  conversation history, like email triage or calendar summaries. This
+  keeps the fork lightweight.
+</Tip>
+
+## Cron expressions
+
+Routines use standard 5-field cron syntax:
+`minute hour day month weekday`. Day-of-week uses `0` for Sunday.
+
+| Expression | Schedule |
+|------------|----------|
+| `0 9 * * 1-5` | 9:00 AM, Monday through Friday |
+| `0 20 * * *` | 8:00 PM daily |
+| `30 8 * * 1` | 8:30 AM every Monday |
+| `0 */4 * * *` | Every 4 hours |
+| `0 9,13 * * 1-5` | 9:00 AM and 1:00 PM on weekdays |
+
+The CLI validates that cron expressions contain exactly 5 fields. The
+scheduler converts them to APScheduler `CronTrigger` internally.
+
+## Examples
+
+### Weekday morning briefing (background)
+
+```yaml title="routines/morning-briefing.md"
+---
+id: "c3d4e5f6"
+cron: "0 9 * * 1-5"
+description: "Morning briefing"
+background: true
+isolated: true
+---
+Check my Google Calendar and Tasks for today.
+Send me an embed summarizing my schedule and any overdue tasks.
+```
+
+### Weekly review (foreground)
+
+```yaml title="routines/weekly-review.md"
+---
+id: "f7a8b9c0"
+cron: "0 18 * * 5"
+description: "Friday weekly review"
+---
+Let's do a weekly review. What did I accomplish this week?
+What's carrying over to next week?
+```
+
+### Quiet background check (no pings)
+
+```yaml title="routines/quiet-email-check.md"
+---
+id: "d1e2f3a4"
+cron: "0 */3 * * *"
+description: "Email check"
+background: true
+isolated: true
+allow_ping: false
+allowed_tools:
+  - "gmail"
+update_main_session: "always"
+---
+Check for new important emails.
+Save a summary to pending updates.
+```
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Reminders" icon="bell" href="/scheduling/reminders">
+    One-shot and chainable reminders for non-recurring prompts.
+  </Card>
+  <Card
+    title="Background forks"
+    icon="code-branch"
+    href="/scheduling/background-forks"
+  >
+    Deep dive into background fork configuration and behavior.
+  </Card>
+  <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
+    How notification rate limiting works for background routines.
+  </Card>
+  <Card
+    title="Scheduling overview"
+    icon="clock"
+    href="/scheduling/overview"
+  >
+    How the scheduler polls and executes routines and reminders.
+  </Card>
+</Columns>

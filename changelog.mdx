@@ -3,4 +3,187 @@ title: "Changelog"
 description: "Version history and updates."
 ---
 
-Content coming soon.
+ollim-bot is developed continuously without formal version releases.
+This changelog tracks major features and milestones in reverse
+chronological order.
+
+<Info>ollim-bot has been in active development since February 9, 2026 with 288 commits across 15 days.</Info>
+
+## Feb 24, 2026
+
+**Context quality and fork thinking**
+
+- Extended thinking enabled in interactive forks
+- Context quality gate added to system prompt — agent evaluates whether context is sufficient before responding
+- Anti-slop guidelines added to design philosophy
+
+## Feb 23, 2026
+
+**Webhook endpoints and ping budget refill**
+
+- **Webhook HTTP endpoints** — external services trigger background forks
+  via authenticated HTTP requests with Haiku screening, payload
+  validation, and content fencing
+- **Ping budget refill-on-read bucket** — replaced flat daily counter
+  with a token bucket that refills over time (`capacity: 5`,
+  `refill_rate: 90` minutes per token)
+- Forward schedule injected into background fork preambles so the agent sees upcoming jobs
+- Per-job tool restrictions (`disallowed_tools`) for background routines and reminders
+- Permission approval flow fixed with anyio primitives to prevent hangs
+
+## Feb 22, 2026
+
+**Background fork configuration and quiet-when-busy**
+
+- **BgForkConfig** — new `update_main_session` (modes: `always`,
+  `on_ping`, `freely`, `blocked`) and `allow_ping` fields for routines
+  and reminders
+- Stop hook respects `update_main_session` mode, controlling whether background forks can write pending updates
+- **Quiet-when-busy** — background forks soft-block non-critical pings when the user is in an active conversation
+- 30-minute timeout for background forks to prevent runaway sessions
+- Relative timestamps added to background update context
+- Concurrent `append_update` race condition fixed
+
+## Feb 21, 2026
+
+**Interactive fork resume and model overrides**
+
+- **Background fork resume** — buttons on background fork embeds open
+  an interactive fork that continues the background session's context
+- `/thinking` slash command to toggle extended thinking mid-conversation
+- `model` and `isolated` fields added to routines, reminders, and
+  chain context — per-job model and isolation overrides
+- Fork message tracking (`track_message`) wired into streamer and MCP tools
+- Subagent prompts (gmail-reader, history-reviewer, responsiveness-reviewer) rewritten for clarity
+
+## Feb 20, 2026
+
+**Session events and ping budget**
+
+- **Session event logging** — `SessionEvent` dataclass tracks session
+  lifecycle (created, compacted, swapped, cleared, bg_fork)
+- `/interrupt` command and agent interruption on fork entry tool calls
+- **Ping budget** — daily limit on background fork pings with
+  `/ping-budget` slash command; budget status injected into background
+  fork preambles
+- Reply-to-fork — replying to a background fork message opens an
+  interactive fork with that session
+
+## Feb 19, 2026
+
+**Permissions and configurable names**
+
+- **Permission management** — `dontAsk` mode (default), `/permissions`
+  slash command, reaction-based approval flow, session-allowed tool set
+- Configurable `OLLIM_USER_NAME` and `OLLIM_BOT_NAME` environment
+  variables — no hardcoded names in prompts
+- Source indicators on embeds — `[bg]` prefix for background fork
+  messages, source footer for fork sessions
+- Context variables for fork-scoped channel, chain context, and `in_fork` state
+
+## Feb 18, 2026
+
+**Interactive forks**
+
+<AccordionGroup>
+  <Accordion title="Fork system">
+    - `enter_fork` and `exit_fork` MCP tools with dual-mode save/report
+    - `/fork` command to start an interactive fork from Discord
+    - Fork-aware `stream_chat` routing — messages route to the active fork when one exists
+    - Fork idle timeout checker runs in the scheduler
+    - Fork exit embeds with save/report/discard button actions
+  </Accordion>
+  <Accordion title="Background fork improvements">
+    - `save_context` blocked in background forks (interactive-only)
+    - Background fork lock removed — background forks run concurrently with the main session
+    - Pending updates prepended to forked agent interactions
+  </Accordion>
+</AccordionGroup>
+
+## Feb 17, 2026
+
+**Architecture refactor and background sessions**
+
+- Package reorganization — `google/` and `scheduling/` sub-packages
+  replace 20 top-level modules
+- **Forked background sessions** — `save_context` and `report_updates`
+  MCP tools for background forks to communicate results back to the
+  main session
+- Pending updates system with atomic file writes
+- Structured dataclasses at module boundaries replacing raw dicts
+- Type annotations (Literal types, TypedDicts) added across the codebase
+
+## Feb 16, 2026
+
+**Routines and reminders split**
+
+- Wakeup system split into **routines** (cron-based recurring) and
+  **reminders** (one-shot with follow-up chains)
+- Individual markdown files with YAML frontmatter replace JSONL storage
+- Chain state machine for reminder follow-up sequences
+- Test suite added for routines, reminders, chains, and CLI
+- Cron day-of-week conversion fixed for APScheduler compatibility
+
+## Feb 15, 2026
+
+**Image support and timestamps**
+
+- Image attachments forwarded from Discord to Claude via streaming content blocks
+- Timestamps prepended to all user messages and prompt paths for time-aware responses
+- DM helpers extracted from scheduler to streamer module
+
+## Feb 11-12, 2026
+
+**Subagents and background wakeups**
+
+- **History-reviewer subagent** for morning briefings
+- **Responsiveness-reviewer subagent** for weekly reminder analysis
+- Background wakeups with `ping_user` MCP tool
+- Persistent button followup prompts across bot restarts
+- Agent working directory pinned to `~/.ollim-bot`
+
+## Feb 10-11, 2026
+
+**Streaming, integrations, and slash commands**
+
+<AccordionGroup>
+  <Accordion title="Streaming">
+    - Real-time response streaming from Claude to Discord
+    - Typing indicators during tool execution
+    - Tool usage shown inline during streaming
+    - Session persistence — conversations resume across bot restarts
+    - 2000-character overflow handling
+  </Accordion>
+  <Accordion title="Google integrations">
+    - Google Tasks integration with CLI commands
+    - Google Calendar integration with event details
+    - Gmail reader subagent for automated inbox triage
+  </Accordion>
+  <Accordion title="Discord UI">
+    - Rich embeds with action buttons
+    - `/clear`, `/compact`, `/cost`, `/model` slash commands
+    - Slash command tree synced on startup
+    - Principle of least privilege applied to agent tools
+  </Accordion>
+</AccordionGroup>
+
+## Feb 9, 2026
+
+**Initial release**
+
+- Discord bot scaffold with Claude Agent SDK
+- Self-scheduling reminder system with persistence
+- Single-user DM-based conversation model
+
+---
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Design philosophy" icon="lightbulb" href="/getting-started/design-philosophy">
+    Understand the principles behind ollim-bot's design decisions.
+  </Card>
+  <Card title="How it works" icon="gears" href="/getting-started/how-it-works">
+    Learn about the agent loop, session persistence, and fork model.
+  </Card>
+</Columns>
