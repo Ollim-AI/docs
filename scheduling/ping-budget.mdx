@@ -17,8 +17,8 @@ counted against the budget.
 When a background fork calls `ping_user` or `discord_embed`, the budget
 is checked first. If tokens are available, one is consumed and the
 message goes through. If the budget is exhausted, the tool returns an
-error to the agent (you are not notified), and the agent falls back to
-`report_updates` instead.
+error to the agent (you are not notified) suggesting it use
+`report_updates` to pass findings to the main session instead.
 
 <Note>
   The budget file at `~/.ollim-bot/ping_budget.json` is ephemeral
