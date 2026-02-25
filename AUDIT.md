@@ -1,7 +1,7 @@
 # Documentation Audit Checklist
 
 Status: IN PROGRESS
-Pages audited: 7 / 40
+Pages audited: 8 / 40
 
 ## Getting Started
 
@@ -15,7 +15,7 @@ Pages audited: 7 / 40
 
 - [x] `core-usage/conversations.mdx` — Sources: `bot.py`, `agent.py`, `streamer.py`, `sessions.py`
 - [x] `core-usage/slash-commands.mdx` — Sources: `agent.py`, `bot.py`
-- [ ] `core-usage/forks.mdx` — Sources: `forks.py`, `agent.py`, `views.py`
+- [x] `core-usage/forks.mdx` — Sources: `forks.py`, `agent.py`, `views.py`
 - [ ] `core-usage/embeds-and-buttons.mdx` — Sources: `embeds.py`, `agent_tools.py`, `views.py`, `inquiries.py`
 - [ ] `core-usage/permissions.mdx` — Sources: `permissions.py`
 
