@@ -16,7 +16,7 @@ the main session, and vice versa.
 
 | Mode | Behavior |
 |------|----------|
-| `dontAsk` | Silent denial of non-whitelisted tools. No prompt. **Default.** |
+| `dontAsk` | Silent denial of tools not in the session-allowed set. No prompt. **Default.** |
 | `default` | Discord message with reaction buttons for each tool use. |
 | `acceptEdits` | SDK built-in — file-edit tools auto-approved, others prompt. |
 | `bypassPermissions` | SDK built-in — all tools auto-approved, no prompts. |
@@ -29,8 +29,10 @@ silent denial before the SDK ever sees it.
 
 ## Approval flow
 
-When the permission mode is anything other than `dontAsk`, unapproved tool
-use triggers an interactive approval prompt in your Discord DM.
+In `default` mode, unapproved tool use triggers an interactive approval
+prompt in your Discord DM. (`acceptEdits` auto-approves file-edit tools
+at the SDK level, and `bypassPermissions` approves everything at the SDK
+level — neither mode triggers the interactive flow below.)
 
 <Steps>
   <Step title="Agent requests a tool">
@@ -93,9 +95,8 @@ Cancelled prompts are edited to show `cancelled` with strikethrough text.
 
 <Tabs>
   <Tab title="dontAsk (default)">
-    In `dontAsk` mode, the agent works with the tools the SDK whitelists
-    automatically. Any tool not in the whitelist or the session-allowed set
-    is silently denied — no message appears.
+    In `dontAsk` mode, any tool not in the session-allowed set is silently
+    denied — no message appears.
 
     ```
     /permissions dontAsk
@@ -105,8 +106,8 @@ Cancelled prompts are edited to show `cancelled` with strikethrough text.
     allowed toolset without interrupting you for approvals.
   </Tab>
   <Tab title="default (interactive)">
-    In `default` mode, each non-whitelisted tool use produces an approval
-    message. You review and react.
+    In `default` mode, each tool use not already in the session-allowed set
+    produces an approval message. You review and react.
 
     ```
     /permissions default
