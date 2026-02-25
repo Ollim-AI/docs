@@ -1,11 +1,11 @@
 # Documentation Audit Checklist
 
-Status: NOT STARTED
-Pages audited: 0 / 40
+Status: IN PROGRESS
+Pages audited: 1 / 40
 
 ## Getting Started
 
-- [ ] `getting-started/overview.mdx` — Sources: `CLAUDE.md`
+- [x] `getting-started/overview.mdx` — Sources: `CLAUDE.md`
 - [ ] `getting-started/quickstart.mdx` — Sources: `main.py`, `config.py`
 - [ ] `getting-started/setup.mdx` — Sources: `main.py`, `config.py`, `google/auth.py`, `bot.py`
 - [ ] `getting-started/how-it-works.mdx` — Sources: `agent.py`, `sessions.py`, `forks.py`, `prompts.py`
