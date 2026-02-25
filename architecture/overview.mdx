@@ -18,7 +18,7 @@ The main path from a Discord message to a streamed response.
 | Module | Role |
 |--------|------|
 | `main.py` | CLI entry point — dispatches to bot or subcommands |
-| `bot.py` | Discord interface — DMs, @mentions, slash commands, reaction acks |
+| `bot.py` | Discord interface — DMs, slash commands, reaction acks |
 | `agent.py` | Agent SDK wrapper — sessions, MCP tools, subagents, slash routing |
 | `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
 | `prompts.py` | System prompt for the main agent and fork prompt helpers |
@@ -81,7 +81,7 @@ A message from Discord travels through four stages before a response appears.
 
 <Steps>
   <Step title="Discord event">
-    `bot.py` receives a DM or @mention. It extracts text and image
+    `bot.py` receives a DM. It extracts text and image
     attachments, resolves reply context (including fork session
     resumption), and acquires the agent lock.
   </Step>

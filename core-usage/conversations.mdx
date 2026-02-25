@@ -1,9 +1,9 @@
 ---
 title: "Conversations"
-description: "DM interface, @mentions, message flow, and context management."
+description: "DM interface, message flow, and context management."
 ---
 
-ollim-bot maintains a single persistent conversation per user. You talk to it through Discord DMs or @mentions in a server channel, and the bot streams its response back in real time. Context carries across messages and survives restarts — every message builds on what came before.
+ollim-bot maintains a single persistent conversation per user. You talk to it through Discord DMs, and the bot streams its response back in real time. Context carries across messages and survives restarts — every message builds on what came before.
 
 ## Overview
 
@@ -17,27 +17,14 @@ All message processing is serialized through an async lock. Only one message is 
 
 ## Talking to ollim-bot
 
-<Tabs>
-  <Tab title="DMs">
-    Send a direct message to the bot. The full message content is forwarded to the agent.
+Send a direct message to the bot. The full message content is forwarded to the agent.
 
-    The bot requires the `message_content` intent to read DM content. This is configured at startup:
+The bot requires the `message_content` intent to read DM content. This is configured at startup:
 
-    ```python
-    intents = discord.Intents.default()
-    intents.message_content = True
-    ```
-  </Tab>
-  <Tab title="@Mentions">
-    Mention the bot in any server channel it has access to. The bot strips the mention prefix from the message before forwarding to the agent:
-
-    ```python
-    content = message.content.replace(f"<@{bot.user.id}>", "").strip()
-    ```
-
-    The bot ignores server messages that do not contain a mention.
-  </Tab>
-</Tabs>
+```python
+intents = discord.Intents.default()
+intents.message_content = True
+```
 
 ## Message flow
 
