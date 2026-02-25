@@ -4,7 +4,9 @@ description: "Annotated scheduling examples from an actual data directory."
 ---
 
 These examples are adapted from a real ollim-bot data directory. They show
-how routines, reminders, chains, and embeds compose into a daily system.
+how [routines](/scheduling/routines), [reminders](/scheduling/reminders),
+[chains](/scheduling/reminders#follow-up-chains), and
+[embeds](/core-usage/embeds-and-buttons) compose into a daily system.
 Personal details have been scrubbed.
 
 ## Daily rhythm
@@ -32,10 +34,12 @@ music review (Sun 10 AM), responsiveness review (Sun 6 PM), weekend
 planner (Thu 5 PM).
 
 <Tip>
-  Every routine here is `background: true`. The agent works silently
-  and only reaches out via `discord_embed` or `ping_user` when it has
-  something worth saying. Some routines (like identity stabilize) never
-  ping at all.
+  Every routine here is `background: true` — see
+  [background forks](/scheduling/background-forks). The agent works
+  silently and only reaches out via `discord_embed` or `ping_user`
+  when it has something worth saying, governed by the
+  [ping budget](/scheduling/ping-budget). Some routines (like identity
+  stabilize) never ping at all.
 </Tip>
 
 ---
@@ -548,3 +552,25 @@ Chains create multi-step follow-up sequences without open-ended loops:
 
 Each step checks whether the user already responded and stays silent
 if so — chains are nudges, not nags.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Routines" icon="rotate" href="/scheduling/routines">
+    Cron syntax, YAML frontmatter fields, and management commands.
+  </Card>
+  <Card title="Reminders" icon="bell" href="/scheduling/reminders">
+    One-shot reminders, delay scheduling, and follow-up chains.
+  </Card>
+  <Card
+    title="Background forks"
+    icon="code-branch"
+    href="/scheduling/background-forks"
+  >
+    Isolated mode, model overrides, tool restrictions, and update
+    modes.
+  </Card>
+  <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
+    How notification rate limiting works for background tasks.
+  </Card>
+</Columns>
