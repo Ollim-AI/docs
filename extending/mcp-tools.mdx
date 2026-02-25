@@ -22,7 +22,7 @@ Send a rich embed message with optional action buttons.
 | `color` | string | No | `"blue"` | `blue` (info), `green` (success), `red` (urgent), `yellow` (warning) |
 | `fields` | array | No | `[]` | Objects with `name` (string, required), `value` (string, required), `inline` (boolean, optional) |
 | `buttons` | array | No | `[]` | Objects with `label` (string, required), `action` (string, required), `style` (string, optional) |
-| `critical` | boolean | No | `false` | Bypasses busy check and ping budget when `true` |
+| `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and ping budget when `true` |
 
 **Button actions** follow a `type:payload` format:
 
@@ -44,7 +44,7 @@ Send a plain text message prefixed with `[bg]`.
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `message` | string | Yes | — | The message to send |
-| `critical` | boolean | No | `false` | Bypasses busy check and ping budget when `true` |
+| `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and ping budget when `true` |
 
 **Availability:** Background forks only. Subject to the same `allow_ping`, busy check, and ping budget gates as `discord_embed`.
 

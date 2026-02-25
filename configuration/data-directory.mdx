@@ -9,21 +9,23 @@ after most writes.
 
 ```
 ~/.ollim-bot/
-├── bot.pid                  # PID file for single-instance check
-├── credentials.json         # Google OAuth credentials (from Cloud Console)
-├── token.json               # Google OAuth token (auto-generated)
-├── sessions.json            # Current session ID (plain string)
-├── session_history.jsonl    # Append-only session lifecycle events
-├── pending_updates.json     # Background fork updates queued for main session
-├── inquiries.json           # Button inquiry prompts (7-day TTL)
-├── fork_messages.json       # Discord message → fork session mapping (7-day TTL)
-├── ping_budget.json         # Ping budget state (ephemeral, no git commit)
+├── bot.pid                      # PID file for single-instance check
+├── credentials.json             # Google OAuth credentials (from Cloud Console)
+├── token.json                   # Google OAuth token (auto-generated)
+├── sessions.json                # Current session ID (plain string)
+├── session_history.jsonl        # Append-only session lifecycle events
+├── pending_updates.json         # Background fork updates queued for main session
+├── inquiries.json               # Button inquiry prompts (7-day TTL)
+├── fork_messages.json           # Discord message → fork session mapping (7-day TTL)
+├── ping_budget.json             # Ping budget state (ephemeral, no git commit)
+├── routine-reminder-spec.md →   # Symlink to docs/routine-reminder-spec.md
+├── webhook-spec.md →            # Symlink to docs/webhook-spec.md
 ├── routines/
-│   └── *.md                 # Recurring routine specs
+│   └── *.md                     # Recurring routine specs
 ├── reminders/
-│   └── *.md                 # One-shot reminder specs
+│   └── *.md                     # One-shot reminder specs
 └── webhooks/
-    └── *.md                 # Webhook specs
+    └── *.md                     # Webhook specs
 ```
 
 ## Session files
@@ -209,6 +211,26 @@ when you first authenticate.
 `_check_already_running()` reads this file and checks
 `/proc/<pid>/cmdline` to prevent duplicate instances. The file is
 deleted on exit via `atexit`.
+
+## Spec-file symlinks
+
+On startup, `_ensure_spec_symlinks()` in `main.py` creates symlinks in
+`~/.ollim-bot/` pointing to specification documents in the project's
+`docs/` directory:
+
+| Symlink | Target | Referenced by |
+|---------|--------|---------------|
+| `routine-reminder-spec.md` | `docs/routine-reminder-spec.md` | System prompt (routines/reminders section) |
+| `webhook-spec.md` | `docs/webhook-spec.md` | System prompt (webhooks section), webhook handler |
+
+The system prompt directs the agent to "enter a fork and read
+`routine-reminder-spec.md`" (or `webhook-spec.md`) when it needs the
+full YAML specification. Because the agent's working directory is
+`~/.ollim-bot/`, the symlinks make these files accessible by name
+without hardcoding paths to the source tree.
+
+Symlinks are only created if the target doesn't already exist — they
+survive bot restarts and are never overwritten.
 
 ## Git tracking
 

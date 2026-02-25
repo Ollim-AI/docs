@@ -79,7 +79,7 @@ When a routine, reminder, or webhook fires with `background: true`, the schedule
 
 The agent communicates results through MCP tools: `ping_user` for plain text alerts, `discord_embed` for structured messages, and `report_updates` to queue a summary for the next main session interaction. If neither `ping_user` nor `report_updates` is called, the fork is silently discarded with zero context bloat.
 
-<Note>Background forks run without holding the agent lock. When the user is mid-conversation, non-critical pings return errors and the agent falls back to `report_updates`. Critical pings (`critical: true`) bypass the busy check but are still tracked against the [ping budget](/scheduling/ping-budget).</Note>
+<Note>Background forks run without holding the agent lock. When the user is mid-conversation, non-critical pings return errors and the agent falls back to `report_updates`. Critical pings (`critical: true`) bypass all three checks — per-session limit, busy state, and [ping budget](/scheduling/ping-budget). They are tracked in a separate `critical_used` daily counter but do not consume budget tokens.</Note>
 
 ## Next steps
 

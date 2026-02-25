@@ -49,11 +49,11 @@ every 90 minutes, capped at the capacity.
 Both `ping_user` and `discord_embed` accept a `critical` parameter.
 When `critical=True`:
 
-- The ping **bypasses the budget entirely** — it is never blocked
-  by an empty bucket
-- The `critical_used` daily counter is incremented for tracking
-- The busy-state check is also bypassed (critical pings go through
-  even during active conversations)
+- The ping **bypasses all three checks** — per-session limit, busy
+  state, and ping budget. It is never blocked (unless `allow_ping`
+  is `false`).
+- The `critical_used` daily counter is incremented for tracking, but
+  no budget token is consumed.
 
 The agent is instructed to reserve `critical=True` for things you
 would be devastated to miss — time-sensitive deadlines, health

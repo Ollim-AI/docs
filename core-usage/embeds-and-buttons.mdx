@@ -24,7 +24,7 @@ The agent calls `discord_embed` with a title (required) and optional description
 | `color` | string | No | `"blue"` | Embed accent color |
 | `fields` | array | No | `[]` | Structured name/value pairs |
 | `buttons` | array | No | `[]` | Interactive buttons attached below the embed |
-| `critical` | boolean | No | `false` | Bypasses [ping budget](/scheduling/ping-budget) in background forks |
+| `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and [ping budget](/scheduling/ping-budget) in background forks |
 
 ### Colors
 
@@ -140,7 +140,7 @@ Buttons remain functional across bot restarts through two mechanisms:
 Embeds sent from the main session or interactive forks are always delivered. In [background forks](/scheduling/background-forks), embeds are subject to additional constraints:
 
 - **Ping budget**: Each embed consumes one ping from the [refill-on-read budget](/scheduling/ping-budget). When the budget is exhausted, `discord_embed` returns an error to the agent.
-- **`critical: true`**: Bypasses the budget. Critical pings are tracked but never blocked.
+- **`critical: true`**: Bypasses all three checks (per-session limit, busy state, and budget). Critical pings are tracked in a separate `critical_used` counter but never blocked.
 - **`allow_ping: false`**: When set in the background fork config, `discord_embed` is disabled entirely — `critical: true` does not override this.
 - **Busy state**: When the main agent is actively responding (lock held), non-critical embeds from background forks return errors. The agent should use `report_updates` instead.
 
