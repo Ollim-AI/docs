@@ -1,13 +1,14 @@
 ---
 title: "Model providers"
-description: "Use Bedrock, Vertex AI, an API key, or a custom backend instead of the default Claude subscription."
+description: "Configure Claude providers, switch billing paths, or experiment with alternative models through custom backends."
 ---
 
 ollim-bot authenticates through Claude Code OAuth by default — no API key,
 no provider config, nothing to set up. Your Claude subscription handles
-everything. But if you need Bedrock, Vertex AI, or your own backend,
-all provider configuration happens through environment variables in your
-`.env` file.
+everything. But if you need a different billing path, want to use your
+cloud provider's infrastructure, or want to experiment with non-Claude
+models entirely, all provider configuration happens through environment
+variables in your `.env` file.
 
 ## Default: Claude subscription
 
@@ -119,7 +120,9 @@ This bypasses Claude Code OAuth entirely. You pay per token at
   <Tab title="Custom backend">
     Point ollim-bot at any endpoint that implements the
     [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) —
-    LiteLLM, vLLM, OpenRouter, or your own gateway:
+    a LiteLLM proxy, vLLM, or your own gateway. For specific alternative
+    providers (DeepSeek, Z.AI, MiniMax, etc.), see
+    [Alternative models](#alternative-models).
 
     | Variable | Required | Description |
     |----------|----------|-------------|
@@ -137,6 +140,122 @@ This bypasses Claude Code OAuth entirely. You pay per token at
     [Claude Code LLM gateway docs](https://code.claude.com/docs/en/llm-gateway).
   </Tab>
 </Tabs>
+
+## Alternative models
+
+You're not locked into a Claude subscription. Several providers offer
+Anthropic Messages API-compatible endpoints — set two environment variables
+and ollim-bot uses their models instead, with no code changes.
+
+| Provider | Cost | Models | Notes |
+|----------|------|--------|-------|
+| [DeepSeek](https://platform.deepseek.com) | \$0.27/1M input tokens | DeepSeek V3.2 | Cheapest per-token option |
+| [Z.AI](https://z.ai) | \$3–49/mo or pay-per-token | GLM-5, GLM-4.7 | Free tier (GLM-4.7-Flash) |
+| [MiniMax](https://platform.minimax.io) | \$10–150/mo | MiniMax M2.5 | 100+ tokens/sec throughput |
+| [Kimi](https://kimi.com/code) | ~\$7/week | Kimi K2.5 | 256K context window |
+| [Qwen](https://alibabacloud.com/help/en/model-studio/coding-plan) | \$10–50/mo | Qwen3.5 + 5 other models | Multi-model under one subscription |
+| [OpenRouter](https://openrouter.ai) | Pay-per-token | 400+ models | Claude models only guaranteed |
+
+All of these use the same pattern — `ANTHROPIC_BASE_URL` and
+`ANTHROPIC_AUTH_TOKEN` in your `.env` file:
+
+```bash title=".env (DeepSeek example)"
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
+```
+
+<AccordionGroup>
+  <Accordion title="DeepSeek setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
+    ANTHROPIC_MODEL=deepseek-chat
+    ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat
+    ```
+
+    Pay-per-token at \$0.27/1M input, \$0.42/1M output — the cheapest
+    option available. No subscription required. Tool use works but image
+    input is not supported through the Anthropic compatibility endpoint.
+  </Accordion>
+
+  <Accordion title="Z.AI GLM setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-zai-api-key
+    ANTHROPIC_DEFAULT_SONNET_MODEL=glm-4.7
+    ANTHROPIC_DEFAULT_HAIKU_MODEL=glm-4.5-air
+    ```
+
+    GLM-4.7 runs at roughly 5–7x cheaper than Claude Sonnet 4.6. Z.AI
+    offers subscription plans (Lite \$3/mo, Pro \$15/mo, Max ~\$60/mo)
+    with prompt-based quotas, or pay-per-token. GLM-4.7-Flash and
+    GLM-4.5-Flash are free.
+  </Accordion>
+
+  <Accordion title="MiniMax setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-minimax-api-key
+    ANTHROPIC_MODEL=minimax-m2.5
+    ANTHROPIC_SMALL_FAST_MODEL=minimax-m2.5-lightning
+    ```
+
+    Subscription tiers: Starter \$10/mo (100 prompts/5h), Plus \$20/mo
+    (300/5h), Max \$50/mo (1,000/5h). 100+ tokens per second throughput.
+  </Accordion>
+
+  <Accordion title="Kimi / Moonshot AI setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-moonshot-api-key
+    ANTHROPIC_MODEL=kimi-k2.5
+    ANTHROPIC_SMALL_FAST_MODEL=kimi-k2
+    ```
+
+    Weekly membership at ~\$7/week with 300–1,200 API calls per 5-hour
+    window. 256K context window and 100 tokens/second output speed.
+  </Accordion>
+
+  <Accordion title="Qwen / Alibaba Cloud setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://dashscope-intl.aliyuncs.com/apps/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-dashscope-api-key
+    ANTHROPIC_MODEL=qwen3.5-plus
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3.5-coder
+    ```
+
+    The standout feature — one subscription (\$10–50/mo), six models.
+    Switch between Qwen3.5-Plus, Qwen3-Coder, GLM-4.7, Kimi-K2.5, and
+    MiniMax M2.5 without changing providers.
+  </Accordion>
+
+  <Accordion title="OpenRouter setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://openrouter.ai/api
+    ANTHROPIC_AUTH_TOKEN=sk-or-v1-your-key
+    ANTHROPIC_API_KEY=
+    ```
+
+    Gateway to 400+ models with unified billing. The empty
+    `ANTHROPIC_API_KEY=` prevents Claude Code from authenticating directly
+    with Anthropic. **Only Claude models are guaranteed to work** —
+    non-Claude models require a
+    [translation proxy](https://github.com/luohy15/y-router).
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  You can also run local models through [Ollama](https://ollama.com)
+  (`ANTHROPIC_BASE_URL=http://localhost:11434`), but tool use is still
+  experimental and not recommended for a production bot.
+</Note>
+
+<Warning>
+  Alternative models are community-supported and not tested by Anthropic.
+  ollim-bot's agentic loop depends on reliable tool use — test thoroughly
+  before relying on a non-Claude model for daily operations. Provider
+  endpoints and pricing may change without notice.
+</Warning>
 
 ## Model version pinning
 
@@ -268,6 +387,11 @@ sense for very light usage or when you need zero rate limits.
   hit a usage threshold. The exact limit is not published. Max plans have
   higher thresholds — Max 20x rarely triggers fallback.
 </Note>
+
+<Tip>
+  Don't need Claude specifically? Alternative providers offer coding
+  subscriptions from \$3/month — see [Alternative models](#alternative-models).
+</Tip>
 
 <AccordionGroup>
   <Accordion title="API token pricing and breakeven analysis">
