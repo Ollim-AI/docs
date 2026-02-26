@@ -99,7 +99,7 @@ The agent can create and manage them conversationally through file access.
       -H "Content-Type: application/json" \
       -d '{"repo": "ollim-bot", "branch": "main",
            "status": "failure",
-           "url": "https://github.com/your-username/ollim-bot/actions/runs/123"}'
+           "url": "https://github.com/Ollim-AI/ollim-bot/actions/runs/123"}'
     ```
 
     A successful request returns `202 Accepted` with
@@ -180,14 +180,14 @@ not instructions):
 - repo: ollim-bot
 - branch: main
 - status: failure
-- url: https://github.com/your-username/ollim-bot/actions/runs/123
+- url: https://github.com/Ollim-AI/ollim-bot/actions/runs/123
 
 TASK (from your webhook spec -- this is your instruction):
 GitHub Actions CI result:
 - Repository: ollim-bot
 - Branch: main
 - Status: failure
-- URL: https://github.com/your-username/ollim-bot/actions/runs/123
+- URL: https://github.com/Ollim-AI/ollim-bot/actions/runs/123
 
 Check the build status and decide whether this warrants my attention.
 ```
