@@ -39,22 +39,24 @@
       "view"
     ]
   },
+  "redirects": [
+    {
+      "source": "/getting-started/how-it-works",
+      "destination": "/architecture/how-it-works"
+    },
+    {
+      "source": "/getting-started/design-philosophy",
+      "destination": "/architecture/design-philosophy"
+    }
+  ],
   "navigation": {
     "tabs": [
       {
         "tab": "Guide",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket",
-            "pages": [
-              "getting-started/overview",
-              "getting-started/quickstart",
-              "getting-started/setup",
-              "getting-started/how-it-works",
-              "getting-started/design-philosophy"
-            ]
-          },
+        "pages": [
+          "getting-started/overview",
+          "getting-started/quickstart",
+          "getting-started/setup",
           {
             "group": "Using the Bot",
             "icon": "message-bot",
@@ -133,6 +135,8 @@
             "group": "Architecture",
             "icon": "sitemap",
             "pages": [
+              "architecture/design-philosophy",
+              "architecture/how-it-works",
               "architecture/overview",
               "architecture/session-management",
               "architecture/context-flow",
