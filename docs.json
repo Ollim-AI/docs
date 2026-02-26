@@ -7,10 +7,10 @@
     "light": "#7289DA",
     "dark": "#4752C4"
   },
-  "favicon": "/favicon.png",
+  "favicon": "/images/favicon.png",
   "logo": {
-    "light": "/images/logo-light.svg",
-    "dark": "/images/logo-dark.svg",
+    "light": "/images/logo.png",
+    "dark": "/images/logo.png",
     "href": "https://github.com/your-username/ollim-bot"
   },
   "navbar": {
@@ -29,9 +29,7 @@
   "contextual": {
     "options": [
       "copy",
-      "view",
-      "chatgpt",
-      "claude"
+      "view"
     ]
   },
   "navigation": {
@@ -147,7 +145,6 @@
       },
       {
         "tab": "Changelog",
-        "icon": "history",
         "pages": [
           "changelog"
         ]
