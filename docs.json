@@ -29,7 +29,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Guide",
         "groups": [
           {
             "group": "Getting Started",
@@ -43,7 +43,7 @@
             ]
           },
           {
-            "group": "Core Usage",
+            "group": "Using the Bot",
             "icon": "message-bot",
             "pages": [
               "core-usage/conversations",
@@ -75,7 +75,12 @@
               "integrations/google-gmail",
               "integrations/webhooks"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Customizing",
+        "groups": [
           {
             "group": "Extending",
             "icon": "puzzle-piece",
@@ -87,6 +92,20 @@
               "extending/adding-integrations"
             ]
           },
+          {
+            "group": "Self-Hosting",
+            "icon": "server",
+            "pages": [
+              "self-hosting/guide",
+              "self-hosting/discord-bot-setup",
+              "self-hosting/google-oauth-setup"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
           {
             "group": "Configuration",
             "icon": "gear",
@@ -114,15 +133,6 @@
               "development/testing",
               "development/cli-reference",
               "development/troubleshooting"
-            ]
-          },
-          {
-            "group": "Self-Hosting",
-            "icon": "server",
-            "pages": [
-              "self-hosting/guide",
-              "self-hosting/discord-bot-setup",
-              "self-hosting/google-oauth-setup"
             ]
           }
         ]

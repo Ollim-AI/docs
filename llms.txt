@@ -3,61 +3,62 @@
 > ADHD-friendly Discord bot with proactive reminders, powered by Claude.
 
 ## Getting Started
-- [ollim-bot overview](getting-started/overview.mdx)
-- [Quickstart](getting-started/quickstart.mdx)
-- [Setup guide](getting-started/setup.mdx)
-- [How ollim-bot works](getting-started/how-it-works.mdx)
-- [Design philosophy](getting-started/design-philosophy.mdx)
+- [ollim-bot overview](getting-started/overview.mdx): ADHD-friendly Discord bot with proactive reminders, powered by Claude.
+- [Quickstart](getting-started/quickstart.mdx): Get ollim-bot running in under 5 minutes.
+- [Setup guide](getting-started/setup.mdx): Full setup: Discord bot, Google OAuth, environment, and first run.
+- [How ollim-bot works](getting-started/how-it-works.mdx): The agent loop, session persistence, fork model, and context flow.
+- [Design philosophy](getting-started/design-philosophy.mdx): Why ollim-bot is built the way it is.
 
-## Core Usage
-- [Conversations](core-usage/conversations.mdx)
-- [Slash commands](core-usage/slash-commands.mdx)
-- [Forks](core-usage/forks.mdx)
-- [Embeds & buttons](core-usage/embeds-and-buttons.mdx)
-- [Permissions](core-usage/permissions.mdx)
+## Using the Bot
+- [Conversations](core-usage/conversations.mdx): DM interface, message flow, and context management.
+- [Slash commands](core-usage/slash-commands.mdx): All Discord slash commands available in ollim-bot.
+- [Forks](core-usage/forks.mdx): Interactive forks, background forks, and exit strategies.
+- [Embeds & buttons](core-usage/embeds-and-buttons.mdx): Agent-controlled embeds, button actions, and inquiry flow.
+- [Permissions](core-usage/permissions.mdx): Permission modes, approval flow, and session-allowed tools.
 
 ## Scheduling
-- [Scheduling overview](scheduling/overview.mdx)
-- [Routines](scheduling/routines.mdx)
-- [Reminders](scheduling/reminders.mdx)
-- [Background forks](scheduling/background-forks.mdx)
-- [Ping budget](scheduling/ping-budget.mdx)
+- [Scheduling overview](scheduling/overview.mdx): Proactive scheduling with routines and reminders.
+- [Routines](scheduling/routines.mdx): Recurring cron-based schedules with YAML frontmatter.
+- [Reminders](scheduling/reminders.mdx): One-shot and chainable reminders.
+- [Background forks](scheduling/background-forks.mdx): Isolated mode, model overrides, tool restrictions, and update modes.
+- [Ping budget](scheduling/ping-budget.mdx): Refill-on-read bucket for background fork notifications.
+- [Real-world examples](scheduling/examples.mdx): Annotated scheduling examples from an actual data directory.
 
 ## Integrations
-- [Google integration](integrations/google-overview.mdx)
-- [Google Tasks](integrations/google-tasks.mdx)
-- [Google Calendar](integrations/google-calendar.mdx)
-- [Gmail](integrations/google-gmail.mdx)
-- [Webhooks](integrations/webhooks.mdx)
+- [Google integration](integrations/google-overview.mdx): OAuth setup, shared auth, and available Google services.
+- [Google Tasks](integrations/google-tasks.mdx): Task management, CLI commands, and embed button actions.
+- [Google Calendar](integrations/google-calendar.mdx): Event management, CLI commands, and embed button actions.
+- [Gmail](integrations/google-gmail.mdx): Read-only email access via the gmail-reader subagent.
+- [Webhooks](integrations/webhooks.mdx): External triggers with spec files, schema validation, and Haiku screening.
 
 ## Extending
-- [Extend ollim-bot](extending/overview.mdx)
-- [MCP tools](extending/mcp-tools.mdx)
-- [Subagents](extending/subagents.mdx)
-- [System prompt](extending/system-prompt.mdx)
-- [Adding new integrations](extending/adding-integrations.mdx)
-
-## Configuration
-- [Configuration reference](configuration/reference.mdx)
-- [Data directory](configuration/data-directory.mdx)
-- [File formats](configuration/file-formats.mdx)
-
-## Architecture
-- [Architecture overview](architecture/overview.mdx)
-- [Session management](architecture/session-management.mdx)
-- [Context flow](architecture/context-flow.mdx)
-- [Streaming & Discord](architecture/streaming.mdx)
-
-## Development
-- [Development guide](development/guide.mdx)
-- [Testing](development/testing.mdx)
-- [CLI reference](development/cli-reference.mdx)
-- [Troubleshooting](development/troubleshooting.mdx)
+- [Extend ollim-bot](extending/overview.mdx): When to use routines, reminders, webhooks, MCP tools, or subagents.
+- [MCP tools](extending/mcp-tools.mdx): All MCP tools: discord_embed, ping_user, follow_up_chain, save_context, report_updates, enter_fork, exit_fork.
+- [Subagents](extending/subagents.mdx): gmail-reader, history-reviewer, and responsiveness-reviewer subagents.
+- [System prompt](extending/system-prompt.mdx): How the system prompt is structured and what gets injected.
+- [Adding new integrations](extending/adding-integrations.mdx): How to add Google services, MCP tools, CLI commands, and webhook specs.
 
 ## Self-Hosting
-- [Self-hosting guide](self-hosting/guide.mdx)
-- [Discord bot setup](self-hosting/discord-bot-setup.mdx)
-- [Google OAuth setup](self-hosting/google-oauth-setup.mdx)
+- [Self-hosting guide](self-hosting/guide.mdx): Running your own instance: fork, configure, deploy.
+- [Discord bot setup](self-hosting/discord-bot-setup.mdx): Create a Discord application, bot token, and enable required intents.
+- [Google OAuth setup](self-hosting/google-oauth-setup.mdx): Google Cloud Console, credentials.json, and first auth flow.
+
+## Configuration
+- [Configuration reference](configuration/reference.mdx): All environment variables, .env file, and data directory structure.
+- [Data directory](configuration/data-directory.mdx): Layout of ~/.ollim-bot/: routines, reminders, webhooks, sessions, and more.
+- [File formats](configuration/file-formats.mdx): YAML frontmatter specs and JSONL formats for all data files.
+
+## Architecture
+- [Architecture overview](architecture/overview.mdx): Module map, dependency diagram, and data flow.
+- [Session management](architecture/session-management.mdx): Persistent sessions, session history, compaction, and /clear lifecycle.
+- [Context flow](architecture/context-flow.mdx): How context flows between main session, forks, background forks, and pending updates.
+- [Streaming & Discord](architecture/streaming.mdx): How agent responses stream to Discord with throttled edits and overflow handling.
+
+## Development
+- [Development guide](development/guide.mdx): Dev setup, running locally, project structure, and code conventions.
+- [Testing](development/testing.mdx): Test philosophy, running tests, and no-mocks policy.
+- [CLI reference](development/cli-reference.mdx): ollim-bot subcommands: bot, routine, reminder, tasks, cal, gmail.
+- [Troubleshooting](development/troubleshooting.mdx): Common issues, debugging, log locations, and session recovery.
 
 ## Changelog
-- [Changelog](changelog.mdx)
+- [Changelog](changelog.mdx): Version history and updates.
