@@ -44,45 +44,9 @@ require `DISCORD_TOKEN` — it is only loaded when starting the bot.
 
 ## Data directory
 
-All persistent state lives in `~/.ollim-bot/`. The directory is created on
-first use and managed as a git repository — most writes trigger an
-auto-commit.
-
-```
-~/.ollim-bot/
-├── routine-reminder-spec.md →  # Symlink to docs/routine-reminder-spec.md
-├── webhook-spec.md →           # Symlink to docs/webhook-spec.md
-├── routines/
-│   └── *.md                    # Recurring routine specs (YAML frontmatter + body)
-├── reminders/
-│   └── *.md                    # One-shot reminder specs (YAML frontmatter + body)
-├── webhooks/
-│   └── *.md                    # Webhook specs (YAML frontmatter + prompt template)
-└── state/
-    ├── bot.pid                 # PID file for single-instance check
-    ├── credentials.json        # Google OAuth credentials (from Cloud Console)
-    ├── token.json              # Google OAuth token (auto-generated)
-    ├── sessions.json           # Current session ID (plain string, not JSON)
-    ├── session_history.jsonl   # Append-only session lifecycle events
-    ├── pending_updates.json    # Pending updates from background forks
-    ├── inquiries.json          # Button inquiry prompts (7-day TTL)
-    ├── fork_messages.json      # Fork message tracking (7-day TTL)
-    └── ping_budget.json        # Ping budget state (ephemeral, no git commit)
-```
-
-### File categories
-
-| File | Format | Git | Description |
-|------|--------|-----|-------------|
-| `sessions.json` | Plain string | No | Active Agent SDK session ID |
-| `session_history.jsonl` | JSONL | Yes | Session lifecycle events |
-| `pending_updates.json` | JSON | No | Background fork updates for main session |
-| `inquiries.json` | JSON | No | Button inquiry prompts (7-day TTL) |
-| `fork_messages.json` | JSON | No | Fork message references (7-day TTL) |
-| `ping_budget.json` | JSON | No | Ephemeral ping budget counters |
-| `bot.pid` | Plain text | No | PID for duplicate-instance detection |
-| `credentials.json` | JSON | No | Google OAuth client credentials |
-| `token.json` | JSON | No | Google OAuth token (auto-generated) |
+All persistent data lives in `~/.ollim-bot/`. See
+[Data directory](/configuration/data-directory) for the full layout,
+file descriptions, and git tracking details.
 
 ## Storage patterns
 

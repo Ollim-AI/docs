@@ -157,24 +157,11 @@ overrides, tool restrictions, `update_main_session` modes,
 
 ## Pending updates
 
-Pending updates are the bridge between forks and the main session.
-When a fork calls `report_updates(message)`, the summary is written
-to `~/.ollim-bot/state/pending_updates.json` with a timestamp.
-
-The main session **pops** pending updates (reads and clears) at the
-start of each interaction. Forked sessions **peek** (read-only), so
-updates are preserved for the main session.
-
-Background forks can also write pending updates via
-`report_updates`, controlled by the `update_main_session`
-configuration:
-
-| Mode | Behavior |
-|------|----------|
-| `always` | Fork must call `report_updates` before finishing |
-| `on_ping` | Report if the agent pinged the user (default) |
-| `freely` | Reporting is optional |
-| `blocked` | `report_updates` returns an error |
+Pending updates are the bridge between forks and the main session —
+when a fork calls `report_updates(message)`, the summary gets
+prepended to the next main session interaction. See
+[Context flow](/architecture/context-flow) for the full pending
+updates cycle and `update_main_session` modes.
 
 ## Next steps
 

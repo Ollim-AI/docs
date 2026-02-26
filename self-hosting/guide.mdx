@@ -18,45 +18,22 @@ yourself, and run it. This guide covers the full process.
 
 ## Installation
 
+Follow the [setup guide](/getting-started/setup) for cloning, installing
+dependencies, and configuring environment variables. The steps below cover
+self-hosting-specific setup.
+
 <Steps>
-  <Step title="Fork and clone the repository">
+  <Step title="Fork the repository">
     Fork the repo on GitHub, then clone your fork:
 
     ```bash
     git clone https://github.com/your-username/ollim-bot.git
     cd ollim-bot
+    uv sync
     ```
 
     Working from a fork lets you customize the system prompt, subagent prompts,
     and integrations while still pulling upstream changes.
-  </Step>
-
-  <Step title="Install dependencies">
-    ```bash
-    uv sync
-    ```
-
-    This installs all runtime and development dependencies defined in `pyproject.toml`.
-  </Step>
-
-  <Step title="Configure environment variables">
-    Create a `.env` file in the project root with the three required variables:
-
-    ```bash title=".env"
-    DISCORD_TOKEN=your-discord-bot-token
-    OLLIM_USER_NAME=YourName
-    OLLIM_BOT_NAME=YourBot
-    ```
-
-    | Variable | Required | Default | Description |
-    |----------|----------|---------|-------------|
-    | `DISCORD_TOKEN` | Yes | — | Discord bot token |
-    | `OLLIM_USER_NAME` | Yes | — | Your display name (how the bot addresses you) |
-    | `OLLIM_BOT_NAME` | Yes | — | The bot's name (used in its system prompt and startup message) |
-    | `WEBHOOK_PORT` | No | — | Port for the webhook HTTP server (e.g., `8420`). Enables webhooks when set. |
-    | `WEBHOOK_SECRET` | No | — | Bearer token for webhook authentication. Required if `WEBHOOK_PORT` is set. |
-
-    If either `OLLIM_USER_NAME` or `OLLIM_BOT_NAME` is missing, the bot exits immediately.
   </Step>
 
   <Step title="Create a Discord bot">
@@ -71,9 +48,6 @@ yourself, and run it. This guide covers the full process.
     from Google Cloud Console. Download the credentials JSON and save it to
     `~/.ollim-bot/state/credentials.json`.
 
-    On first use of any Google service, a browser window opens for consent. The
-    authorized token is saved to `~/.ollim-bot/state/token.json` and reused automatically.
-
     See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full walkthrough.
   </Step>
 
@@ -82,13 +56,8 @@ yourself, and run it. This guide covers the full process.
     uv run ollim-bot
     ```
 
-    On startup, ollim-bot:
-    1. Validates required environment variables
-    2. Checks that no other instance is running (PID file at `~/.ollim-bot/state/bot.pid`)
-    3. Connects to Discord and syncs slash commands
-    4. Starts the scheduler (polls routines and reminders every 10 seconds)
-    5. Starts the webhook server if `WEBHOOK_PORT` is set
-    6. Sends you a startup DM
+    On startup, ollim-bot validates environment variables, checks for duplicate
+    instances, connects to Discord, starts the scheduler, and sends you a startup DM.
 
     <Note>
       ollim-bot enforces single-instance via a PID file. On startup, it checks whether
@@ -147,36 +116,14 @@ uv run ollim-bot reminder add --delay 30 -m "Take a break"
 
 ## Data directory
 
-All persistent data lives in `~/.ollim-bot/`. This directory is automatically
-initialized as a git repository — `storage.py` auto-commits on every write
-and delete operation.
-
-```
-~/.ollim-bot/
-├── routine-reminder-spec.md →  # Symlink to docs/routine-reminder-spec.md
-├── webhook-spec.md →           # Symlink to docs/webhook-spec.md
-├── routines/                   # Recurring cron files
-├── reminders/                  # One-shot reminder files
-├── webhooks/                   # Webhook spec files
-└── state/
-    ├── bot.pid                 # PID lock file
-    ├── credentials.json        # Google OAuth credentials (manual)
-    ├── token.json              # Google OAuth token (auto-generated)
-    ├── sessions.json           # Current session ID
-    ├── session_history.jsonl   # Session lifecycle log
-    ├── fork_messages.json      # Message → fork session map (7-day TTL)
-    ├── inquiries.json          # Button inquiry prompts (7-day TTL)
-    ├── pending_updates.json    # Background fork summaries
-    └── ping_budget.json        # Ping budget state (not git-committed)
-```
+All persistent data lives in `~/.ollim-bot/`, managed as a git repository.
+See [Data directory](/configuration/data-directory) for the full layout.
 
 <Tip>
   Back up `~/.ollim-bot/` to preserve your routines, reminders, session history,
   and Google credentials. Since it is a git repo, you can push it to a private
   remote for backup.
 </Tip>
-
-See [Data directory](/configuration/data-directory) for details on each file.
 
 ## Running as a service
 
@@ -212,13 +159,10 @@ systemctl --user enable --now ollim-bot
 
 ## Session persistence
 
-ollim-bot persists its Claude session ID to `~/.ollim-bot/state/sessions.json`.
-On restart, it resumes the existing conversation — no context is lost. If you
-want a fresh start, use `/clear` in Discord or delete `sessions.json`.
-
-Session history (compactions, forks, clears) is logged to
-`~/.ollim-bot/state/session_history.jsonl` for debugging. See
-[Session management](/architecture/session-management) for details.
+ollim-bot persists its Claude session across restarts — no context is lost. If you
+want a fresh start, use `/clear` in Discord. See
+[Session management](/architecture/session-management) for details on compaction,
+lifecycle events, and session recovery.
 
 ## Next steps
 

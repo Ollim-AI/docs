@@ -90,66 +90,23 @@ required. For a minimal quickstart, see the [quickstart guide](/getting-started/
 
 ## Environment variables
 
-All variables are set in the `.env` file at the project root.
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DISCORD_TOKEN` | Yes | — | Discord bot token |
-| `OLLIM_USER_NAME` | Yes | — | Your display name (how the bot addresses you) |
-| `OLLIM_BOT_NAME` | Yes | — | The bot's name (used in its system prompt and startup message) |
-| `WEBHOOK_PORT` | No | — | Port for the webhook HTTP server (e.g., `8420`). Enables webhooks when set. |
-| `WEBHOOK_SECRET` | No | — | Bearer token for webhook authentication. Required if `WEBHOOK_PORT` is set. |
-
-<Warning>
-If you set `WEBHOOK_PORT`, you must also set `WEBHOOK_SECRET`. The webhook server binds to `127.0.0.1` only.
-</Warning>
-
-See [Configuration reference](/configuration/reference) for the full configuration surface.
+All variables are set in the `.env` file at the project root. The three required
+variables (`DISCORD_TOKEN`, `OLLIM_USER_NAME`, `OLLIM_BOT_NAME`) are shown in
+Step 3 above. Optional variables for webhooks and other features are documented
+in the [Configuration reference](/configuration/reference).
 
 ## Data directory
 
-ollim-bot stores all user data in `~/.ollim-bot/`, which is auto-created on first
-run. If this directory is a git repository, `storage.py` auto-commits on every
-add/remove operation.
-
-```
-~/.ollim-bot/
-├── state/
-│   ├── bot.pid                  # Process ID (prevents duplicate instances)
-│   ├── credentials.json         # Google OAuth client credentials (manual download)
-│   ├── token.json               # Google OAuth authorized token (auto-generated)
-│   ├── sessions.json            # Current session ID
-│   ├── session_history.jsonl    # Append-only session lifecycle log
-│   ├── fork_messages.json       # Discord message → fork session mapping (7-day TTL)
-│   ├── inquiries.json           # Persistent button inquiry prompts (7-day TTL)
-│   ├── pending_updates.json     # Summary updates from background forks
-│   └── ping_budget.json         # Ping budget state
-├── routines/                    # Recurring cron job files (YAML frontmatter + markdown)
-├── reminders/                   # One-shot reminder files (YAML frontmatter + markdown)
-└── webhooks/                    # Webhook spec files (YAML frontmatter + prompt template)
-```
-
-See [Data directory](/configuration/data-directory) for details on each file
-and [File formats](/configuration/file-formats) for the YAML and JSONL schemas.
+ollim-bot stores all persistent data in `~/.ollim-bot/`, which is auto-created on first
+run and managed as a git repository. See [Data directory](/configuration/data-directory)
+for the full layout and file descriptions.
 
 ## Webhooks (optional)
 
-To accept external HTTP triggers, set `WEBHOOK_PORT` and `WEBHOOK_SECRET` in your `.env`:
-
-```bash title=".env"
-WEBHOOK_PORT=8420
-WEBHOOK_SECRET=a-long-random-string
-```
-
-The webhook server starts automatically on bot launch and binds to
-`127.0.0.1:{WEBHOOK_PORT}`. Each webhook is defined as a markdown file in
-`~/.ollim-bot/webhooks/` with YAML frontmatter describing the expected
-payload schema.
-
-Incoming requests are validated through four layers: JSON Schema validation,
-content fencing, Haiku screening, and operational limits (10KB payload,
-20 max properties, 500-character default string length).
-See [Webhooks](/integrations/webhooks) for the full specification.
+To accept external HTTP triggers, set `WEBHOOK_PORT` and `WEBHOOK_SECRET` in your `.env`.
+The webhook server starts automatically on bot launch and binds to `127.0.0.1`.
+See [Webhooks](/integrations/webhooks) for the full specification and
+[Configuration reference](/configuration/reference) for the environment variables.
 
 ## Next steps
 
