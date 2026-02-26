@@ -21,7 +21,7 @@ ollim-bot runs entirely in DMs — no server invite is needed.
   </Step>
 
   <Step title="Create a bot and copy the token">
-    In the left sidebar, click **Bot**. Click **Reset Token** (or **Add Bot** if prompted), then copy the token.
+    In the left sidebar, click **Bot**. Uncheck **Public Bot** (ollim-bot is single-user — no one else needs to install it). Click **Reset Token** (or **Add Bot** if prompted), then copy the token.
 
     Add it to your `.env` file:
 
@@ -46,6 +46,24 @@ ollim-bot runs entirely in DMs — no server invite is needed.
     Without this intent enabled, the bot cannot see what you type.
   </Step>
 
+  <Step title="Configure user installation">
+    In the left sidebar, click **Installation**.
+
+    1. Under **Installation Contexts**, check **User Install** (uncheck **Guild Install** — ollim-bot doesn't use servers)
+    2. Set the install link to **Discord Provided Link**
+    3. Under **Default Install Settings** for the user install context, add the `applications.commands` scope
+
+    This lets you install the app directly to your Discord account so slash commands work in DMs without a shared server.
+  </Step>
+
+  <Step title="Install the app to your account">
+    Copy the **Install Link** shown on the Installation page and open it in your browser. Select **Add to my apps** to install the bot to your Discord account.
+
+    <Tip>
+    Bookmark the install link — you'll need it again if you re-create the application.
+    </Tip>
+  </Step>
+
   <Step title="Configure remaining environment variables">
     In addition to `DISCORD_TOKEN`, ollim-bot requires two more environment variables:
 
@@ -66,7 +84,7 @@ ollim-bot runs entirely in DMs — no server invite is needed.
 
   <Step title="Start the bot">
     ```bash
-    uv run ollim-bot
+    ollim-bot
     ```
 
     Required environment variables are validated at import time (before the bot starts).
@@ -109,8 +127,8 @@ Once the bot is online, these slash commands are available:
   <Card title="Google OAuth setup" icon="key" href="/self-hosting/google-oauth-setup">
     Connect Google Tasks, Calendar, and Gmail.
   </Card>
-  <Card title="Setup guide" icon="book" href="/getting-started/setup">
-    Full setup walkthrough including data directory and all integrations.
+  <Card title="Optional integrations" icon="puzzle-piece" href="/getting-started/setup">
+    Google OAuth, webhooks, and other optional features.
   </Card>
   <Card title="Conversations" icon="message" href="/core-usage/conversations">
     Learn how to interact with the bot via DMs and mentions.
