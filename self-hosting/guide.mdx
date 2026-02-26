@@ -100,6 +100,13 @@ with three subagents:
 You can modify these prompts or add new subagents by defining additional
 `AgentDefinition` entries in `agent.py`.
 
+### Model providers
+
+By default, ollim-bot uses your Claude subscription via Claude Code OAuth.
+You can switch to an Anthropic API key, Amazon Bedrock, Google Vertex AI,
+or a custom backend. See [Model providers](/self-hosting/model-providers)
+for the full configuration.
+
 ### Integrations
 
 To add a new Google service: add the OAuth scope to `google/auth.py`, create a

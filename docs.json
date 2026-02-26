@@ -111,7 +111,8 @@
             "pages": [
               "self-hosting/guide",
               "self-hosting/discord-bot-setup",
-              "self-hosting/google-oauth-setup"
+              "self-hosting/google-oauth-setup",
+              "self-hosting/model-providers"
             ]
           }
         ]

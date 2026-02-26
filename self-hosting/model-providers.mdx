@@ -1,0 +1,206 @@
+---
+title: "Model providers"
+description: "Use Bedrock, Vertex AI, an API key, or a custom backend instead of the default Claude subscription."
+---
+
+ollim-bot authenticates through Claude Code OAuth by default — no API key,
+no provider config, nothing to set up. Your Claude subscription handles
+everything. But if you need Bedrock, Vertex AI, or your own backend,
+all provider configuration happens through environment variables in your
+`.env` file.
+
+## Default: Claude subscription
+
+Out of the box, ollim-bot uses your Claude subscription via Claude Code
+OAuth. The model you get depends on your subscription tier:
+
+| Subscription | Default model | Opus access |
+|--------------|---------------|-------------|
+| Pro | Sonnet 4.6 | Not available |
+| Max | Opus 4.6 | Default |
+
+Switch models at runtime with the `/model` slash command in Discord:
+
+```
+/model opus
+/model sonnet
+/model haiku
+```
+
+The agent resolves aliases to the latest version automatically — `sonnet`
+currently maps to Sonnet 4.6, `opus` to Opus 4.6, `haiku` to Haiku 4.5.
+
+<Note>
+  Claude Code may fall back to Sonnet if you hit your Opus usage threshold
+  on a subscription plan.
+</Note>
+
+## Anthropic API key
+
+For pay-as-you-go billing instead of a subscription, set an API key:
+
+```bash title=".env"
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+This bypasses Claude Code OAuth entirely. You pay per token at
+[Anthropic's API rates](https://docs.anthropic.com/en/docs/about-claude/models/all-models#model-comparison-table).
+
+## Cloud providers
+
+<Tabs>
+  <Tab title="Amazon Bedrock">
+    Set these environment variables in your `.env` file:
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `CLAUDE_CODE_USE_BEDROCK` | Yes | Set to `1` to enable Bedrock |
+    | `AWS_REGION` | Yes | AWS region (e.g. `us-east-1`) — not read from `.aws` config |
+    | `AWS_ACCESS_KEY_ID` | Conditional | AWS access key (one auth method required) |
+    | `AWS_SECRET_ACCESS_KEY` | Conditional | AWS secret key |
+    | `AWS_SESSION_TOKEN` | No | Session token for temporary credentials |
+    | `AWS_PROFILE` | Conditional | AWS SSO profile name (alternative to access keys) |
+
+    ```bash title=".env"
+    CLAUDE_CODE_USE_BEDROCK=1
+    AWS_REGION=us-east-1
+    AWS_ACCESS_KEY_ID=AKIA...
+    AWS_SECRET_ACCESS_KEY=...
+    ```
+
+    Bedrock supports five authentication methods: AWS CLI config, environment
+    variable access keys, SSO profiles, Management Console credentials, and
+    Bedrock API keys (`AWS_BEARER_TOKEN_BEDROCK`).
+
+    <Warning>
+      `AWS_REGION` is required and is not read from your AWS CLI configuration.
+      Always set it explicitly.
+    </Warning>
+
+    IAM permissions required: `bedrock:InvokeModel`,
+    `bedrock:InvokeModelWithResponseStream`, `bedrock:ListInferenceProfiles`.
+
+    For full IAM policy details, credential chain options, and guardrail
+    configuration, see the
+    [Claude Code Bedrock docs](https://code.claude.com/docs/en/amazon-bedrock).
+  </Tab>
+
+  <Tab title="Google Vertex AI">
+    Set these environment variables in your `.env` file:
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `CLAUDE_CODE_USE_VERTEX` | Yes | Set to `1` to enable Vertex AI |
+    | `CLOUD_ML_REGION` | Yes | GCP region (e.g. `us-east5`) or `global` |
+    | `ANTHROPIC_VERTEX_PROJECT_ID` | Yes | Your GCP project ID |
+    | `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to service account JSON (alternative to `gcloud auth`) |
+
+    ```bash title=".env"
+    CLAUDE_CODE_USE_VERTEX=1
+    CLOUD_ML_REGION=us-east5
+    ANTHROPIC_VERTEX_PROJECT_ID=my-project-id
+    ```
+
+    Authenticate with `gcloud auth application-default login` or provide a
+    service account key via `GOOGLE_APPLICATION_CREDENTIALS`.
+
+    IAM role required: `roles/aiplatform.user`
+
+    <Note>
+      Model access approval on Vertex AI can take 24–48 hours. Not all models
+      are available in all regions.
+    </Note>
+
+    For full GCP setup, region-specific configuration, and credential details,
+    see the
+    [Claude Code Vertex AI docs](https://code.claude.com/docs/en/google-vertex-ai).
+  </Tab>
+
+  <Tab title="Custom backend">
+    Point ollim-bot at any endpoint that implements the
+    [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) —
+    LiteLLM, vLLM, OpenRouter, or your own gateway:
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `ANTHROPIC_BASE_URL` | Yes | Base URL for the Messages API endpoint |
+    | `ANTHROPIC_AUTH_TOKEN` | No | Static API key sent as `Authorization` header |
+
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://litellm-server:4000
+    ANTHROPIC_AUTH_TOKEN=sk-litellm-static-key
+    ```
+
+    The gateway must expose `/v1/messages` and forward the `anthropic-beta`
+    and `anthropic-version` headers. For LiteLLM-specific setup (unified
+    endpoint, Bedrock/Vertex pass-through, dynamic key helpers), see the
+    [Claude Code LLM gateway docs](https://code.claude.com/docs/en/llm-gateway).
+  </Tab>
+</Tabs>
+
+## Model version pinning
+
+By default, model aliases (`opus`, `sonnet`, `haiku`) resolve to the latest
+version. Pin specific versions with these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `ANTHROPIC_DEFAULT_OPUS_MODEL` | Pin the `opus` alias |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | Pin the `sonnet` alias |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | Pin the `haiku` alias |
+
+Model IDs differ by provider:
+
+| Model | Anthropic API | Amazon Bedrock | Google Vertex AI |
+|-------|---------------|----------------|------------------|
+| Opus 4.6 | `claude-opus-4-6` | `us.anthropic.claude-opus-4-6-v1` | `claude-opus-4-6` |
+| Sonnet 4.6 | `claude-sonnet-4-6` | `us.anthropic.claude-sonnet-4-6` | `claude-sonnet-4-6` |
+| Haiku 4.5 | `claude-haiku-4-5-20251001` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` | `claude-haiku-4-5@20251001` |
+
+```bash title=".env (Bedrock example)"
+ANTHROPIC_DEFAULT_OPUS_MODEL=us.anthropic.claude-opus-4-6-v1
+ANTHROPIC_DEFAULT_SONNET_MODEL=us.anthropic.claude-sonnet-4-6
+ANTHROPIC_DEFAULT_HAIKU_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0
+```
+
+<Warning>
+  Pin all three models when using Bedrock or Vertex AI. Without pinning,
+  aliases resolve to the latest version — which may not be available in your
+  deployment yet.
+</Warning>
+
+## Per-routine model override
+
+Background routines can override the model in their YAML frontmatter:
+
+```yaml title="routines/quick-email-check.md"
+---
+id: "d1e2f3a4"
+cron: "0 */3 * * *"
+description: "Email check"
+background: true
+model: "haiku"
+---
+Check for new important emails. Save a summary to pending updates.
+```
+
+The `model` field accepts aliases (`opus`, `sonnet`, `haiku`) and only
+applies to background routines. See [Routines](/scheduling/routines)
+for all frontmatter fields.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Configuration reference" icon="sliders" href="/configuration/reference">
+    All environment variables and configuration options.
+  </Card>
+  <Card title="Self-hosting guide" icon="server" href="/self-hosting/guide">
+    Fork, configure, and deploy your own instance.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Per-routine model overrides and background fork configuration.
+  </Card>
+  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
+    The /model command and other runtime controls.
+  </Card>
+</Columns>
