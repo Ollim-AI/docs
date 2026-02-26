@@ -1,14 +1,12 @@
 ---
 title: "Model providers"
-description: "Configure Claude providers, switch billing paths, or experiment with alternative models through custom backends."
+description: "Use your Claude subscription, switch to a cheaper alternative, or bring your own backend."
 ---
 
 ollim-bot authenticates through Claude Code OAuth by default — no API key,
 no provider config, nothing to set up. Your Claude subscription handles
-everything. But if you need a different billing path, want to use your
-cloud provider's infrastructure, or want to experiment with non-Claude
-models entirely, all provider configuration happens through environment
-variables in your `.env` file.
+everything. If you want to experiment with other models or reduce costs,
+swap providers with a couple of environment variables in your `.env` file.
 
 ## Default: Claude subscription
 
@@ -36,148 +34,29 @@ currently maps to Sonnet 4.6, `opus` to Opus 4.6, `haiku` to Haiku 4.5.
   on a subscription plan.
 </Note>
 
-## Anthropic API key
+## Alternative subscriptions
 
-For pay-as-you-go billing instead of a subscription, set an API key:
-
-```bash title=".env"
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-This bypasses Claude Code OAuth entirely. You pay per token at
-[Anthropic's API rates](https://docs.anthropic.com/en/docs/about-claude/models/all-models#model-comparison-table).
-
-## Cloud providers
-
-<Tabs>
-  <Tab title="Amazon Bedrock">
-    Set these environment variables in your `.env` file:
-
-    | Variable | Required | Description |
-    |----------|----------|-------------|
-    | `CLAUDE_CODE_USE_BEDROCK` | Yes | Set to `1` to enable Bedrock |
-    | `AWS_REGION` | Yes | AWS region (e.g. `us-east-1`) — not read from `.aws` config |
-    | `AWS_ACCESS_KEY_ID` | Conditional | AWS access key (one auth method required) |
-    | `AWS_SECRET_ACCESS_KEY` | Conditional | AWS secret key |
-    | `AWS_SESSION_TOKEN` | No | Session token for temporary credentials |
-    | `AWS_PROFILE` | Conditional | AWS SSO profile name (alternative to access keys) |
-
-    ```bash title=".env"
-    CLAUDE_CODE_USE_BEDROCK=1
-    AWS_REGION=us-east-1
-    AWS_ACCESS_KEY_ID=AKIA...
-    AWS_SECRET_ACCESS_KEY=...
-    ```
-
-    Bedrock supports five authentication methods: AWS CLI config, environment
-    variable access keys, SSO profiles, Management Console credentials, and
-    Bedrock API keys (`AWS_BEARER_TOKEN_BEDROCK`).
-
-    <Warning>
-      `AWS_REGION` is required and is not read from your AWS CLI configuration.
-      Always set it explicitly.
-    </Warning>
-
-    IAM permissions required: `bedrock:InvokeModel`,
-    `bedrock:InvokeModelWithResponseStream`, `bedrock:ListInferenceProfiles`.
-
-    For full IAM policy details, credential chain options, and guardrail
-    configuration, see the
-    [Claude Code Bedrock docs](https://code.claude.com/docs/en/amazon-bedrock).
-  </Tab>
-
-  <Tab title="Google Vertex AI">
-    Set these environment variables in your `.env` file:
-
-    | Variable | Required | Description |
-    |----------|----------|-------------|
-    | `CLAUDE_CODE_USE_VERTEX` | Yes | Set to `1` to enable Vertex AI |
-    | `CLOUD_ML_REGION` | Yes | GCP region (e.g. `us-east5`) or `global` |
-    | `ANTHROPIC_VERTEX_PROJECT_ID` | Yes | Your GCP project ID |
-    | `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to service account JSON (alternative to `gcloud auth`) |
-
-    ```bash title=".env"
-    CLAUDE_CODE_USE_VERTEX=1
-    CLOUD_ML_REGION=us-east5
-    ANTHROPIC_VERTEX_PROJECT_ID=my-project-id
-    ```
-
-    Authenticate with `gcloud auth application-default login` or provide a
-    service account key via `GOOGLE_APPLICATION_CREDENTIALS`.
-
-    IAM role required: `roles/aiplatform.user`
-
-    <Note>
-      Model access approval on Vertex AI can take 24–48 hours. Not all models
-      are available in all regions.
-    </Note>
-
-    For full GCP setup, region-specific configuration, and credential details,
-    see the
-    [Claude Code Vertex AI docs](https://code.claude.com/docs/en/google-vertex-ai).
-  </Tab>
-
-  <Tab title="Custom backend">
-    Point ollim-bot at any endpoint that implements the
-    [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) —
-    a LiteLLM proxy, vLLM, or your own gateway. For specific alternative
-    providers (DeepSeek, Z.AI, MiniMax, etc.), see
-    [Alternative models](#alternative-models).
-
-    | Variable | Required | Description |
-    |----------|----------|-------------|
-    | `ANTHROPIC_BASE_URL` | Yes | Base URL for the Messages API endpoint |
-    | `ANTHROPIC_AUTH_TOKEN` | No | Static API key sent as `Authorization` header |
-
-    ```bash title=".env"
-    ANTHROPIC_BASE_URL=https://litellm-server:4000
-    ANTHROPIC_AUTH_TOKEN=sk-litellm-static-key
-    ```
-
-    The gateway must expose `/v1/messages` and forward the `anthropic-beta`
-    and `anthropic-version` headers. For LiteLLM-specific setup (unified
-    endpoint, Bedrock/Vertex pass-through, dynamic key helpers), see the
-    [Claude Code LLM gateway docs](https://code.claude.com/docs/en/llm-gateway).
-  </Tab>
-</Tabs>
-
-## Alternative models
-
-You're not locked into a Claude subscription. Several providers offer
-Anthropic Messages API-compatible endpoints — set two environment variables
-and ollim-bot uses their models instead, with no code changes.
+Don't want a Claude subscription? Several providers offer their own coding
+subscriptions with Anthropic Messages API-compatible endpoints. Set two
+environment variables and ollim-bot uses their models instead — no code
+changes.
 
 | Provider | Cost | Models | Notes |
 |----------|------|--------|-------|
-| [DeepSeek](https://platform.deepseek.com) | \$0.27/1M input tokens | DeepSeek V3.2 | Cheapest per-token option |
-| [Z.AI](https://z.ai) | \$3–49/mo or pay-per-token | GLM-5, GLM-4.7 | Free tier (GLM-4.7-Flash) |
+| [Z.AI](https://z.ai) | \$3–49/mo | GLM-5, GLM-4.7 | Free tier (GLM-4.7-Flash) |
+| [Qwen](https://alibabacloud.com/help/en/model-studio/coding-plan) | \$10–50/mo | Qwen3.5 + 5 other models | Multi-model under one subscription |
 | [MiniMax](https://platform.minimax.io) | \$10–150/mo | MiniMax M2.5 | 100+ tokens/sec throughput |
 | [Kimi](https://kimi.com/code) | ~\$7/week | Kimi K2.5 | 256K context window |
-| [Qwen](https://alibabacloud.com/help/en/model-studio/coding-plan) | \$10–50/mo | Qwen3.5 + 5 other models | Multi-model under one subscription |
-| [OpenRouter](https://openrouter.ai) | Pay-per-token | 400+ models | Claude models only guaranteed |
 
 All of these use the same pattern — `ANTHROPIC_BASE_URL` and
 `ANTHROPIC_AUTH_TOKEN` in your `.env` file:
 
-```bash title=".env (DeepSeek example)"
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
-ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
+```bash title=".env (Z.AI example)"
+ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
+ANTHROPIC_AUTH_TOKEN=your-zai-api-key
 ```
 
 <AccordionGroup>
-  <Accordion title="DeepSeek setup">
-    ```bash title=".env"
-    ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
-    ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
-    ANTHROPIC_MODEL=deepseek-chat
-    ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat
-    ```
-
-    Pay-per-token at \$0.27/1M input, \$0.42/1M output — the cheapest
-    option available. No subscription required. Tool use works but image
-    input is not supported through the Anthropic compatibility endpoint.
-  </Accordion>
-
   <Accordion title="Z.AI GLM setup">
     ```bash title=".env"
     ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
@@ -190,6 +69,19 @@ ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
     offers subscription plans (Lite \$3/mo, Pro \$15/mo, Max ~\$60/mo)
     with prompt-based quotas, or pay-per-token. GLM-4.7-Flash and
     GLM-4.5-Flash are free.
+  </Accordion>
+
+  <Accordion title="Qwen / Alibaba Cloud setup">
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://dashscope-intl.aliyuncs.com/apps/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-dashscope-api-key
+    ANTHROPIC_MODEL=qwen3.5-plus
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3.5-coder
+    ```
+
+    The standout feature — one subscription (\$10–50/mo), six models.
+    Switch between Qwen3.5-Plus, Qwen3-Coder, GLM-4.7, Kimi-K2.5, and
+    MiniMax M2.5 without changing providers.
   </Accordion>
 
   <Accordion title="MiniMax setup">
@@ -215,18 +107,29 @@ ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
     Weekly membership at ~\$7/week with 300–1,200 API calls per 5-hour
     window. 256K context window and 100 tokens/second output speed.
   </Accordion>
+</AccordionGroup>
 
-  <Accordion title="Qwen / Alibaba Cloud setup">
+## Pay-per-token providers
+
+If you prefer paying for what you use instead of a flat subscription:
+
+| Provider | Input cost | Output cost | Models | Notes |
+|----------|-----------|-------------|--------|-------|
+| [DeepSeek](https://platform.deepseek.com) | \$0.27/1M | \$0.42/1M | DeepSeek V3.2 | Cheapest option available |
+| [OpenRouter](https://openrouter.ai) | Varies | Varies | 400+ models | Gateway with unified billing |
+
+<AccordionGroup>
+  <Accordion title="DeepSeek setup">
     ```bash title=".env"
-    ANTHROPIC_BASE_URL=https://dashscope-intl.aliyuncs.com/apps/anthropic
-    ANTHROPIC_AUTH_TOKEN=your-dashscope-api-key
-    ANTHROPIC_MODEL=qwen3.5-plus
-    ANTHROPIC_SMALL_FAST_MODEL=qwen3.5-coder
+    ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
+    ANTHROPIC_MODEL=deepseek-chat
+    ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat
     ```
 
-    The standout feature — one subscription (\$10–50/mo), six models.
-    Switch between Qwen3.5-Plus, Qwen3-Coder, GLM-4.7, Kimi-K2.5, and
-    MiniMax M2.5 without changing providers.
+    The cheapest per-token option — roughly 10x cheaper than Claude
+    Sonnet 4.6. No subscription required. Tool use works but image input
+    is not supported through the Anthropic compatibility endpoint.
   </Accordion>
 
   <Accordion title="OpenRouter setup">
@@ -244,18 +147,57 @@ ANTHROPIC_AUTH_TOKEN=your-deepseek-api-key
   </Accordion>
 </AccordionGroup>
 
-<Note>
-  You can also run local models through [Ollama](https://ollama.com)
-  (`ANTHROPIC_BASE_URL=http://localhost:11434`), but tool use is still
-  experimental and not recommended for a production bot.
-</Note>
-
 <Warning>
   Alternative models are community-supported and not tested by Anthropic.
   ollim-bot's agentic loop depends on reliable tool use — test thoroughly
   before relying on a non-Claude model for daily operations. Provider
   endpoints and pricing may change without notice.
 </Warning>
+
+## Self-hosted models
+
+If you want full control over your data — no tokens leaving your
+network — you can run models locally and point ollim-bot at them.
+
+<AccordionGroup>
+  <Accordion title="Ollama">
+    [Ollama](https://ollama.com) runs open models locally and exposes an
+    Anthropic-compatible endpoint as of v0.14+:
+
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=http://localhost:11434
+    ANTHROPIC_AUTH_TOKEN=ollama
+    ANTHROPIC_MODEL=qwen3-coder
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
+    ```
+
+    Recommended models for tool use: **Qwen3-Coder** (32B), **GLM-4.7-Flash**.
+    Use q8 or fp16 quantization with at least 24GB VRAM for reliable results.
+
+    **Limitations**: tool use is still experimental — smaller models get stuck
+    in reasoning loops, and inference is 50–70x slower than cloud providers.
+    Expect tinkering. Not recommended as a primary backend for a bot that
+    needs to respond reliably.
+  </Accordion>
+
+  <Accordion title="vLLM / other local inference">
+    Any local inference server that exposes an Anthropic Messages
+    API-compatible endpoint works with the same `ANTHROPIC_BASE_URL`
+    mechanism. [vLLM](https://docs.vllm.ai/) and
+    [llama.cpp server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server)
+    both support this with the right configuration.
+
+    Route through a [LiteLLM proxy](https://docs.litellm.ai/) if your
+    inference server only speaks the OpenAI Chat Completions format —
+    LiteLLM translates to Anthropic format automatically.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Self-hosting makes sense for data sovereignty and experimentation.
+  For daily bot reliability, cloud providers still have the edge — tool
+  use support in local models is improving but not yet production-grade.
+</Tip>
 
 ## Model version pinning
 
@@ -268,25 +210,30 @@ version. Pin specific versions with these environment variables:
 | `ANTHROPIC_DEFAULT_SONNET_MODEL` | Pin the `sonnet` alias |
 | `ANTHROPIC_DEFAULT_HAIKU_MODEL` | Pin the `haiku` alias |
 
-Model IDs differ by provider:
+These also work with alternative providers — set them to the provider's
+model IDs (e.g. `glm-4.7`, `deepseek-chat`, `kimi-k2.5`).
 
-| Model | Anthropic API | Amazon Bedrock | Google Vertex AI |
-|-------|---------------|----------------|------------------|
-| Opus 4.6 | `claude-opus-4-6` | `us.anthropic.claude-opus-4-6-v1` | `claude-opus-4-6` |
-| Sonnet 4.6 | `claude-sonnet-4-6` | `us.anthropic.claude-sonnet-4-6` | `claude-sonnet-4-6` |
-| Haiku 4.5 | `claude-haiku-4-5-20251001` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` | `claude-haiku-4-5@20251001` |
+<AccordionGroup>
+  <Accordion title="Claude model IDs by provider">
+    | Model | Anthropic API | Amazon Bedrock | Google Vertex AI |
+    |-------|---------------|----------------|------------------|
+    | Opus 4.6 | `claude-opus-4-6` | `us.anthropic.claude-opus-4-6-v1` | `claude-opus-4-6` |
+    | Sonnet 4.6 | `claude-sonnet-4-6` | `us.anthropic.claude-sonnet-4-6` | `claude-sonnet-4-6` |
+    | Haiku 4.5 | `claude-haiku-4-5-20251001` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` | `claude-haiku-4-5@20251001` |
 
-```bash title=".env (Bedrock example)"
-ANTHROPIC_DEFAULT_OPUS_MODEL=us.anthropic.claude-opus-4-6-v1
-ANTHROPIC_DEFAULT_SONNET_MODEL=us.anthropic.claude-sonnet-4-6
-ANTHROPIC_DEFAULT_HAIKU_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0
-```
+    ```bash title=".env (Bedrock example)"
+    ANTHROPIC_DEFAULT_OPUS_MODEL=us.anthropic.claude-opus-4-6-v1
+    ANTHROPIC_DEFAULT_SONNET_MODEL=us.anthropic.claude-sonnet-4-6
+    ANTHROPIC_DEFAULT_HAIKU_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0
+    ```
 
-<Warning>
-  Pin all three models when using Bedrock or Vertex AI. Without pinning,
-  aliases resolve to the latest version — which may not be available in your
-  deployment yet.
-</Warning>
+    <Warning>
+      Pin all three models when using Bedrock or Vertex AI. Without
+      pinning, aliases resolve to the latest version — which may not be
+      available in your deployment yet.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
 
 ## Per-routine model override
 
@@ -368,30 +315,23 @@ lightweight background routines where speed matters more than depth.
   </Accordion>
 </AccordionGroup>
 
-## Subscription vs API pricing
+## Claude pricing
 
 For most users, a Claude subscription is dramatically cheaper than API
 pay-as-you-go. The average Claude Code developer uses the equivalent of
-\$130/month in API tokens — covered by a \$20 Pro plan. API keys make
-sense for very light usage or when you need zero rate limits.
+\$130/month in API tokens — covered by a \$20 Pro plan.
 
 | Plan | Cost | Default model | Opus access | Rate limits |
 |------|------|---------------|-------------|-------------|
 | Pro | $20/mo | Sonnet 4.6 | Available (with fallback) | ~45 msgs/5hr |
 | Max 5x | $100/mo | Opus 4.6 | Default | 5x Pro |
 | Max 20x | $200/mo | Opus 4.6 | Default | 20x Pro |
-| API key | Variable | Any | No limits | Per-tier TPM/RPM |
 
 <Note>
   On the Pro plan, Claude Code may fall back from Opus to Sonnet when you
   hit a usage threshold. The exact limit is not published. Max plans have
   higher thresholds — Max 20x rarely triggers fallback.
 </Note>
-
-<Tip>
-  Don't need Claude specifically? Alternative providers offer coding
-  subscriptions from \$3/month — see [Alternative models](#alternative-models).
-</Tip>
 
 <AccordionGroup>
   <Accordion title="API token pricing and breakeven analysis">
@@ -427,14 +367,116 @@ sense for very light usage or when you need zero rate limits.
   </Accordion>
 </AccordionGroup>
 
-## Cross-provider pricing
+## Advanced provider options
 
-Global endpoint pricing is identical across Anthropic API, Amazon Bedrock,
-and Google Vertex AI — no markup. Regional endpoints add a 10% premium for
-data residency compliance.
+If you need pay-as-you-go API billing, cloud provider infrastructure, or
+a custom LLM gateway, these options are available but require more setup.
 
 <AccordionGroup>
-  <Accordion title="Detailed cross-provider comparison">
+  <Accordion title="Anthropic API key">
+    For pay-as-you-go billing instead of a subscription:
+
+    ```bash title=".env"
+    ANTHROPIC_API_KEY=sk-ant-...
+    ```
+
+    This bypasses Claude Code OAuth entirely. You pay per token at
+    [Anthropic's API rates](https://docs.anthropic.com/en/docs/about-claude/models/all-models#model-comparison-table).
+  </Accordion>
+
+  <Accordion title="Amazon Bedrock">
+    Set these environment variables in your `.env` file:
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `CLAUDE_CODE_USE_BEDROCK` | Yes | Set to `1` to enable Bedrock |
+    | `AWS_REGION` | Yes | AWS region (e.g. `us-east-1`) — not read from `.aws` config |
+    | `AWS_ACCESS_KEY_ID` | Conditional | AWS access key (one auth method required) |
+    | `AWS_SECRET_ACCESS_KEY` | Conditional | AWS secret key |
+    | `AWS_SESSION_TOKEN` | No | Session token for temporary credentials |
+    | `AWS_PROFILE` | Conditional | AWS SSO profile name (alternative to access keys) |
+
+    ```bash title=".env"
+    CLAUDE_CODE_USE_BEDROCK=1
+    AWS_REGION=us-east-1
+    AWS_ACCESS_KEY_ID=AKIA...
+    AWS_SECRET_ACCESS_KEY=...
+    ```
+
+    Bedrock supports five authentication methods: AWS CLI config, environment
+    variable access keys, SSO profiles, Management Console credentials, and
+    Bedrock API keys (`AWS_BEARER_TOKEN_BEDROCK`).
+
+    <Warning>
+      `AWS_REGION` is required and is not read from your AWS CLI configuration.
+      Always set it explicitly.
+    </Warning>
+
+    IAM permissions required: `bedrock:InvokeModel`,
+    `bedrock:InvokeModelWithResponseStream`, `bedrock:ListInferenceProfiles`.
+
+    For full IAM policy details, credential chain options, and guardrail
+    configuration, see the
+    [Claude Code Bedrock docs](https://code.claude.com/docs/en/amazon-bedrock).
+  </Accordion>
+
+  <Accordion title="Google Vertex AI">
+    Set these environment variables in your `.env` file:
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `CLAUDE_CODE_USE_VERTEX` | Yes | Set to `1` to enable Vertex AI |
+    | `CLOUD_ML_REGION` | Yes | GCP region (e.g. `us-east5`) or `global` |
+    | `ANTHROPIC_VERTEX_PROJECT_ID` | Yes | Your GCP project ID |
+    | `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to service account JSON (alternative to `gcloud auth`) |
+
+    ```bash title=".env"
+    CLAUDE_CODE_USE_VERTEX=1
+    CLOUD_ML_REGION=us-east5
+    ANTHROPIC_VERTEX_PROJECT_ID=my-project-id
+    ```
+
+    Authenticate with `gcloud auth application-default login` or provide a
+    service account key via `GOOGLE_APPLICATION_CREDENTIALS`.
+
+    IAM role required: `roles/aiplatform.user`
+
+    <Note>
+      Model access approval on Vertex AI can take 24–48 hours. Not all models
+      are available in all regions.
+    </Note>
+
+    For full GCP setup, region-specific configuration, and credential details,
+    see the
+    [Claude Code Vertex AI docs](https://code.claude.com/docs/en/google-vertex-ai).
+  </Accordion>
+
+  <Accordion title="Custom LLM gateway">
+    Point ollim-bot at any endpoint that implements the
+    [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) —
+    a LiteLLM proxy, vLLM, or your own gateway.
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `ANTHROPIC_BASE_URL` | Yes | Base URL for the Messages API endpoint |
+    | `ANTHROPIC_AUTH_TOKEN` | No | Static API key sent as `Authorization` header |
+
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=https://litellm-server:4000
+    ANTHROPIC_AUTH_TOKEN=sk-litellm-static-key
+    ```
+
+    The gateway must expose `/v1/messages` and forward the `anthropic-beta`
+    and `anthropic-version` headers. For LiteLLM-specific setup (unified
+    endpoint, Bedrock/Vertex pass-through, dynamic key helpers), see the
+    [Claude Code LLM gateway docs](https://code.claude.com/docs/en/llm-gateway).
+  </Accordion>
+
+  <Accordion title="Cross-provider pricing">
+    Global endpoint pricing is identical across Anthropic API, Amazon Bedrock,
+    and Google Vertex AI — no markup. Regional endpoints add a 10% premium
+    for data residency compliance.
+
     **Per million tokens (global endpoints):**
 
     | Model | Anthropic API | Bedrock | Vertex AI | Regional (+10%) |
