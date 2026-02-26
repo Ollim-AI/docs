@@ -26,6 +26,14 @@
       "github": "https://github.com/your-username/ollim-bot"
     }
   },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
+  },
   "navigation": {
     "tabs": [
       {
