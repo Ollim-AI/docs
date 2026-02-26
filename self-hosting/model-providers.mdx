@@ -188,6 +188,164 @@ The `model` field accepts aliases (`opus`, `sonnet`, `haiku`) and only
 applies to background routines. See [Routines](/scheduling/routines)
 for all frontmatter fields.
 
+## Choosing a model
+
+For most ollim-bot use, **Sonnet 4.6 handles tool calling, scheduling, and
+conversation as well as Opus 4.6** — at 40% of the cost. Opus pulls ahead on
+deep reasoning and complex multi-step debugging. Haiku 4.5 is ideal for
+lightweight background routines where speed matters more than depth.
+
+| Model | Best for | Tool calling | Agentic coding | Deep reasoning | Speed | Cost |
+|-------|----------|--------------|----------------|----------------|-------|------|
+| Opus 4.6 | Complex multi-step tasks, novel problem-solving | Excellent | 65.4% Terminal-Bench | 91.3% GPQA | Slowest | $$$ |
+| Sonnet 4.6 | Daily conversations, routines, most agentic work | Excellent | 59.1% Terminal-Bench | 74.1% GPQA | Fast | $$ |
+| Haiku 4.5 | Background routines, email triage, quick checks | Good | 41.8% Terminal-Bench | — | Fastest | $ |
+
+<Tip>
+  **Sonnet 4.6 is the sweet spot for ollim-bot.** It matches Opus on
+  tau2-bench tool calling (91.7% vs 91.9%), beats it on knowledge work
+  tasks (GDPval-AA: 1633 vs 1606 Elo), and is 70% more token-efficient.
+  It's the default for a reason.
+</Tip>
+
+<AccordionGroup>
+  <Accordion title="Full agentic benchmark comparison">
+    All scores use extended/adaptive thinking unless noted. Benchmarks are
+    selected for relevance to agentic tool-calling bots like ollim-bot.
+
+    | Benchmark | What it measures | Opus 4.6 | Sonnet 4.6 | Haiku 4.5 |
+    |-----------|------------------|----------|------------|-----------|
+    | SWE-bench Verified | Real-world software engineering | 80.8% | 79.6% | 73.3% |
+    | Terminal-Bench 2.0 | Agentic CLI coding | **65.4%** | 59.1% | 41.8% |
+    | tau2-bench Retail | Multi-step tool calling (retail) | 91.9% | **91.7%** | — |
+    | tau2-bench Telecom | Multi-step tool calling (telecom) | **99.3%** | 97.9% | — |
+    | OSWorld | Agentic computer use | **72.7%** | 72.5% | 22.0% |
+    | MCP Atlas | Scaled tool use | 59.5% | **61.3%** | — |
+    | GDPval-AA (Elo) | Economically valuable knowledge work | 1606 | **1633** | — |
+    | Finance Agent | Financial tool use | 60.7% | **63.3%** | — |
+    | ARC-AGI-2 | Novel problem-solving | **68.8%** | 58.3% | — |
+    | GPQA Diamond | Graduate-level scientific reasoning | **91.3%** | 74.1% | — |
+    | Humanity's Last Exam | Hardest questions (with tools) | **53.1%** | 19.1% | — |
+    | BrowseComp | Web search and information discovery | **84.0%** | — | — |
+    | MRCR v2 8-needle @ 1M | Long-context retrieval accuracy | **76.0%** | — | — |
+
+    **Key pattern**: Sonnet 4.6 matches or beats Opus on practical tool
+    calling (tau2-bench, MCP Atlas, Finance Agent, GDPval-AA). Opus leads
+    on deep reasoning (GPQA, ARC-AGI-2, Humanity's Last Exam) and
+    long-context retrieval — tasks that matter for complex debugging, not
+    typical daily bot interactions.
+
+    **Haiku 4.5** achieves 73.3% on SWE-bench Verified — matching Claude
+    Sonnet 4.5 — at one-third the cost and 4-5x the speed. It reaches ~90%
+    of Sonnet 4.5's agentic coding performance per Augment's evaluation.
+
+    Sources:
+    [Anthropic Opus 4.6](https://www.anthropic.com/news/claude-opus-4-6),
+    [Anthropic Sonnet 4.6](https://www.anthropic.com/news/claude-sonnet-4-6),
+    [Anthropic Haiku 4.5](https://www.anthropic.com/news/claude-haiku-4-5),
+    [Vellum benchmarks](https://www.vellum.ai/blog/claude-opus-4-6-benchmarks),
+    [Anthropic model overview](https://platform.claude.com/docs/en/about-claude/models/all-models).
+    Scores current as of February 2026.
+  </Accordion>
+</AccordionGroup>
+
+## Subscription vs API pricing
+
+For most users, a Claude subscription is dramatically cheaper than API
+pay-as-you-go. The average Claude Code developer uses the equivalent of
+\$130/month in API tokens — covered by a \$20 Pro plan. API keys make
+sense for very light usage or when you need zero rate limits.
+
+| Plan | Cost | Default model | Opus access | Rate limits |
+|------|------|---------------|-------------|-------------|
+| Pro | $20/mo | Sonnet 4.6 | Available (with fallback) | ~45 msgs/5hr |
+| Max 5x | $100/mo | Opus 4.6 | Default | 5x Pro |
+| Max 20x | $200/mo | Opus 4.6 | Default | 20x Pro |
+| API key | Variable | Any | No limits | Per-tier TPM/RPM |
+
+<Note>
+  On the Pro plan, Claude Code may fall back from Opus to Sonnet when you
+  hit a usage threshold. The exact limit is not published. Max plans have
+  higher thresholds — Max 20x rarely triggers fallback.
+</Note>
+
+<AccordionGroup>
+  <Accordion title="API token pricing and breakeven analysis">
+    **Per million tokens (standard on-demand):**
+
+    | Model | Input | Output | Cache read (90% off) | Batch (50% off) |
+    |-------|-------|--------|----------------------|-----------------|
+    | Opus 4.6 | $5.00 | $25.00 | $0.50 in | $2.50 in / $12.50 out |
+    | Sonnet 4.6 | $3.00 | $15.00 | $0.30 in | $1.50 in / $7.50 out |
+    | Haiku 4.5 | $1.00 | $5.00 | $0.10 in | $0.50 in / $2.50 out |
+
+    Extended thinking tokens are billed at output token rates. Long context
+    (>200K input) doubles the input cost and adds 50% to the output cost.
+
+    **Breakeven analysis** (assuming 3:1 input-to-output ratio):
+
+    | Plan | Monthly cost | Breakeven on Sonnet | Breakeven on Opus |
+    |------|-------------|---------------------|-------------------|
+    | Pro | $20 | ~3.3M tokens/month | ~2M tokens/month |
+    | Max 5x | $100 | ~16.7M tokens/month | ~10M tokens/month |
+    | Max 20x | $200 | ~33.3M tokens/month | ~20M tokens/month |
+
+    For context, Anthropic reports the average Claude Code developer uses
+    ~\$6/day (~\$130/month) in API-equivalent costs, and the 90th percentile
+    is under \$12/day (~\$260/month). **Pro at \$20/month covers what would be
+    \$130+ on the API** — a subscription is the clear winner for regular use.
+
+    API pay-as-you-go only wins at very low usage (under ~3M tokens/month on
+    Sonnet) or when you need guaranteed access without rate limit resets.
+
+    Source: [Anthropic API pricing](https://platform.claude.com/docs/en/about-claude/pricing),
+    [Claude Code costs](https://code.claude.com/docs/en/costs).
+  </Accordion>
+</AccordionGroup>
+
+## Cross-provider pricing
+
+Global endpoint pricing is identical across Anthropic API, Amazon Bedrock,
+and Google Vertex AI — no markup. Regional endpoints add a 10% premium for
+data residency compliance.
+
+<AccordionGroup>
+  <Accordion title="Detailed cross-provider comparison">
+    **Per million tokens (global endpoints):**
+
+    | Model | Anthropic API | Bedrock | Vertex AI | Regional (+10%) |
+    |-------|---------------|---------|-----------|-----------------|
+    | Opus 4.6 input | $5.00 | $5.00 | $5.00 | $5.50 |
+    | Opus 4.6 output | $25.00 | $25.00 | $25.00 | $27.50 |
+    | Sonnet 4.6 input | $3.00 | $3.00 | $3.00 | $3.30 |
+    | Sonnet 4.6 output | $15.00 | $15.00 | $15.00 | $16.50 |
+    | Haiku 4.5 input | $1.00 | $1.00 | $1.00 | $1.10 |
+    | Haiku 4.5 output | $5.00 | $5.00 | $5.00 | $5.50 |
+
+    **Feature availability:**
+
+    | Feature | Anthropic API | Bedrock | Vertex AI |
+    |---------|---------------|---------|-----------|
+    | Prompt caching | Yes | Yes | Yes |
+    | Batch API (50% off) | Yes | Yes | Yes |
+    | Extended thinking | Yes | Yes | Yes |
+    | Fast mode (6x pricing) | Yes | Not confirmed | Not confirmed |
+    | 1M context (beta) | Yes | Verify | Verify |
+    | New model availability | First | Delayed | Delayed |
+    | Provisioned throughput | No | Yes | Yes |
+
+    **Choose based on your infrastructure**, not pricing — the per-token cost
+    is the same. Bedrock and Vertex AI add value through IAM integration,
+    compliance frameworks, and provisioned throughput for predictable
+    workloads. The Anthropic API gets new features and models first.
+
+    Source: [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing),
+    [Bedrock pricing](https://aws.amazon.com/bedrock/pricing/),
+    [Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing).
+    Pricing current as of February 2026.
+  </Accordion>
+</AccordionGroup>
+
 ## Next steps
 
 <Columns cols={2}>
