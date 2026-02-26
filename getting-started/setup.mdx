@@ -1,112 +1,82 @@
 ---
-title: "Setup guide"
-description: "Set up ollim-bot from scratch with Discord, Google OAuth, and environment configuration."
+title: "Optional integrations"
+description: "Configure Google OAuth, timezone, and other optional features after the quickstart."
 ---
 
-Complete setup for ollim-bot from scratch — Discord bot creation, Google OAuth,
-environment configuration, and optional webhooks. No existing infrastructure
-required. For a minimal quickstart, see the [quickstart guide](/getting-started/quickstart).
+You've completed the [quickstart](/getting-started/quickstart) and the bot is
+running. This guide covers the optional features you can enable next.
 
-## Prerequisites
+## Google OAuth
 
-| Requirement | Notes |
-|-------------|-------|
-| Python 3.11+ | Check with `python3 --version` |
-| [uv](https://docs.astral.sh/uv/) | Install: `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| [Claude Code](https://claude.ai/code) | Install and authenticate — ollim-bot uses Claude Code OAuth, no API key needed |
-| A Discord account | The bot runs entirely in DMs — no server required |
-| Git | For cloning the repo and data directory version control |
-
-## Installation
+Google Tasks, Calendar, and Gmail integration requires OAuth credentials from
+Google Cloud Console.
 
 <Steps>
-  <Step title="Clone and install">
+  <Step title="Create a Google Cloud project">
+    Go to the [Google Cloud Console](https://console.cloud.google.com/) and
+    create a new project (or use an existing one).
+  </Step>
+
+  <Step title="Enable APIs">
+    Enable the **Google Tasks API**, **Google Calendar API**, and **Gmail API**
+    in the project's API library.
+  </Step>
+
+  <Step title="Create OAuth credentials">
+    Go to **Credentials**, click **Create Credentials** > **OAuth 2.0 Client ID**,
+    and select **Desktop application** as the type. Download the credentials JSON.
+  </Step>
+
+  <Step title="Save the credentials file">
     ```bash
-    git clone https://github.com/Ollim-AI/ollim-bot.git
-    cd ollim-bot
-    uv sync
+    mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
     ```
-  </Step>
-
-  <Step title="Create a Discord bot">
-    1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-    2. Click **New Application** and give it a name (e.g. `ollim-bot`)
-    3. Go to **Bot** in the sidebar and click **Reset Token** — copy the token
-    4. Enable **Message Content Intent** under Privileged Gateway Intents
-
-    See [Discord bot setup](/self-hosting/discord-bot-setup) for a detailed walkthrough.
-  </Step>
-
-  <Step title="Configure environment variables">
-    Create a `.env` file in the project root:
-
-    ```bash title=".env"
-    DISCORD_TOKEN=your-discord-bot-token
-    OLLIM_USER_NAME=YourName
-    OLLIM_BOT_NAME=Ollim
-    ```
-
-    Replace `your-discord-bot-token` with the token from step 2, and `YourName`
-    with whatever name you want the bot to call you.
-
-    See the [full environment variable reference](#environment-variables) below for optional variables.
-  </Step>
-
-  <Step title="Set up Google OAuth (optional)">
-    Google integrations (Tasks, Calendar, Gmail) require OAuth credentials.
-
-    1. Create a project in the [Google Cloud Console](https://console.cloud.google.com/)
-    2. Enable the Google Tasks API, Google Calendar API, and Gmail API
-    3. Create an OAuth 2.0 Client ID (Desktop application type)
-    4. Download the credentials JSON and save it to `~/.ollim-bot/state/credentials.json`
 
     On first use of any Google service, ollim-bot opens a browser window for
-    consent. The authorized token is saved to `~/.ollim-bot/state/token.json` and
-    reused automatically. Expired tokens are refreshed without user interaction.
-
-    <Note>
-    ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and `gmail.readonly`.
-    If scopes change after a code update, delete `~/.ollim-bot/state/token.json` to re-consent.
-    </Note>
-
-    See [Google OAuth setup](/self-hosting/google-oauth-setup) for a detailed walkthrough.
-  </Step>
-
-  <Step title="Start the bot">
-    ```bash
-    uv run ollim-bot
-    ```
-
-    On first run, ollim-bot:
-    1. Creates the data directory at `~/.ollim-bot/`
-    2. Writes a PID file to prevent duplicate instances
-    3. Connects to Discord and syncs slash commands
-    4. Starts the scheduler (polls routines and reminders every 10 seconds)
-    5. Sends you a startup DM
-
-    Open a DM with the bot and send a message to verify everything works.
+    consent. The authorized token is saved to `~/.ollim-bot/state/token.json`
+    and reused automatically. Expired tokens are refreshed without interaction.
   </Step>
 </Steps>
 
+<Note>
+ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and
+`gmail.readonly`. If scopes change after a code update, delete
+`~/.ollim-bot/state/token.json` to re-consent.
+</Note>
+
+See [Google OAuth setup](/self-hosting/google-oauth-setup) for a detailed
+walkthrough with screenshots.
+
+## Timezone
+
+ollim-bot auto-detects your system timezone. If that doesn't match where you
+are, set it explicitly:
+
+```bash title=".env"
+OLLIM_TIMEZONE=America/New_York
+```
+
+This affects all timestamps — scheduling, Google Calendar, Gmail, session
+history, and the system prompt.
+
 ## Environment variables
 
-All variables are set in the `.env` file at the project root. The three required
-variables (`DISCORD_TOKEN`, `OLLIM_USER_NAME`, `OLLIM_BOT_NAME`) are shown in
-Step 3 above. Optional variables for webhooks and other features are documented
-in the [Configuration reference](/configuration/reference).
+The three required variables (`DISCORD_TOKEN`, `OLLIM_USER_NAME`,
+`OLLIM_BOT_NAME`) are covered in the quickstart. See the
+[Configuration reference](/configuration/reference) for all optional variables
+and their defaults.
 
 ## Data directory
 
-ollim-bot stores all persistent data in `~/.ollim-bot/`, which is auto-created on first
-run and managed as a git repository. See [Data directory](/configuration/data-directory)
-for the full layout and file descriptions.
+All persistent state lives in `~/.ollim-bot/`, which is auto-created on first
+run and managed as a git repository. See
+[Data directory](/configuration/data-directory) for the full layout.
 
-## Webhooks (optional)
-
-To accept external HTTP triggers, set `WEBHOOK_PORT` and `WEBHOOK_SECRET` in your `.env`.
-The webhook server starts automatically on bot launch and binds to `127.0.0.1`.
-See [Webhooks](/integrations/webhooks) for the full specification and
-[Configuration reference](/configuration/reference) for the environment variables.
+<Tip>
+Back up `~/.ollim-bot/` to preserve your routines, reminders, session history,
+and Google credentials. Since it's a git repo, you can push it to a private
+remote.
+</Tip>
 
 ## Next steps
 

@@ -9,28 +9,31 @@ yourself, and run it. This guide covers the full process.
 
 ## Prerequisites
 
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) package manager
-- [Claude Code](https://claude.ai/code) installed and authenticated
-  (ollim-bot uses Claude Code OAuth — no API key needed)
+- [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh` (automatically installs the required Python version)
+- [Claude Code](https://claude.ai/code) — `curl -fsSL https://claude.ai/install.sh | bash` then run `claude` to authenticate. A Claude subscription (Pro or Max) is recommended for access to the latest models.
 - A Discord account (the bot runs entirely in DMs — no server required)
 - Git installed (the data directory is a git repo)
 
 ## Installation
 
-Follow the [setup guide](/getting-started/setup) for cloning, installing
-dependencies, and configuring environment variables. The steps below cover
-self-hosting-specific setup.
+Follow the [quickstart](/getting-started/quickstart) to get the bot running,
+then [Optional integrations](/getting-started/setup) for Google OAuth, webhooks, etc.
+The steps below cover self-hosting-specific setup.
 
 <Steps>
   <Step title="Fork the repository">
     Fork the repo on GitHub, then clone your fork:
 
     ```bash
-    git clone https://github.com/Ollim-AI/ollim-bot.git
+    git clone https://github.com/<your-username>/ollim-bot.git
     cd ollim-bot
-    uv sync
+    uv tool install --editable .
+    uv tool install claude-history@git+https://github.com/Ollim-AI/claude-history.git
     ```
+
+    The first command installs `ollim-bot` as a global command. `claude-history`
+    is a global CLI tool used by [subagents](/extending/subagents) to review
+    Claude Code session transcripts.
 
     Working from a fork lets you customize the system prompt, subagent prompts,
     and integrations while still pulling upstream changes.
@@ -53,7 +56,7 @@ self-hosting-specific setup.
 
   <Step title="Run the bot">
     ```bash
-    uv run ollim-bot
+    ollim-bot
     ```
 
     On startup, ollim-bot validates environment variables, checks for duplicate
@@ -110,8 +113,8 @@ Routines and reminders are markdown files in `~/.ollim-bot/routines/` and
 but you can also create them manually or via the CLI:
 
 ```bash
-uv run ollim-bot routine add --cron "0 9 * * 1-5" -m "Morning briefing"
-uv run ollim-bot reminder add --delay 30 -m "Take a break"
+ollim-bot routine add --cron "0 9 * * 1-5" -m "Morning briefing"
+ollim-bot reminder add --delay 30 -m "Take a break"
 ```
 
 ## Data directory
@@ -138,7 +141,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/path/to/ollim-bot
-ExecStart=/path/to/.local/bin/uv run ollim-bot
+ExecStart=/path/to/.local/bin/ollim-bot
 Restart=on-failure
 RestartSec=10
 
@@ -153,7 +156,7 @@ systemctl --user enable --now ollim-bot
 
 <Warning>
   Claude Code must be authenticated before starting the service. Run
-  `uv run ollim-bot` interactively first to complete any auth flows, then
+  `ollim-bot` interactively first to complete any auth flows, then
   enable the systemd service.
 </Warning>
 
