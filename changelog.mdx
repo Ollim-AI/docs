@@ -7,7 +7,37 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Info>ollim-bot has been in active development since February 9, 2026 with 309 commits across 15 days.</Info>
+<Info>ollim-bot has been in active development since February 9, 2026 with 324 commits across 17 days.</Info>
+
+## Feb 26, 2026
+
+**Timezone, CI, and code quality**
+
+- **Timezone configuration** — new `OLLIM_TIMEZONE` environment variable
+  with automatic system local detection fallback; replaces hardcoded
+  `America/Los_Angeles` across all timestamp-producing modules
+- **GitHub Actions CI** — lint (`ruff check`, `ruff format --check`,
+  `ty check`) and test (`pytest`) jobs across Python 3.11, 3.12, and 3.13
+- **Pre-commit hooks** — `ruff --fix`, `ruff format`, and `ty check`
+  run on every commit
+- All 25 `ty` type checker diagnostics resolved
+- `.env.example` template added for onboarding
+
+## Feb 25, 2026
+
+**Hardening and cleanup**
+
+- Extended thinking parameter passed to forked background clients —
+  background forks now inherit the `thinking` setting from their parent
+- Stale migration code removed
+- Code-only state files moved to `~/.ollim-bot/state/` — separates
+  infrastructure files from the agent's working directory
+- Owner identity guard on all bot entry points
+- DM-only operation enforced in `bot.py`
+- Bot presence set to "Watching your DMs" (always offline)
+- 1-ping-per-session limit enforced for background forks via contextvar
+- `allow_ping: false` now hides ping tools from the SDK tool list entirely
+- Google API errors surfaced in button handlers instead of silently failing
 
 ## Feb 24, 2026
 

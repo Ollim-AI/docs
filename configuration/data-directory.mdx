@@ -52,7 +52,7 @@ Each line in `session_history.jsonl` contains:
 |-------|------|-------------|
 | `session_id` | `str` | The Agent SDK session ID |
 | `event` | `str` | One of: `created`, `compacted`, `swapped`, `cleared`, `interactive_fork`, `bg_fork`, `isolated_bg` |
-| `timestamp` | `str` | ISO 8601 datetime in `America/Los_Angeles` timezone |
+| `timestamp` | `str` | ISO 8601 datetime in the configured timezone (`OLLIM_TIMEZONE`) |
 | `parent_session_id` | `str \| null` | Set for `compacted`, `swapped`, and fork events |
 
 ```json title="session_history.jsonl"
@@ -130,7 +130,7 @@ its next turn.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `ts` | `str` | ISO 8601 datetime in `America/Los_Angeles` timezone |
+| `ts` | `str` | ISO 8601 datetime in the configured timezone (`OLLIM_TIMEZONE`) |
 | `message` | `str` | Summary from the background fork |
 
 <Note>

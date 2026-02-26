@@ -163,7 +163,7 @@ Append-only JSONL log of session lifecycle events.
 |-------|------|-------------|
 | `session_id` | `str` | Agent SDK session identifier |
 | `event` | `str` | Event type (see below) |
-| `timestamp` | `str` | ISO datetime in `America/Los_Angeles` timezone |
+| `timestamp` | `str` | ISO datetime in the configured timezone |
 | `parent_session_id` | `str \| null` | Parent session for forks and compactions |
 
 Event types:

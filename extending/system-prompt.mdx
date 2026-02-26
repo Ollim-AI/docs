@@ -89,7 +89,7 @@ Notion, Slack, or Trello.
     | `ollim-bot cal delete <id>` | Delete event |
     | `ollim-bot cal update <id> [--summary] [--start] [--end]` | Update |
 
-    All times use `America/Los_Angeles` (PT). The agent checks `today`
+    All times use the configured timezone (`OLLIM_TIMEZONE`). The agent checks `today`
     when planning the user's day.
   </Tab>
   <Tab title="Routines">
@@ -133,7 +133,7 @@ from main (never nested forks), wait for user response before exiting, and
 present an embed with all three exit strategies (`save_context`,
 `report_updates`, `exit_fork`) when work is complete.
 
-The background session section documents the ping budget system,
+The background fork section documents the ping budget system,
 `report_updates` for bridging information back to the main session, and the
 four `update_main_session` modes (`always`, `on_ping`, `freely`, `blocked`).
 See [Background forks](/scheduling/background-forks) for the full reference.

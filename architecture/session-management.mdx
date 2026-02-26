@@ -54,7 +54,7 @@ Every session transition is recorded in `~/.ollim-bot/state/session_history.json
 |-------|------|-------------|
 | `session_id` | `str` | The session ID involved in this event |
 | `event` | `SessionEventType` | One of the event types below |
-| `timestamp` | `str` | ISO 8601 timestamp in `America/Los_Angeles` |
+| `timestamp` | `str` | ISO 8601 timestamp in the configured timezone |
 | `parent_session_id` | `str \| None` | The session this one branched from (for forks, compaction, swaps) |
 
 ### Event types

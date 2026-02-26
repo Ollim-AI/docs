@@ -41,7 +41,7 @@ warrants attention, governed by a
     discarded — the agent pings or reports findings.
   </Card>
   <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
-    Rate-limited notification budget that prevents scheduled tasks
+    Rate-limited ping budget that prevents scheduled tasks
     from over-pinging.
   </Card>
   <Card
@@ -62,7 +62,7 @@ warrants attention, governed by a
 
 The scheduler is powered by
 [APScheduler](https://apscheduler.readthedocs.io/)
-(`AsyncIOScheduler`) running in the `America/Los_Angeles` timezone.
+(`AsyncIOScheduler`) running in the configured timezone (`OLLIM_TIMEZONE`, defaults to system local).
 It starts in `on_ready` alongside the Discord client.
 
 ### Polling loop

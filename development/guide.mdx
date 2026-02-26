@@ -10,8 +10,7 @@ and conventions.
 
 ## Prerequisites
 
-- Python 3.11 or later
-- [uv](https://docs.astral.sh/uv/) package manager
+- [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh` (automatically installs the required Python version)
 - A Discord bot token (see [Discord bot setup](/self-hosting/discord-bot-setup))
 - Google OAuth credentials (see [Google OAuth setup](/self-hosting/google-oauth-setup)) if using Google integrations
 
@@ -26,10 +25,16 @@ and conventions.
   </Step>
   <Step title="Install dependencies">
     ```bash
+    uv tool install --editable .
+    uv tool install claude-history@git+https://github.com/Ollim-AI/claude-history.git
     uv sync
+    uv run pre-commit install
     ```
 
-    This installs all runtime and dev dependencies defined in `pyproject.toml`.
+    The first command installs `ollim-bot` as a global command. `claude-history`
+    is a global CLI tool required by [subagents](/extending/subagents). `uv sync`
+    installs dev dependencies (pytest, ruff, ty). Pre-commit hooks enforce linting
+    and type checking on every commit.
   </Step>
   <Step title="Configure environment variables">
     Create a `.env` file in the project root:
@@ -45,12 +50,13 @@ and conventions.
     | `DISCORD_TOKEN` | Yes | Discord bot token |
     | `OLLIM_USER_NAME` | Yes | Your display name (used in the system prompt) |
     | `OLLIM_BOT_NAME` | Yes | The bot's display name |
+    | `OLLIM_TIMEZONE` | No | IANA timezone (e.g. `America/New_York`); defaults to system local |
     | `WEBHOOK_PORT` | No | Port for the webhook HTTP server (e.g. `8420`) |
-    | `WEBHOOK_SECRET` | No | Bearer token for webhook auth (required if `WEBHOOK_PORT` is set) |
+    | `WEBHOOK_SECRET` | Conditional | Bearer token for webhook auth (required if `WEBHOOK_PORT` is set) |
   </Step>
   <Step title="Run the bot">
     ```bash
-    uv run ollim-bot
+    ollim-bot
     ```
 
     The bot checks for an existing instance via a PID file at
@@ -66,6 +72,36 @@ uv run pytest
 
 Dev dependencies include `pytest`, `pytest-asyncio`, and `pytest-cov`.
 See [Testing](/development/testing) for the test philosophy and conventions.
+
+## Linting and type checking
+
+ollim-bot uses [ruff](https://docs.astral.sh/ruff/) for linting and formatting,
+and [ty](https://docs.astral.sh/ty/) for type checking. Pre-commit hooks run both
+automatically on every commit.
+
+```bash
+# Lint
+uv run ruff check
+
+# Format
+uv run ruff format
+
+# Type check
+uv run ty check
+
+# Install pre-commit hooks (one-time setup)
+uv run pre-commit install
+```
+
+The pre-commit config runs `ruff --fix` (auto-fixes safe lint issues), `ruff format`,
+and `ty check` on staged Python files. CI runs the same checks — see below.
+
+## CI
+
+GitHub Actions runs on every push and pull request to `main`:
+
+- **Lint job** — `ruff check`, `ruff format --check`, `ty check`
+- **Test job** — `pytest` across Python 3.11, 3.12, and 3.13
 
 ## Project structure
 
@@ -89,7 +125,7 @@ src/ollim_bot/
 ├── embeds.py            # Embed/button types, builders, and build_embed/build_view
 ├── views.py             # Persistent button handlers via DynamicItem
 ├── inquiries.py         # Button inquiry prompt persistence (7-day TTL)
-├── ping_budget.py       # Refill-on-read ping budget for bg fork notifications
+├── ping_budget.py       # Refill-on-read ping budget for background fork notifications
 ├── formatting.py        # Tool-label formatting helpers
 ├── webhook.py           # Webhook HTTP server for external triggers
 ├── google/
@@ -164,6 +200,17 @@ Key runtime dependencies (from `pyproject.toml`):
 | `pyyaml` | YAML frontmatter parsing |
 | `aiohttp` | Webhook HTTP server |
 | `jsonschema` | Webhook payload validation |
+
+Key dev dependencies:
+
+| Package | Purpose |
+|---------|---------|
+| `ruff` | Linting and formatting |
+| `ty` | Type checking |
+| `pre-commit` | Git hooks for automated lint/format/type checks |
+| `pytest` | Test framework |
+| `pytest-asyncio` | Async test support |
+| `pytest-cov` | Coverage reporting |
 
 ## Data directory
 

@@ -78,7 +78,7 @@ list in `google/auth.py`. Once you've completed the
     | `--end` | Yes | End time in `YYYY-MM-DDTHH:MM` format |
     | `--description` | No | Event description |
 
-    Naive datetimes (without timezone) are treated as `America/Los_Angeles`.
+    Naive datetimes (without timezone) are treated as the configured timezone (`OLLIM_TIMEZONE`).
 
     ### Update an event
 
@@ -149,9 +149,9 @@ blocking the Discord event loop.
     encodes the ID into the button action automatically.
   </Accordion>
   <Accordion title="Times show in the wrong timezone">
-    All datetimes are handled in `America/Los_Angeles` (Pacific Time). Naive
-    datetime inputs are assumed to be in this timezone. The Google Calendar API
-    stores and returns timezone-aware values.
+    All datetimes are handled in the configured timezone (`OLLIM_TIMEZONE`,
+    defaults to system local). Naive datetime inputs are assumed to be in this
+    timezone. The Google Calendar API stores and returns timezone-aware values.
   </Accordion>
 </AccordionGroup>
 

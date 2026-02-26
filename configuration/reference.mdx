@@ -14,6 +14,7 @@ automatically managed as a git repository.
 | `DISCORD_TOKEN` | Yes | — | Discord bot token for authentication |
 | `OLLIM_USER_NAME` | Yes | — | Your display name, used in the system prompt and messages |
 | `OLLIM_BOT_NAME` | Yes | — | The bot's display name |
+| `OLLIM_TIMEZONE` | No | System local | IANA timezone name (e.g. `America/New_York`). Used for timestamps in session history, pending updates, scheduling preambles, and Google Calendar/Gmail. Falls back to system local detection, then UTC. |
 | `WEBHOOK_PORT` | No | — | Port for the webhook HTTP server; omit to disable webhooks |
 | `WEBHOOK_SECRET` | Conditional | — | Bearer token for webhook authentication; required if `WEBHOOK_PORT` is set |
 
@@ -33,6 +34,7 @@ Place a `.env` file at the project root. Both `config.py` and `main.py` call `lo
 DISCORD_TOKEN=your-discord-bot-token
 OLLIM_USER_NAME=YourName
 OLLIM_BOT_NAME=Ollim
+OLLIM_TIMEZONE=America/New_York
 WEBHOOK_PORT=8420
 WEBHOOK_SECRET=a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5
 ```

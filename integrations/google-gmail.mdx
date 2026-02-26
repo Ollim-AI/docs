@@ -156,9 +156,9 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
     The reader extracts `text/plain` first, then falls back to stripped
     `text/html`. Emails that are purely image-based will show no body.
   </Accordion>
-  <Accordion title="Dates display in Pacific Time">
-    All Gmail timestamps are displayed in `America/Los_Angeles`
-    (Pacific Time). This is currently not configurable.
+  <Accordion title="Dates display in configured timezone">
+    All Gmail timestamps are displayed in the configured timezone
+    (`OLLIM_TIMEZONE`, defaults to system local).
   </Accordion>
 </AccordionGroup>
 
