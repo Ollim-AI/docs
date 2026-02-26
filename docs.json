@@ -26,6 +26,13 @@
       "github": "https://github.com/Ollim-AI/ollim-bot"
     }
   },
+  "seo": {
+    "metatags": {
+      "og:site_name": "ollim-bot",
+      "og:image": "https://docs.ollim.ai/images/logo.png",
+      "twitter:card": "summary"
+    }
+  },
   "contextual": {
     "options": [
       "copy",
