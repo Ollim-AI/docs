@@ -58,7 +58,7 @@ agent session is created.
   <Tab title="Isolated">
     Setting `isolated: true` calls `create_isolated_client`, which
     starts a fresh session with no conversation history. This also
-    unlocks model and thinking overrides.
+    unlocks model overrides.
 
     ```yaml title="routines/email-triage.md"
     ---
@@ -85,7 +85,7 @@ agent session is created.
 |-------|---------|-------------|
 | `isolated` | `false` | No conversation history instead of forking |
 | `model` | — | Model override. Isolated mode only |
-| `thinking` | `true` | Extended thinking. Isolated mode only |
+| `thinking` | `true` | Extended thinking override |
 
 ## Communication
 
@@ -178,7 +178,7 @@ frontmatter:
 | `background` | `bool` | `false` | Run as a background fork |
 | `isolated` | `bool` | `false` | Fresh session, no history |
 | `model` | `string` | — | Model override (isolated only) |
-| `thinking` | `bool` | `true` | Extended thinking (isolated only) |
+| `thinking` | `bool` | `true` | Extended thinking override |
 | `update_main_session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
 | `allow_ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
 | `allowed_tools` | `list[string]` | — | Tool whitelist (SDK format) |
