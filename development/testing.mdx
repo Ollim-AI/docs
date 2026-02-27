@@ -151,21 +151,28 @@ pytest's built-in `tmp_path`.
 ### Async tests
 
 <Tabs>
-  <Tab title="pytest.mark.asyncio">
-    For test functions that are natively async:
+  <Tab title="async via _run() helper">
+    Most async tests use a sync `_run()` helper that drives coroutines
+    through the event loop — no `@pytest.mark.asyncio` needed:
 
     ```python
-    @pytest.mark.asyncio
-    async def test_concurrent_appends(data_dir):
-        async def append_one(i):
-            await append_update(f"update-{i}")
+    def _run(coro):
+        return asyncio.get_event_loop().run_until_complete(coro)
 
-        async with anyio.create_task_group() as tg:
-            for i in range(10):
-                tg.start_soon(append_one, i)
 
-        updates = await pop_pending_updates()
-        assert len(updates) == 10
+    def test_many_concurrent_appends(data_dir):
+        """Stress test: 20 concurrent append_update calls — all must survive."""
+
+        async def _scenario():
+            tasks = [asyncio.create_task(append_update(f"update-{i}")) for i in range(20)]
+            await asyncio.gather(*tasks)
+
+            result = await pop_pending_updates()
+            messages = sorted([u.message for u in result])
+            expected = sorted([f"update-{i}" for i in range(20)])
+            assert messages == expected
+
+        _run(_scenario())
     ```
   </Tab>
   <Tab title="sync test with real objects">
@@ -181,6 +188,8 @@ pytest's built-in `tmp_path`.
         result = list_routines()
 
         assert len(result) == 2
+        messages = {r.message for r in result}
+        assert messages == {"morning", "evening"}
     ```
   </Tab>
 </Tabs>
