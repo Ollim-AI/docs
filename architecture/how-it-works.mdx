@@ -113,7 +113,8 @@ next user message. This ensures background work surfaces naturally
 without requiring the user to check anything.
 
 Every message the agent receives is also enriched with a timestamp
-in Pacific time, giving the agent consistent time awareness.
+in the configured timezone (`OLLIM_TIMEZONE`), giving the agent
+consistent time awareness.
 
 See [Context flow](/architecture/context-flow) for the full
 pending updates cycle, background preamble, and reply-to-fork
