@@ -108,7 +108,11 @@ triggered it.
 | `[routine-bg:ID]` | Background routine (runs in a fork) |
 | `[reminder:ID]` | Foreground reminder (runs in main session) |
 | `[reminder-bg:ID]` | Background reminder (runs in a fork) |
-| `[fork-started]` | Interactive fork resumed from a bg session |
+| `[webhook:ID]` | Webhook (always background) |
+| `[fork-started]` | Interactive fork (topic, no-topic, or bg resume) |
+| `[fork-timeout]` | Idle fork timeout prompt |
+| `[button]` | Non-fork button click dispatching a prompt |
+| `[system]` | Internal system prompt (e.g., fork report button) |
 
 The agent's system prompt documents how to interpret these tags. For
 foreground tasks, only the tag and the task's markdown body are injected.
