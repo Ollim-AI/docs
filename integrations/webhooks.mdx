@@ -169,12 +169,12 @@ Invalid requests are rejected with descriptive errors:
     2. **Spec lookup** — matches the URL slug to a spec's `id` field.
     3. **JSON parse** — reads request body as JSON.
     4. **Schema validation** — validates payload against `fields` schema.
-    5. **202 Accepted** — response sent immediately.
-    6. **Haiku screening** — free-form string fields are screened for
-       prompt injection patterns. Flagged payloads are skipped silently.
-    7. **Prompt construction** — payload data fills the template. The
+    5. **Prompt construction** — payload data fills the template. The
        prompt separates untrusted webhook data from the spec's
        instructions.
+    6. **202 Accepted** — response sent immediately.
+    7. **Haiku screening** — free-form string fields are screened for
+       prompt injection patterns. Flagged payloads are skipped silently.
     8. **Dispatch** — a background fork runs with the spec's
        configuration.
   </Accordion>
