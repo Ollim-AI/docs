@@ -13,24 +13,24 @@ updates, and background preambles — is injected dynamically at runtime.
 
 `SYSTEM_PROMPT` is assembled from these sections, in order:
 
-| Section | Lines | Purpose |
-|---------|-------|---------|
-| Personality | 6-15 | Tone, ADHD-awareness, honest pushback |
-| Context budget | 17-19 | Keep output tight, default to forking |
-| Task capture | 21-24 | When and how to capture tasks |
-| Output guidance | 26-30 | One-thing-at-a-time vs full lists |
-| Configuration notes | 32-48 | CLI style, timestamps, prompt tags, tool whitelisting |
-| Google Tasks | 52-67 | Commands, conventions |
-| Google Calendar | 69-84 | Commands, timezone |
-| Routines and Reminders | 86-113 | Quick CLI commands, spec-file reference, chain follow-ups |
-| Gmail | 115-121 | Delegation to gmail-reader subagent |
-| Claude History | 123-129 | Delegation to history-reviewer subagent |
-| Responsiveness | 131-139 | Delegation to responsiveness-reviewer |
-| Discord embeds | 141-148 | When to use embeds vs plain text |
-| Web and docs | 150-157 | `WebSearch`, `WebFetch`, and `docs` MCP server |
-| Interactive forks | 156-174 | Fork rules, idle timeout, exit options |
-| Background sessions | 176-201 | Ping budget, reporting modes |
-| Webhooks | 202-206 | Webhook spec format reference |
+| Section | Purpose |
+|---------|---------|
+| Personality | Tone, ADHD-awareness, honest pushback |
+| Context budget | Keep output tight, default to forking |
+| Task capture | When and how to capture tasks |
+| Output guidance | One-thing-at-a-time vs full lists |
+| Configuration notes | CLI style, timestamps, prompt tags, tool whitelisting |
+| Google Tasks | Commands, conventions |
+| Google Calendar | Commands, timezone |
+| Routines and Reminders | Quick CLI commands, spec-file reference, chain follow-ups |
+| Gmail | Delegation to gmail-reader subagent |
+| Claude History | Delegation to history-reviewer subagent |
+| Responsiveness | Delegation to responsiveness-reviewer |
+| Discord embeds | When to use embeds vs plain text |
+| Web and docs | `WebSearch`, `WebFetch`, and `docs` MCP server |
+| Interactive forks | Fork rules, idle timeout, exit options |
+| Background sessions | Ping budget, reporting modes |
+| Webhooks | Webhook spec format reference |
 
 <Note>
 The entire prompt is a string literal — no template rendering or
