@@ -152,8 +152,10 @@ Suggestions:
 
 The reviewer reports engaged vs. ignored as the core signal rather than exact response times, since user activity is bursty and timestamps are too coarse for precise latency measurements.
 
-## Configuration
+## Developer reference
 
+<AccordionGroup>
+<Accordion title="Agent configuration in code">
 Subagents are defined in `agent.py` as `AgentDefinition` objects passed to `ClaudeAgentOptions`:
 
 ```python
@@ -197,9 +199,9 @@ Each `AgentDefinition` takes four fields:
 | `model` | `str` | Model to use (`sonnet` for all three) |
 
 The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
+</Accordion>
 
-## Delegation in the system prompt
-
+<Accordion title="Delegation in the system prompt">
 The main agent's system prompt in `prompts.py` contains explicit delegation instructions for each subagent:
 
 <Tabs>
@@ -219,6 +221,8 @@ The main agent's system prompt in `prompts.py` contains explicit delegation inst
     > Analyze reminder effectiveness by spawning the responsiveness-reviewer subagent (via the Task tool). It correlates reminder firings with your responses to measure engagement and suggest schedule changes. When you see `[reminder:resp-rev]`, use the responsiveness-reviewer to generate the weekly report. Don't run the analysis yourself — always delegate to the responsiveness-reviewer subagent.
   </Tab>
 </Tabs>
+</Accordion>
+</AccordionGroup>
 
 ## Next steps
 
