@@ -27,30 +27,22 @@ with Tasks and Calendar, and a dedicated subagent for Gmail.
 
 ## How it works
 
-All Google services share a single OAuth2 credential managed by
-`google/auth.py`. The module requests three scopes during the
-initial consent flow:
+All Google services share a single OAuth2 credential. One consent
+flow grants access to all three services:
 
-| Scope | Service | Access level |
-|-------|---------|--------------|
-| `https://www.googleapis.com/auth/tasks` | Google Tasks | Read/write |
-| `https://www.googleapis.com/auth/calendar.events` | Google Calendar | Read/write |
-| `https://www.googleapis.com/auth/gmail.readonly` | Gmail | Read-only |
+| Service | Access level |
+|---------|--------------|
+| Google Tasks | Read/write |
+| Google Calendar | Read/write |
+| Gmail | Read-only |
 
-Two functions handle all authentication:
-
-- **`get_credentials()`** — loads cached credentials from
-  `~/.ollim-bot/state/token.json`, refreshes expired tokens automatically,
-  or starts a new browser-based consent flow on first run.
-- **`get_service(api, version)`** — builds a Google API client for
-  any service using the shared credentials. Each service module calls
-  this with its API name and version
-  (e.g., `get_service("tasks", "v1")`).
+On first run, the OAuth flow opens a browser window for consent.
+After granting access, the token is cached and refreshed
+automatically — you only need to consent once.
 
 <Note>
-On first run, the OAuth flow opens a browser window bound to
-`127.0.0.1` for consent. After granting access, the token is
-cached at `~/.ollim-bot/state/token.json` and refreshed automatically.
+If a code update adds new scopes, delete
+`~/.ollim-bot/state/token.json` to trigger re-consent.
 </Note>
 
 ## Credential files
@@ -59,23 +51,6 @@ cached at `~/.ollim-bot/state/token.json` and refreshed automatically.
 |------|------|---------|
 | OAuth client credentials | `~/.ollim-bot/state/credentials.json` | Downloaded from Google Cloud Console |
 | Cached token | `~/.ollim-bot/state/token.json` | Auto-generated after first OAuth consent |
-
-<Warning>
-If you add a new Google service scope to `google/auth.py`, delete
-`~/.ollim-bot/state/token.json` to trigger re-consent with the updated
-scopes.
-</Warning>
-
-## Adding a new scope
-
-To integrate an additional Google service:
-
-1. Add the new scope to the `SCOPES` list in `google/auth.py`.
-2. Create a new module in `google/` with CLI handlers and any helper functions.
-3. Delete `~/.ollim-bot/state/token.json` so the next run prompts for consent with the expanded scopes.
-4. Add commands to the system prompt so the agent knows about the new service.
-
-See [Adding new integrations](/extending/adding-integrations) for the full walkthrough.
 
 ## Next steps
 

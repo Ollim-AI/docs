@@ -10,23 +10,21 @@ findings, and the fork is discarded.
 
 ## Overview
 
-When a background routine or reminder fires, `run_agent_background` creates
-a temporary agent session. The agent's text output is discarded — it
-communicates only through MCP tools like `ping_user`, `discord_embed`, and `report_updates`.
-After the task completes (or times out after 30 minutes), the forked
-session is thrown away.
+When a background routine or reminder fires, the bot creates
+a temporary session. The agent's text output is discarded — it
+communicates only through notifications, embeds, and reporting to
+the main session. After the task completes (or times out after 30
+minutes), the session is thrown away.
 
-Background forks run without the agent lock. They execute concurrently
-with your main conversation and with other background forks. State
-isolation is handled through context variables — each fork gets its own
-channel reference, config, and output tracking.
+Background forks run concurrently with your main conversation and
+with other background forks — they never interrupt what you're doing.
 
 <Note>
-Each background fork session is limited to 1 non-critical ping
-(hard-enforced in code). Additionally, when you're mid-conversation
-(the agent lock is held), non-critical pings return an error suggesting
-the agent use `report_updates` instead. `critical: true` bypasses all
-three checks — per-session limit, busy state, and ping budget.
+Each background fork can send at most 1 non-critical notification.
+When you're mid-conversation, non-critical notifications are blocked
+and the agent reports findings to the main session instead.
+`critical: true` bypasses all limits — per-session cap, busy state,
+and ping budget.
 </Note>
 
 ## Execution modes
@@ -36,9 +34,8 @@ agent session is created.
 
 <Tabs>
   <Tab title="Forked (default)">
-    The default mode calls `create_forked_client`, which branches from
-    your current main session. The agent has access to your full
-    conversation history and context.
+    The default mode branches from your current main session. The
+    agent has access to your full conversation history and context.
 
     ```yaml title="routines/daily-review.md"
     ---
@@ -56,9 +53,8 @@ agent session is created.
     decisions.
   </Tab>
   <Tab title="Isolated">
-    Setting `isolated: true` calls `create_isolated_client`, which
-    starts a fresh session with no conversation history. This also
-    unlocks model overrides.
+    Setting `isolated: true` starts a fresh session with no
+    conversation history. This also unlocks model overrides.
 
     ```yaml title="routines/email-triage.md"
     ---
@@ -100,11 +96,9 @@ The agent's text output is discarded. To reach you, it must call
 are subject to the [ping budget](/scheduling/ping-budget) — each
 non-critical ping consumes one token from the budget.
 
-Set `allow_ping: false` to disable both tools entirely. This is enforced
-at two levels: the tools are removed from the SDK's tool list (the agent
-never sees them), and the MCP handlers return errors as a fallback.
-Unlike the ping budget, this is absolute — `critical: true` does **not**
-bypass it. Use this for tasks that should never produce visible output.
+Set `allow_ping: false` to disable both tools entirely. Unlike the
+ping budget, this is absolute — `critical: true` does **not** bypass
+it. Use this for tasks that should never produce visible output.
 
 ### Reporting to the main session
 
@@ -166,7 +160,7 @@ Send an embed summary if anything needs attention.
 
 Tool restrictions are inherited by chain reminders — `follow_up_chain`
 propagates `allowed_tools` and `disallowed_tools` to child reminders
-via `ChainContext`.
+automatically.
 
 ## Configuration
 

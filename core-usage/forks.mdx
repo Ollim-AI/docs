@@ -17,7 +17,7 @@ ollim-bot has two fork types:
   until you end it.
 - **Background forks** — the scheduler runs a task on a disposable
   forked session. Output is discarded by default; the agent uses
-  `ping_user`, `discord_embed`, or `report_updates` to surface results.
+  notifications, embeds, or reporting to surface results.
 
 Forks cannot be nested. You can only have one interactive fork at a
 time, though background forks run concurrently without blocking
@@ -25,25 +25,15 @@ anything.
 
 ## Interactive forks
 
-<Tabs>
-  <Tab title="Slash command">
-    Use `/fork` to start an interactive fork with an optional topic:
+Use `/fork` to start an interactive fork with an optional topic:
 
-    ```
-    /fork topic:research meal prep options
-    ```
+```
+/fork topic:research meal prep options
+```
 
-    If no topic is given, the agent waits for you to lead.
-  </Tab>
-  <Tab title="MCP tool">
-    The agent can start a fork itself by calling the `enter_fork` MCP tool:
-
-    | Parameter | Type | Default | Description |
-    |-----------|------|---------|-------------|
-    | `topic` | string | — | Optional topic for the fork |
-    | `idle_timeout` | integer | `10` | Minutes of inactivity before idle timeout prompt |
-  </Tab>
-</Tabs>
+If no topic is given, the agent waits for you to lead. The agent can
+also start a fork on its own when it decides a tangent needs isolated
+context.
 
 Interactive forks always enable extended thinking, regardless of
 the main session's thinking setting. This gives the agent deeper
@@ -114,21 +104,17 @@ corresponding MCP tools directly.
 ## Idle timeout
 
 Interactive forks have an idle timeout to prevent abandoned forks
-from blocking normal conversation. The default is 10 minutes,
-configurable via the `idle_timeout` parameter on `enter_fork`.
+from blocking normal conversation. The default is 10 minutes.
 
 The timeout works in two stages:
 
-1. **First timeout** — after `idle_timeout` minutes of inactivity,
-   the scheduler prompts the agent to decide on an exit strategy.
-   The agent may choose to save, report, or exit.
-2. **Second timeout** — if another `idle_timeout` period passes
-   with no activity after the prompt, the agent receives a
-   "you MUST exit" message. The agent always decides the final
-   exit strategy; there is no forced auto-exit.
-
-Activity is tracked by `touch_activity()`, which is called after
-each user interaction in the fork.
+1. **First timeout** — after 10 minutes of inactivity,
+   the agent is prompted to decide on an exit strategy.
+   It may choose to save, report, or exit.
+2. **Second timeout** — if another 10 minutes pass
+   with no activity, the agent receives a stronger prompt to
+   exit. The agent always decides the final exit strategy;
+   there is no forced auto-exit.
 
 ## Background forks
 
@@ -138,22 +124,20 @@ several ways:
 
 | Aspect | Interactive | Background |
 |--------|-------------|------------|
-| Started by | User (`/fork`) or agent (`enter_fork`) | Scheduler (routines/reminders) |
-| Lock | Requires `agent.lock()` | Runs without lock |
-| Output | Streamed to Discord | Discarded (use `ping_user`/`discord_embed` to alert) |
+| Started by | You (`/fork`) or the agent | Scheduler (routines/reminders) |
+| Output | Streamed to Discord | Discarded (agent notifies or reports) |
 | Timeout | Idle timeout (default 10 min) | Hard timeout (30 minutes) |
-| `save_context` | Available | Blocked |
-| `report_updates` | Available | Available (controlled by `update_main_session` mode) |
-| Concurrency | One at a time | Multiple can run concurrently |
+| Save context | Available | Not available |
+| Report to main session | Available | Available |
+| Blocks conversation | Yes (one at a time) | No (multiple run concurrently) |
 
-When the main session is busy at the time a background fork starts
-(lock held at launch), the fork runs in quiet mode — non-critical
-`ping_user` and `discord_embed` calls return errors, and the agent
-uses `report_updates` instead.
+When you're mid-conversation at the time a background fork starts,
+the fork runs in quiet mode — non-critical notifications are blocked,
+and the agent reports findings to the main session instead.
 
 For full background fork configuration (isolated mode, model
-overrides, tool restrictions, `update_main_session` modes,
-`allow_ping`), see [Background forks](/scheduling/background-forks).
+overrides, tool restrictions, reporting modes), see
+[Background forks](/scheduling/background-forks).
 
 ## Pending updates
 

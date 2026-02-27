@@ -4,9 +4,8 @@ description: "Control which tools the agent can use with permission modes and ap
 ---
 
 ollim-bot controls which tools the agent can use through a permission
-system built on top of the Claude Agent SDK's `canUseTool` callback.
-You choose a permission mode, and the bot enforces it — from silent
-denial of unapproved tools all the way to full bypass.
+system. You choose a permission mode, and the bot enforces it — from
+silent denial of unapproved tools all the way to full bypass.
 
 ## Permission modes
 
@@ -22,9 +21,9 @@ the main session, and vice versa.
 | `bypassPermissions` | SDK built-in — all tools auto-approved, no prompts. |
 
 <Note>
-`dontAsk` is ollim-bot's own layer. Under the hood, the SDK permission
-mode stays at `default` — the bot's `canUseTool` callback handles the
-silent denial before the SDK ever sees it.
+`dontAsk` is ollim-bot's own layer on top of the default SDK
+permission system. It silently blocks unapproved tools before
+the agent sees them.
 </Note>
 
 ## Approval flow

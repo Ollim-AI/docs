@@ -4,8 +4,8 @@ description: "All Discord slash commands available in ollim-bot."
 ---
 
 ollim-bot registers nine slash commands in Discord. All commands are
-scoped to DMs with the bot and restricted to the **bot owner** (resolved
-via `application_info()` at startup). Non-owners receive "not authorized".
+scoped to DMs with the bot and restricted to the **bot owner**.
+Non-owners receive "not authorized".
 
 ## Quick reference
 
@@ -25,19 +25,15 @@ via `application_info()` at startup). Non-owners receive "not authorized".
 
 ### /clear
 
-Resets the conversation to a blank state. This:
-
-- Clears session-level tool approvals and cancels pending [permission](/core-usage/permissions) prompts
-- Exits any active [interactive fork](/core-usage/forks)
-- Logs a "cleared" session event
-- Drops the active client connection
-- Deletes the persisted session ID
-
-The next message starts a fresh session with no prior context.
+Resets the conversation to a blank state. This clears all prior
+context, exits any active [interactive fork](/core-usage/forks),
+resets [permission](/core-usage/permissions) approvals, and cancels
+any pending permission prompts. The next message starts a fresh
+session.
 
 ### /compact
 
-Compresses conversation context using the Claude Agent SDK's built-in compaction.
+Compresses conversation context to free up space.
 Useful when a long conversation starts hitting context limits.
 
 | Parameter | Type | Required | Description |
@@ -73,19 +69,18 @@ Switches the AI model for subsequent messages. The change applies to both the ma
 |-----------|------|----------|---------|
 | `name` | choice | Yes | `opus`, `sonnet`, `haiku` |
 
-The active client connection is updated in-place. The next message uses the new model.
+The change takes effect immediately — the next message uses the new model.
 
 ### /thinking
 
-Toggles extended thinking (chain-of-thought reasoning). When enabled, sets `max_thinking_tokens` to 10,000.
+Toggles extended thinking (chain-of-thought reasoning) for deeper analysis.
 
 | Parameter | Type | Required | Choices |
 |-----------|------|----------|---------|
 | `enabled` | choice | Yes | `on`, `off` |
 
 <Warning>
-  Changing thinking mode drops the active client connection.
-  If you are in a fork, the fork client is interrupted and fork state is cleared.
+  Changing thinking mode exits any active fork.
 </Warning>
 
 ## Fork commands
@@ -121,18 +116,18 @@ Sets the [permission mode](/core-usage/permissions) that controls how the agent 
 
 | Mode | Behavior |
 |------|----------|
-| `dontAsk` | Suppresses all prompts. Routes as `default` to the SDK while blocking locally. |
+| `dontAsk` | Suppresses all prompts. Unapproved tools are silently denied. |
 | `default` | The agent asks for approval before using tools. |
 | `acceptEdits` | The agent can make file edits without asking, but other tools still require approval. |
 | `bypassPermissions` | All tools are auto-approved. No permission prompts. |
 
-Permission mode is scoped to the active client. If you are in a fork, only the
-fork client is affected. The main session retains its own permission mode.
+Permission mode is scoped per session. If you are in a fork, only the
+fork is affected. The main session retains its own permission mode.
 
 ### /ping-budget
 
-Views or configures the [ping budget](/scheduling/ping-budget) — a token-bucket
-rate limiter that controls how often background forks can notify you.
+Views or configures the [ping budget](/scheduling/ping-budget) — controls
+how often background forks can notify you.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
