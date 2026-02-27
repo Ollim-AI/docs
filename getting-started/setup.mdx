@@ -6,7 +6,7 @@ description: "Configure Google OAuth, timezone, and other optional features afte
 You've completed the [quickstart](/getting-started/quickstart) and the bot is
 running. This guide covers the optional features you can enable next.
 
-## Google OAuth
+## Set up Google OAuth
 
 Google Tasks, Calendar, and Gmail integration requires OAuth credentials from
 Google Cloud Console.
@@ -47,7 +47,7 @@ ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and
 See [Google OAuth setup](/self-hosting/google-oauth-setup) for a detailed
 walkthrough with screenshots.
 
-## Timezone
+## Configure your timezone
 
 ollim-bot auto-detects your system timezone. If that doesn't match where you
 are, set it explicitly:
@@ -59,14 +59,14 @@ OLLIM_TIMEZONE=America/New_York
 This affects all timestamps — scheduling, Google Calendar, Gmail, session
 history, and the system prompt.
 
-## Environment variables
+## Review environment variables
 
 The three required variables (`DISCORD_TOKEN`, `OLLIM_USER_NAME`,
 `OLLIM_BOT_NAME`) are covered in the quickstart. See the
 [Configuration reference](/configuration/reference) for all optional variables
 and their defaults.
 
-## Data directory
+## Explore the data directory
 
 All persistent state lives in `~/.ollim-bot/`, which is auto-created on first
 run and managed as a git repository. See
