@@ -1,20 +1,22 @@
 ---
 title: "Background forks"
-description: "Configure disposable agent sessions for scheduled tasks with model overrides and tool restrictions."
+description: "Configure disposable or persistent agent sessions for scheduled tasks with model overrides and tool restrictions."
 ---
 
-Background forks run agent tasks on disposable sessions that don't pollute
+Background forks run agent tasks on sessions that don't pollute
 your main conversation. Routines and reminders with `background: true`
 execute this way — the agent does its work, optionally pings you or reports
-findings, and the fork is discarded.
+findings, and the fork is discarded (or saved, if persistent).
 
 ## Overview
 
 When a background routine or reminder fires, the bot creates
-a temporary session. The agent's text output is discarded — it
+a session. The agent's text output is discarded — it
 communicates only through notifications, embeds, and reporting to
 the main session. After the task completes (or times out after 30
-minutes), the session is thrown away.
+minutes), the session is thrown away — unless it's a
+[persistent session](/scheduling/routines#persistent-sessions), which
+saves the session ID for resumption on the next fire.
 
 Background forks run concurrently with your main conversation and
 with other background forks — they never interrupt what you're doing.
@@ -29,7 +31,7 @@ and ping budget.
 
 ## Execution modes
 
-Background forks support two execution modes that determine how the
+Background forks support three execution modes that determine how the
 agent session is created.
 
 <Tabs>
@@ -75,11 +77,39 @@ agent session is created.
     Using `model: haiku` and `thinking: false` reduces cost for
     simple tasks.
   </Tab>
+  <Tab title="Persistent">
+    Setting `session: persistent` creates a standalone session that
+    accumulates context across fires. Each fire resumes from the
+    previous session, building up knowledge over time.
+
+    ```yaml title="routines/market-tracker.md"
+    ---
+    id: market-tracker
+    cron: "0 9 * * 1-5"
+    background: true
+    session: persistent
+    description: Track market conditions
+    ---
+    Check current market conditions.
+    Compare with your running analysis from previous sessions.
+    ```
+
+    Persistent mode is best for specialized tasks that benefit
+    from remembering past observations — research tracking, ongoing
+    analysis, or accumulative monitoring. The agent has a
+    [`compact_session`](/extending/mcp-tools#compact_session) tool
+    to compress context when it grows large.
+
+    A skip guard prevents the same persistent routine from
+    running concurrently — if a previous fire is still running,
+    the new one is silently skipped.
+  </Tab>
 </Tabs>
 
 | Field | Default | Description |
 |-------|---------|-------------|
 | `isolated` | `false` | No conversation history instead of forking |
+| `session` | — | `persistent` for context that carries across fires (mutex with `isolated`) |
 | `model` | — | Model override. Isolated mode only |
 | `thinking` | `true` | Extended thinking override |
 
@@ -171,6 +201,7 @@ frontmatter:
 |-------|------|---------|-------------|
 | `background` | `bool` | `false` | Run as a background fork |
 | `isolated` | `bool` | `false` | Fresh session, no history |
+| `session` | `string` | — | `persistent` for context that carries across fires (mutex with `isolated`) |
 | `model` | `string` | — | Model override (isolated only) |
 | `thinking` | `bool` | `true` | Extended thinking override |
 | `update_main_session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |

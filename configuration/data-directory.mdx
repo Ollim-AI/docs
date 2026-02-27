@@ -33,7 +33,9 @@ subdirectory, keeping the agent's working directory clean.
     ├── pending_updates.json         # Background fork updates queued for main session
     ├── inquiries.json               # Button inquiry prompts (7-day TTL)
     ├── fork_messages.json           # Discord message → fork session mapping (7-day TTL)
-    └── ping_budget.json             # Ping budget state (ephemeral, no git commit)
+    ├── ping_budget.json             # Ping budget state (ephemeral, no git commit)
+    └── routine_sessions/
+        └── <routine-id>             # Persistent routine session IDs (one file per routine)
 ```
 
 ## Session files
@@ -45,6 +47,7 @@ These files track the agent's conversation state across restarts.
 |------|--------|-------------|
 | `sessions.json` | Plain string | Active Agent SDK session ID. A raw string, not JSON. Read on startup to resume. |
 | `session_history.jsonl` | JSONL | Append-only log of session lifecycle events. One JSON object per line. |
+| `routine_sessions/<id>` | Plain string | Persistent routine session IDs. One file per routine with `session: persistent`. |
 
 ### Session events
 
@@ -53,7 +56,7 @@ Each line in `session_history.jsonl` contains:
 | Field | Type | Description |
 |-------|------|-------------|
 | `session_id` | `str` | The Agent SDK session ID |
-| `event` | `str` | One of: `created`, `compacted`, `swapped`, `cleared`, `interactive_fork`, `bg_fork`, `isolated_bg` |
+| `event` | `str` | One of: `created`, `compacted`, `swapped`, `cleared`, `interactive_fork`, `bg_fork`, `isolated_bg`, `persistent_bg` |
 | `timestamp` | `str` | ISO 8601 datetime in the configured timezone (`OLLIM_TIMEZONE`) |
 | `parent_session_id` | `str \| null` | Set for `compacted`, `swapped`, and fork events |
 
@@ -258,6 +261,7 @@ The `~/.ollim-bot/` directory is initialized as a git repository.
 | `state/fork_messages.json` | Ephemeral mapping with 7-day TTL |
 | `state/pending_updates.json` | Ephemeral cross-fork messaging |
 | `state/inquiries.json` | Ephemeral button state with 7-day TTL |
+| `state/routine_sessions/*` | Frequent overwrites on every routine fire |
 
 All other files — session history, routines, reminders, and webhooks —
 are auto-committed on every write.

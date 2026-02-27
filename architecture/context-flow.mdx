@@ -24,8 +24,9 @@ The flow forms a loop:
    prepended
 2. **Interactive forks** branch from main, peek at pending updates
    (read-only)
-3. **Background forks** branch from main (or start fresh if isolated),
-   receive a preamble with budget and schedule context
+3. **Background forks** branch from main (or start fresh if isolated,
+   or resume from a saved session if persistent), receive a preamble
+   with budget and schedule context
 4. Forks write back to the main session via `report_updates`
 5. Main session pops those updates on the next interaction
 
@@ -94,6 +95,12 @@ The main session and forks read pending updates differently:
     prompt, similar to the main session. This gives the background
     task awareness of what other forks reported.
   </Tab>
+  <Tab title="Persistent background fork">
+    Persistent routine sessions (`session: persistent`) do **not**
+    receive pending updates. Like isolated forks, they start from
+    their own standalone context — but unlike isolated forks, they
+    resume from their saved session rather than starting fresh.
+  </Tab>
 </Tabs>
 
 ## Prompt tags
@@ -153,6 +160,12 @@ sections.
     - Refill estimation before the last scheduled task
     - Guidance on when to ping vs. report (the "regret test")
     - Note about `critical=True` bypass
+  </Accordion>
+  <Accordion title="Persistent session">
+    Included only when `session: persistent` is set. Tells the agent
+    that its context carries across fires and that it has a
+    `compact_session` tool available for compressing context when it
+    grows large.
   </Accordion>
   <Accordion title="Tool restrictions">
     Listed only when `allowed_tools` or `disallowed_tools` are
