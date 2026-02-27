@@ -1,79 +1,11 @@
 ---
 title: "Architecture overview"
-description: "Explore the module map, key architectural patterns, and data flow through the system."
+description: "Data flow, background execution, key patterns, and the full module map for ollim-bot's internals."
 ---
 
 ollim-bot is a single-process Python application that bridges Discord with
 Claude via the Agent SDK. All modules live under `src/ollim_bot/`, with two
 sub-packages (`google/` and `scheduling/`) for domain-specific functionality.
-
-## Module map
-
-The codebase has 28 modules organized into five layers.
-
-### Core loop
-
-The main path from a Discord message to a streamed response.
-
-| Module | Role |
-|--------|------|
-| `main.py` | CLI entry point — dispatches to bot or subcommands |
-| `bot.py` | Discord interface — DMs, slash commands, reaction acks |
-| `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
-| `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
-| `prompts.py` | System prompt for the main agent and fork prompt helpers |
-| `subagent_prompts.py` | Subagent prompts (gmail-reader, history-reviewer, responsiveness-reviewer) |
-
-### Tool system
-
-MCP tools and the external trigger server the agent uses to interact with
-Discord and the outside world.
-
-| Module | Role |
-|--------|------|
-| `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
-| `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
-| `forks.py` | Fork state (bg + interactive), pending updates, `run_agent_background` |
-| `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks, and streamer |
-
-### Storage and state
-
-Persistence, configuration, and cross-cutting concerns.
-
-| Module | Role |
-|--------|------|
-| `storage.py` | Shared JSONL and markdown I/O, git auto-commit for `~/.ollim-bot/` |
-| `sessions.py` | Persists Agent SDK session ID + session history JSONL log |
-| `permissions.py` | Tool approval — `canUseTool` callback, reaction-based approval |
-| `config.py` | Env vars: `OLLIM_USER_NAME`, `OLLIM_BOT_NAME` (from `.env`) |
-| `embeds.py` | Embed/button types and builders shared by `agent_tools` and `views` |
-| `inquiries.py` | Persists button inquiry prompts to disk (7-day TTL, survives restarts) |
-| `ping_budget.py` | Refill-on-read ping budget — capacity 5, refills 1 per 90 min |
-| `formatting.py` | Tool-label formatting helpers shared by agent and permissions |
-
-### Google integration (`google/`)
-
-OAuth2-based integrations with Google services.
-
-| Module | Role |
-|--------|------|
-| `auth.py` | Shared OAuth2 credentials for Tasks + Calendar + Gmail |
-| `tasks.py` | Google Tasks CLI + API helpers (`complete_task`, `delete_task`) |
-| `calendar.py` | Google Calendar CLI + API helpers (`delete_event`) |
-| `gmail.py` | Gmail CLI (`ollim-bot gmail`) — read-only access |
-
-### Scheduling (`scheduling/`)
-
-Proactive routines and reminders via APScheduler.
-
-| Module | Role |
-|--------|------|
-| `scheduler.py` | APScheduler integration — polls files every 10s, registers triggers |
-| `routines.py` | Routine dataclass and markdown I/O — recurring crons in `routines/*.md` |
-| `reminders.py` | Reminder dataclass and markdown I/O — one-shot + chainable |
-| `preamble.py` | Background preamble builder — ping budget, schedule, and config |
-| `routine_cmd.py` | CLI handler for `ollim-bot routine` (add, list, cancel) |
-| `reminder_cmd.py` | CLI handler for `ollim-bot reminder` (add, list, cancel) |
 
 ## Data flow
 
@@ -183,6 +115,78 @@ Discord buttons survive bot restarts through two mechanisms:
 `DynamicItem[Button]` in `views.py` reconstructs button handlers from
 `custom_id` patterns on startup, and `inquiries.py` persists
 agent-generated button prompts to disk with a 7-day TTL.
+
+## Module map
+
+The codebase has 28 modules organized into five layers.
+
+<Accordion title="Full module map (28 modules)">
+
+### Core loop
+
+The main path from a Discord message to a streamed response.
+
+| Module | Role |
+|--------|------|
+| `main.py` | CLI entry point — dispatches to bot or subcommands |
+| `bot.py` | Discord interface — DMs, slash commands, reaction acks |
+| `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
+| `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
+| `prompts.py` | System prompt for the main agent and fork prompt helpers |
+| `subagent_prompts.py` | Subagent prompts (gmail-reader, history-reviewer, responsiveness-reviewer) |
+
+### Tool system
+
+MCP tools and the external trigger server the agent uses to interact with
+Discord and the outside world.
+
+| Module | Role |
+|--------|------|
+| `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
+| `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
+| `forks.py` | Fork state (bg + interactive), pending updates, `run_agent_background` |
+| `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks, and streamer |
+
+### Storage and state
+
+Persistence, configuration, and cross-cutting concerns.
+
+| Module | Role |
+|--------|------|
+| `storage.py` | Shared JSONL and markdown I/O, git auto-commit for `~/.ollim-bot/` |
+| `sessions.py` | Persists Agent SDK session ID + session history JSONL log |
+| `permissions.py` | Tool approval — `canUseTool` callback, reaction-based approval |
+| `config.py` | Env vars: `OLLIM_USER_NAME`, `OLLIM_BOT_NAME` (from `.env`) |
+| `embeds.py` | Embed/button types and builders shared by `agent_tools` and `views` |
+| `inquiries.py` | Persists button inquiry prompts to disk (7-day TTL, survives restarts) |
+| `ping_budget.py` | Refill-on-read ping budget — capacity 5, refills 1 per 90 min |
+| `formatting.py` | Tool-label formatting helpers shared by agent and permissions |
+
+### Google integration (`google/`)
+
+OAuth2-based integrations with Google services.
+
+| Module | Role |
+|--------|------|
+| `auth.py` | Shared OAuth2 credentials for Tasks + Calendar + Gmail |
+| `tasks.py` | Google Tasks CLI + API helpers (`complete_task`, `delete_task`) |
+| `calendar.py` | Google Calendar CLI + API helpers (`delete_event`) |
+| `gmail.py` | Gmail CLI (`ollim-bot gmail`) — read-only access |
+
+### Scheduling (`scheduling/`)
+
+Proactive routines and reminders via APScheduler.
+
+| Module | Role |
+|--------|------|
+| `scheduler.py` | APScheduler integration — polls files every 10s, registers triggers |
+| `routines.py` | Routine dataclass and markdown I/O — recurring crons in `routines/*.md` |
+| `reminders.py` | Reminder dataclass and markdown I/O — one-shot + chainable |
+| `preamble.py` | Background preamble builder — ping budget, schedule, and config |
+| `routine_cmd.py` | CLI handler for `ollim-bot routine` (add, list, cancel) |
+| `reminder_cmd.py` | CLI handler for `ollim-bot reminder` (add, list, cancel) |
+
+</Accordion>
 
 ## Next steps
 
