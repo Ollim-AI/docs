@@ -17,14 +17,14 @@ These are the most common blockers when launching `ollim-bot`.
 `config.py` validates required variables on import. If any are missing, the
 bot prints a message to stderr and exits immediately.
 
-```
+```text
 Missing required env vars: OLLIM_USER_NAME, OLLIM_BOT_NAME
 Set them in .env or your environment.
 ```
 
 `DISCORD_TOKEN` is checked separately in `main.py`:
 
-```
+```text
 Set DISCORD_TOKEN in .env
 ```
 
@@ -42,7 +42,7 @@ project root) and restart.
 The bot writes its PID to `~/.ollim-bot/state/bot.pid` on startup and checks
 `/proc/<pid>/cmdline` for the string `ollim-bot`. If a match is found:
 
-```
+```text
 ollim-bot is already running (pid 12345)
 ```
 
@@ -59,7 +59,7 @@ The file is normally deleted on exit via `atexit`.
 
 If `bot.application_info()` returns no owner, the bot prints:
 
-```
+```text
 warning: no owner found; scheduler and DM disabled
 ```
 
