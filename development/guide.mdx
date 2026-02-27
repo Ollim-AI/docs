@@ -50,7 +50,7 @@ and conventions.
     | `DISCORD_TOKEN` | Yes | Discord bot token |
     | `OLLIM_USER_NAME` | Yes | Your display name (used in the system prompt) |
     | `OLLIM_BOT_NAME` | Yes | The bot's display name |
-    | `OLLIM_TIMEZONE` | No | IANA timezone (e.g. `America/New_York`); defaults to system local |
+    | `OLLIM_TIMEZONE` | No | IANA timezone (e.g. `America/New_York`); defaults to auto-detected system timezone, then UTC |
     | `WEBHOOK_PORT` | No | Port for the webhook HTTP server (e.g. `8420`) |
     | `WEBHOOK_SECRET` | Conditional | Bearer token for webhook auth (required if `WEBHOOK_PORT` is set) |
   </Step>
@@ -155,7 +155,7 @@ arguments starts the Discord bot. Subcommands route to their respective modules:
 | `ollim-bot reminder add\|list\|cancel` | Manage one-shot reminders |
 | `ollim-bot tasks list\|add\|done\|update\|delete` | Google Tasks operations |
 | `ollim-bot cal today\|upcoming\|show\|add\|update\|delete` | Google Calendar operations |
-| `ollim-bot gmail unread\|read\|search` | Gmail (read-only) |
+| `ollim-bot gmail unread\|read\|search\|labels` | Gmail (read-only) |
 | `ollim-bot help` | Show help text |
 
 See the [CLI reference](/development/cli-reference) for full flag documentation.
