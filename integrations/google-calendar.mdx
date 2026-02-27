@@ -150,8 +150,9 @@ blocking the Discord event loop.
   </Accordion>
   <Accordion title="Times show in the wrong timezone">
     All datetimes are handled in the configured timezone (`OLLIM_TIMEZONE`,
-    defaults to system local). Naive datetime inputs are assumed to be in this
-    timezone. The Google Calendar API stores and returns timezone-aware values.
+    defaults to auto-detected system timezone with a UTC fallback). Naive
+    datetime inputs are assumed to be in this timezone. The Google Calendar
+    API stores and returns timezone-aware values.
   </Accordion>
 </AccordionGroup>
 
