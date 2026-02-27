@@ -110,12 +110,12 @@ happened in the background.
 The `update_main_session` field controls when and whether the agent
 must report:
 
-| Mode | Behavior | Stop hook |
-|------|----------|-----------|
-| `on_ping` | Report if a ping/embed was sent | Blocks if pinged without reporting |
-| `always` | Must call `report_updates` | Blocks if not called |
-| `freely` | Reporting is optional | Never blocks |
-| `blocked` | `report_updates` returns error | Never blocks |
+| Mode | Behavior | Enforcement |
+|------|----------|-------------|
+| `on_ping` | Report if a ping or embed was sent | Task blocked until reported |
+| `always` | Must report regardless | Task blocked until reported |
+| `freely` | Reporting is optional | None |
+| `blocked` | Reporting disabled | None |
 
 <Tip>
 Use `update_main_session: always` for tasks where the main session needs
