@@ -17,11 +17,19 @@ ollim-bot runs entirely in DMs — no server invite is needed.
     and click **New Application**. Give it a name (e.g. `ollim-bot`)
     and click **Create**.
 
+    <Frame>
+      <img src="/images/discord-new-app.png" alt="Discord Developer Portal showing the New Application button" />
+    </Frame>
+
     Note the **Application ID** on the General Information page.
   </Step>
 
   <Step title="Create a bot and copy the token">
     In the left sidebar, click **Bot**. Uncheck **Public Bot** (ollim-bot is single-user — no one else needs to install it). Click **Reset Token** (or **Add Bot** if prompted), then copy the token.
+
+    <Frame>
+      <img src="/images/discord-bot-token.png" alt="Discord Bot page showing the Reset Token button and Public Bot toggle" />
+    </Frame>
 
     Add it to your `.env` file:
 
@@ -34,6 +42,10 @@ ollim-bot runs entirely in DMs — no server invite is needed.
 
   <Step title="Enable the Message Content intent">
     On the same **Bot** page, scroll down to **Privileged Gateway Intents**. Enable **Message Content Intent**.
+
+    <Frame>
+      <img src="/images/discord-message-intent.png" alt="Privileged Gateway Intents section with Message Content Intent enabled" />
+    </Frame>
 
     ollim-bot requires this intent to read message content in DMs.
     The bot initialization enables it explicitly:
@@ -52,6 +64,10 @@ ollim-bot runs entirely in DMs — no server invite is needed.
     1. Under **Installation Contexts**, check **User Install** (uncheck **Guild Install** — ollim-bot doesn't use servers)
     2. Set the install link to **Discord Provided Link**
     3. Under **Default Install Settings** for the user install context, add the `applications.commands` scope
+
+    <Frame>
+      <img src="/images/discord-installation.png" alt="Discord Installation page with User Install checked, Discord Provided Link selected, and applications.commands scope added" />
+    </Frame>
 
     This lets you install the app directly to your Discord account so slash commands work in DMs without a shared server.
   </Step>
