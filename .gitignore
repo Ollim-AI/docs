@@ -3,3 +3,4 @@ node_modules/
 .claude/
 .playwright-mcp/
 .vscode/
+backlog.md
