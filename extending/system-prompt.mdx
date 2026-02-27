@@ -34,9 +34,9 @@ updates, and background preambles — is injected dynamically at runtime.
 
 <Note>
 The entire prompt is a string literal — no template rendering or
-conditional logic. The only dynamic value injected into `SYSTEM_PROMPT`
-itself is `USER_NAME` from `config.py`, which appears in the personality
-section and fork instructions.
+conditional logic. Two dynamic values are injected into `SYSTEM_PROMPT`
+via f-string substitution: `USER_NAME` (personality section, fork
+instructions) and `TZ` (Google Calendar section), both from `config.py`.
 </Note>
 
 ## Personality section
