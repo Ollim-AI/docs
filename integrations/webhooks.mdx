@@ -156,12 +156,12 @@ processes the webhook asynchronously.
 
 Invalid requests are rejected with descriptive errors:
 
-| Condition | Status |
-|-----------|--------|
-| Bad or missing Bearer token | `401 Unauthorized` |
-| Unknown webhook slug | `404 Not Found` |
-| Invalid JSON body | `400 Bad Request` |
-| Schema validation failure | `400` with error details |
+| Condition | Status | Response body |
+|-----------|--------|---------------|
+| Bad or missing Bearer token | `401` | `{"error": "unauthorized"}` |
+| Unknown webhook slug | `404` | `{"error": "webhook not found: <slug>"}` |
+| Invalid JSON body | `400` | `{"error": "invalid json"}` |
+| Schema validation failure | `400` | `{"error": "validation failed", "details": [...]}` |
 
 <AccordionGroup>
   <Accordion title="Request processing pipeline">
