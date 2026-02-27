@@ -7,12 +7,15 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Info>ollim-bot has been in active development since February 9, 2026 with 324 commits across 17 days.</Info>
+<Info>ollim-bot has been in active development since February 9, 2026 with 334 commits across 17 days.</Info>
 
 ## Feb 26, 2026
 
-**Timezone, CI, and code quality**
+**Docs MCP server, timezone, CI, and reliability**
 
+- **Docs MCP server** — the agent now has a `docs` MCP server
+  (`https://docs.ollim.ai/mcp`) for looking up its own features and
+  architecture, replacing the previous `llms.txt` fetch approach
 - **Timezone configuration** — new `OLLIM_TIMEZONE` environment variable
   with automatic system local detection fallback; replaces hardcoded
   `America/Los_Angeles` across all timestamp-producing modules
@@ -20,6 +23,9 @@ chronological order.
   `ty check`) and test (`pytest`) jobs across Python 3.11, 3.12, and 3.13
 - **Pre-commit hooks** — `ruff --fix`, `ruff format`, and `ty check`
   run on every commit
+- Background fork client initialization retries on SDK timeout (3 attempts
+  with 5s/15s backoff)
+- `claude-agent-sdk` updated from 0.1.39 to 0.1.44
 - All 25 `ty` type checker diagnostics resolved
 - `.env.example` template added for onboarding
 

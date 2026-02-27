@@ -27,9 +27,10 @@ Every message you send follows the same path through the system:
     `agent.py` sends the enriched message to the Claude Agent SDK
     client. The agent has access to MCP tools (`discord_embed`,
     `ping_user`, `save_context`, `report_updates`, `enter_fork`,
-    `exit_fork`, `follow_up_chain`), Bash commands
-    (`ollim-bot tasks`, `ollim-bot cal`, etc.), file operations,
-    web tools, and three subagents (gmail-reader,
+    `exit_fork`, `follow_up_chain`) via the `discord` server,
+    a `docs` MCP server for self-referencing documentation,
+    Bash commands (`ollim-bot tasks`, `ollim-bot cal`, etc.),
+    file operations, web tools, and three subagents (gmail-reader,
     history-reviewer, responsiveness-reviewer).
   </Step>
   <Step title="Response streamed">
