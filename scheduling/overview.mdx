@@ -4,16 +4,15 @@ description: "Proactive scheduling with routines and reminders."
 ---
 
 ollim-bot doesn't wait to be asked. Its scheduling system runs
-**routines** (recurring cron jobs) and **reminders** (one-shot or
-chainable nudges) that fire automatically on a schedule. Each scheduled
+**routines** (recurring schedules) and **reminders** (one-shot or
+chainable nudges) that fire automatically. Each scheduled
 task becomes an agent prompt — the bot reads the task, decides what to
 do, and optionally pings you with findings.
 
-Schedules are defined as markdown files with YAML frontmatter, stored
+Routines and reminders are defined as markdown files with YAML frontmatter, stored
 in `~/.ollim-bot/routines/` and `~/.ollim-bot/reminders/`. The agent
 can create, edit, and remove these files directly — no CLI required.
-A scheduler polls both directories every 10 seconds, registering new
-jobs and pruning stale ones.
+Changes are picked up within seconds, no restart needed.
 
 Most scheduled tasks run as
 [background forks](/scheduling/background-forks) — disposable sessions
@@ -58,102 +57,48 @@ warrants attention, governed by a
   </Card>
 </Columns>
 
-## How it works
-
-The scheduler is powered by
-[APScheduler](https://apscheduler.readthedocs.io/)
-(`AsyncIOScheduler`) running in the configured timezone (`OLLIM_TIMEZONE`, defaults to system local).
-It starts in `on_ready` alongside the Discord client.
-
-### Polling loop
-
-A sync job runs every **10 seconds** and:
-
-1. Reads all `.md` files from `~/.ollim-bot/routines/` and
-   `~/.ollim-bot/reminders/`
-2. Registers new APScheduler jobs for any files not yet tracked
-3. Removes jobs for files that have been deleted
-
-Routines get a `CronTrigger` (fires on schedule, persists
-indefinitely). Reminders get a `DateTrigger` (fires once at the
-specified time, then the file is removed).
-
-### Foreground vs background
+## Foreground vs background
 
 Scheduled tasks can run in two modes:
 
 <Tabs>
   <Tab title="Foreground">
     The default when `background` is not set or `false`. The
-    scheduler calls `send_agent_dm`, which acquires the agent lock
-    and sends the prompt directly to the main session. The response
-    streams to your DM.
+    bot sends you a DM with the agent's response, just like a normal
+    conversation.
 
-    Foreground tasks block interactive conversation while running.
+    Foreground tasks pause interactive conversation while running.
     Use these for tasks that need your immediate attention or
     require back-and-forth.
-
-    Prompt tags: `[routine:ID]` or `[reminder:ID]`
   </Tab>
   <Tab title="Background">
     When `background: true` is set in the YAML frontmatter. The
-    scheduler calls `run_agent_background`, which creates a
-    disposable forked session. The agent's text output is
-    discarded — it uses `ping_user` or `discord_embed` to reach
-    you, and `report_updates` to pass findings back to the main
-    session.
+    agent works silently in a disposable session. Its text output is
+    discarded — it uses notifications or embeds to reach
+    you, and can report findings back to the main session so the bot
+    has context about what happened.
 
-    Background tasks run without acquiring the agent lock, so they
-    don't block your conversation. They receive a **BG preamble**
-    with ping budget status, a forward schedule of upcoming tasks,
-    and instructions for how to report.
+    Background tasks don't interrupt your conversation. They receive
+    context about the ping budget status and upcoming schedule, so the
+    agent can make informed decisions about whether to notify you or
+    stay silent.
 
-    Prompt tags: `[routine-bg:ID]` or `[reminder-bg:ID]`
+    See [Background forks](/scheduling/background-forks) for
+    configuration options and [Context flow](/architecture/context-flow)
+    for details on what context the agent receives.
   </Tab>
 </Tabs>
-
-### BG preamble
-
-Every background task receives a preamble injected before its
-prompt. The preamble includes:
-
-| Section | Content |
-|---------|---------|
-| Ping instructions | Available tools based on `allow_ping` |
-| Update mode | `report_updates` behavior per `update_main_session` |
-| Busy state | Non-critical pings suppressed mid-conversation |
-| Ping budget | Remaining pings and refill timing |
-| Forward schedule | Upcoming bg tasks (3h window or 3+ tasks) |
-| Tool restrictions | `allowed_tools` / `disallowed_tools` constraints |
-
-<Tip>
-The forward schedule helps the agent make smart decisions — if budget
-is tight and more important tasks are coming, it can defer its ping
-and use `report_updates` instead.
-</Tip>
-
-### Fork timeout
-
-A separate job runs every **60 seconds** to check interactive fork
-idle time. If a fork has been idle past its timeout, the agent is
-prompted to exit — either by saving context back, reporting updates,
-or discarding the fork. A second warning escalates to a mandatory
-exit.
 
 ## Routines vs reminders
 
 | | Routines | Reminders |
 |---|---------|-----------|
-| **Schedule** | Cron expression (`0 9 * * 1-5`) | ISO datetime |
+| **Schedule** | Cron expression (`0 9 * * 1-5`) | Specific date/time |
 | **Recurrence** | Fires indefinitely | Fires once, self-removes |
 | **Chaining** | No | `max_chain` enables follow-ups |
 | **Storage** | `routines/<slug>.md` | `reminders/<slug>.md` |
 | **Created by** | Agent or `ollim-bot routine` | Agent or `ollim-bot reminder` |
 | **Background** | Optional (`background: true`) | Optional (`background: true`) |
-
-Both support the same background fork options: `model`, `thinking`,
-`isolated`, `update_main_session`, `allow_ping`, `allowed_tools`,
-and `disallowed_tools`.
 
 ## Next steps
 

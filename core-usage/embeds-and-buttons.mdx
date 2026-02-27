@@ -3,23 +3,23 @@ title: "Embeds & buttons"
 description: "Understand how the agent sends Discord embeds with interactive buttons and inquiry actions."
 ---
 
-The agent communicates structured information — task lists, calendar events, email digests, status updates — through Discord embeds. Each embed can include interactive buttons that trigger actions directly or route prompts back to the agent. The entire system is persistent: buttons survive bot restarts.
+The agent communicates structured information — task lists, calendar events, email digests, status updates — through Discord embeds. Each embed can include interactive buttons that trigger actions directly or route prompts back to the agent. Buttons survive bot restarts, so you can click them any time.
 
 ## Overview
 
-ollim-bot uses a single MCP tool, `discord_embed`, to send rich embed messages. The agent decides when and what to send — there is no manual embed API. Buttons attached to embeds follow an action pattern that either performs a direct operation (complete a task, delete an event) or opens a conversation with the agent through the inquiry system.
+The agent decides when and what to send — there is no manual embed API. Buttons attached to embeds follow an action pattern that either performs a direct operation (complete a task, delete an event) or opens a conversation with the agent through the inquiry system.
 
-Embeds sent from [background forks](/scheduling/background-forks) or [interactive forks](/core-usage/forks) are tagged with a footer indicating their source context.
+Embeds sent from [background forks](/scheduling/background-forks) or [interactive forks](/core-usage/forks) are tagged with a footer indicating their source.
 
 ## The `discord_embed` tool
 
-The agent calls `discord_embed` with a title (required) and optional description, color, fields, buttons, and critical flag.
+The agent uses `discord_embed` to send rich embed messages with a title (required) and optional description, color, fields, buttons, and critical flag.
 
 ### Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `title` | string | Yes | — | Embed heading (emoji stripped automatically) |
+| `title` | string | Yes | — | Embed heading |
 | `description` | string | No | — | Body text below the title |
 | `color` | string | No | `"blue"` | Embed accent color |
 | `fields` | array | No | `[]` | Structured name/value pairs |
@@ -61,12 +61,12 @@ Button behavior is determined by the `action` string. There are two categories: 
   <Tab title="Direct actions">
     Direct actions perform a single operation and respond with an ephemeral message. No agent involvement. If the Google API returns an error, the error reason is shown as an ephemeral message.
 
-    | Action pattern | Handler | What it does |
-    |----------------|---------|--------------|
-    | `task_done:<task_id>` | `_handle_task_done` | Marks a Google Tasks item complete |
-    | `task_del:<task_id>` | `_handle_task_delete` | Deletes a Google Tasks item |
-    | `event_del:<event_id>` | `_handle_event_delete` | Deletes a Google Calendar event |
-    | `dismiss` | `_handle_dismiss` | Deletes the embed message |
+    | Action pattern | What it does |
+    |----------------|--------------|
+    | `task_done:<task_id>` | Marks a Google Tasks item complete |
+    | `task_del:<task_id>` | Deletes a Google Tasks item |
+    | `event_del:<event_id>` | Deletes a Google Calendar event |
+    | `dismiss` | Deletes the embed message |
   </Tab>
   <Tab title="Agent inquiries">
     Agent inquiry buttons store a prompt and route it back through the agent when clicked. If the button was sent by a background fork, clicking it opens an [interactive fork](/core-usage/forks) that resumes that session; otherwise the prompt is processed in the current session.
@@ -75,28 +75,24 @@ Button behavior is determined by the `action` string. There are two categories: 
   </Tab>
 </Tabs>
 
-All button custom IDs follow the pattern `act:<action>:<data>`, parsed by the `ActionButton` dynamic item handler in `views.py`.
+## Inquiry buttons
 
-## Inquiry flow
+When the agent sends a button with an `agent:` action, the prompt is stored so it can be retrieved when you click. Clicking the button sends that prompt to the agent, and the agent responds in your conversation.
 
-When the agent sends a button with an `agent:` action, the prompt is persisted to disk so it survives bot restarts. Clicking the button sends the stored prompt to the agent. If the button was sent by a background fork, clicking it enters an interactive fork that resumes that fork's session; otherwise the prompt is processed in the current session.
+If the button was sent by a background fork, clicking it opens an interactive fork that resumes from that fork's session — so you can continue where the background task left off. Otherwise the prompt is processed in your current session.
 
-<Steps>
-  <Step title="Agent sends embed with inquiry button">
-    The agent calls `discord_embed` with a button whose action starts with `agent:`. The `build_view` function extracts the prompt, registers it via `inquiries.register()`, and gets back an 8-character hex UUID. The button's custom ID becomes `act:agent:{uid}`.
-  </Step>
-  <Step title="User clicks the button">
-    Discord dispatches the interaction to `ActionButton`, which matches the `act:agent:{uid}` pattern and calls `_handle_agent_inquiry`.
-  </Step>
-  <Step title="Inquiry is popped and validated">
-    The handler calls `inquiries.pop(uid)` to retrieve and remove the stored prompt. If the inquiry has expired (older than 7 days) or was already consumed, the button responds with an expiration notice.
-  </Step>
-  <Step title="Agent processes the prompt">
-    If the button's message has a fork session ID (i.e., it was sent by a background fork), the handler enters an interactive fork that resumes that session, sends a fork entry embed, and streams the agent's response. Otherwise, the prompt is sent directly to the agent in the current session prefixed with `[button]`. Either way, the agent streams its response to the channel.
-  </Step>
-</Steps>
+Inquiry buttons expire after **7 days**. If you click an expired button, you'll see an expiration notice.
 
-Inquiry prompts are stored in `~/.ollim-bot/state/inquiries.json` with a 7-day TTL. Expired entries are cleaned up on read.
+<Accordion title="How inquiry buttons work internally">
+  When the agent creates an inquiry button, the prompt text is persisted to disk with a unique ID. The button's custom ID encodes this reference. When you click:
+
+  1. Discord dispatches the interaction to the bot
+  2. The bot retrieves and removes the stored prompt
+  3. If the button came from a background fork, an interactive fork is created to resume that session
+  4. The prompt is sent to the agent, which streams its response
+
+  Inquiry prompts are stored in `~/.ollim-bot/state/inquiries.json` with a 7-day TTL. Expired entries are cleaned up on read.
+</Accordion>
 
 ## Fork embeds
 
@@ -104,15 +100,13 @@ Forks produce their own embeds at entry and exit, separate from the `discord_emb
 
 ### Fork entry
 
-When a fork starts (via `/fork`, the `enter_fork` MCP tool, or an inquiry button), a purple "Forked Session" embed is sent with three buttons:
+When a fork starts (via `/fork`, an agent action, or an inquiry button), a purple "Forked Session" embed appears with three buttons:
 
 | Button | Style | Action |
 |--------|-------|--------|
-| Save Context | `success` (green) | Promotes fork context to the main session |
-| Report | `primary` (blurple) | Exits the fork and sends a summary to the main session |
-| Exit Fork | `danger` (red) | Discards the fork cleanly |
-
-These buttons map to the `fork_save`, `fork_report`, and `fork_exit` handlers in `views.py`. They are equivalent to the `save_context`, `report_updates`, and `exit_fork` MCP tools.
+| Save Context | Green | Promotes fork context to the main session |
+| Report | Blurple | Exits the fork and sends a summary to the main session |
+| Exit Fork | Red | Discards the fork cleanly |
 
 ### Fork exit
 
@@ -126,21 +120,19 @@ When a fork ends, a "Fork Ended" embed is sent with a color indicating the exit 
 
 ## Persistence
 
-Buttons remain functional across bot restarts through two mechanisms:
+Buttons remain functional across bot restarts:
 
-- **`DynamicItem[Button]`**: Discord.py reconstructs button handlers from custom IDs using a regex pattern (`act:(?P<action>[a-z_]+):(?P<data>.+)`). The `ActionButton` class matches this pattern and dispatches to the correct handler.
-- **Inquiry storage**: Agent inquiry prompts are written to `~/.ollim-bot/state/inquiries.json` so the prompt text is available even after a restart. Each entry includes a timestamp for TTL enforcement.
-
-<Tip>Direct action buttons (task operations, dismiss, fork controls) are fully persistent with no expiration — their data is encoded in the custom ID itself. Only agent inquiry buttons expire after 7 days.</Tip>
+- **Direct action buttons** (task operations, dismiss, fork controls) never expire — their data is encoded in the button itself.
+- **Agent inquiry buttons** expire after 7 days — the stored prompt is cleaned up after that.
 
 ## Background fork behavior
 
 Embeds sent from the main session or interactive forks are always delivered. In [background forks](/scheduling/background-forks), embeds are subject to additional constraints:
 
-- **Ping budget**: Each embed consumes one ping from the [refill-on-read budget](/scheduling/ping-budget). When the budget is exhausted, `discord_embed` returns an error to the agent.
-- **`critical: true`**: Bypasses all three checks (per-session limit, busy state, and budget). Critical pings are tracked in a separate `critical_used` counter but never blocked.
-- **`allow_ping: false`**: When set in the background fork config, `discord_embed` is disabled entirely — `critical: true` does not override this.
-- **Busy state**: When the main agent is actively responding (lock held), non-critical embeds from background forks return errors. The agent should use `report_updates` instead.
+- **Ping budget** — each embed consumes one ping from the [ping budget](/scheduling/ping-budget). When the budget is exhausted, the embed is blocked and the agent is told to use reporting instead.
+- **`critical: true`** — bypasses budget limits and busy checks. Use for things you'd be devastated to miss.
+- **`allow_ping: false`** — when set in the background fork config, embeds are disabled entirely. `critical: true` does not override this.
+- **Busy state** — when you're mid-conversation, non-critical embeds from background forks are blocked. The agent reports findings to the main session instead.
 
 <Warning>Background fork embeds include a "bg" footer to distinguish them from main session messages. Interactive fork embeds show "fork".</Warning>
 
@@ -151,7 +143,7 @@ Embeds sent from the main session or interactive forks are always delivered. In 
     Interactive and background fork lifecycle, exit strategies, and idle timeout.
   </Card>
   <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
-    How the refill-on-read budget controls background fork notifications.
+    How the ping budget controls background fork notifications.
   </Card>
   <Card title="MCP tools" icon="wrench" href="/extending/mcp-tools">
     Full reference for all MCP tools including discord_embed.
