@@ -90,6 +90,7 @@ Follow existing patterns — read a similar page before adding components:
 - Ask how to handle uncommitted changes before starting
 - Create a new branch when no clear branch exists for changes
 - Commit frequently throughout development
+- Keep commits bite-sized
 
 ## Do not
 
