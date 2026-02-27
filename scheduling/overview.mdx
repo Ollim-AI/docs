@@ -9,11 +9,6 @@ chainable nudges) that fire automatically. Each scheduled
 task becomes an agent prompt — the bot reads the task, decides what to
 do, and optionally pings you with findings.
 
-Routines and reminders are defined as markdown files with YAML frontmatter, stored
-in `~/.ollim-bot/routines/` and `~/.ollim-bot/reminders/`. The agent
-can create, edit, and remove these files directly — no CLI required.
-Changes are picked up within seconds, no restart needed.
-
 Most scheduled tasks run as
 [background forks](/scheduling/background-forks) — disposable sessions
 where the agent works silently and only reaches out when something
@@ -56,6 +51,13 @@ warrants attention, governed by a
     Chains end when the agent stops calling follow_up_chain.
   </Card>
 </Columns>
+
+<Note>
+Routines and reminders are markdown files with YAML frontmatter, stored
+in `~/.ollim-bot/routines/` and `~/.ollim-bot/reminders/`. The agent
+can create, edit, and remove these files directly — no CLI required.
+Changes are picked up within seconds, no restart needed.
+</Note>
 
 ## Foreground vs background
 
