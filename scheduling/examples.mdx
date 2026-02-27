@@ -393,6 +393,7 @@ id: "e7f3a1b9"
 description: "Every 4 hrs — stabilize core identity file"
 cron: "0 2,6,10,14,18,22 * * *"
 background: true
+isolated: true
 model: "haiku"
 allow_ping: false
 update_main_session: "freely"
@@ -420,8 +421,10 @@ read for core context. Keep it accurate, current, and under 100 lines.
 ```
 
 **Key patterns:**
+- **`isolated: true`** — fresh context since this routine doesn't need
+  conversation history
 - **`model: "haiku"`** — uses the cheapest model since this is simple
-  file maintenance
+  file maintenance (requires `isolated: true` to take effect)
 - **`allow_ping: false`** — can never notify the user; purely background
 - **`update_main_session: "freely"`** — reports updates even without
   pinging, so the main session stays informed
