@@ -36,7 +36,10 @@
   "contextual": {
     "options": [
       "copy",
-      "view"
+      "view",
+      "claude",
+      "chatgpt",
+      "mcp"
     ]
   },
   "redirects": [
@@ -71,8 +74,8 @@
           {
             "group": "Scheduling",
             "icon": "clock",
+            "root": "scheduling/overview",
             "pages": [
-              "scheduling/overview",
               "scheduling/routines",
               "scheduling/reminders",
               "scheduling/background-forks",
@@ -83,8 +86,8 @@
           {
             "group": "Integrations",
             "icon": "plug",
+            "root": "integrations/google-overview",
             "pages": [
-              "integrations/google-overview",
               "integrations/google-tasks",
               "integrations/google-calendar",
               "integrations/google-gmail",
@@ -99,8 +102,8 @@
           {
             "group": "Extending",
             "icon": "puzzle-piece",
+            "root": "extending/overview",
             "pages": [
-              "extending/overview",
               "extending/mcp-tools",
               "extending/subagents",
               "extending/system-prompt",
@@ -134,10 +137,10 @@
           {
             "group": "Architecture",
             "icon": "sitemap",
+            "root": "architecture/overview",
             "pages": [
               "architecture/design-philosophy",
               "architecture/how-it-works",
-              "architecture/overview",
               "architecture/session-management",
               "architecture/context-flow",
               "architecture/streaming"

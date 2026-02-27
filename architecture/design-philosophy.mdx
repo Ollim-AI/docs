@@ -65,12 +65,12 @@ integrations can expand over time, but only when the complexity is justified.
 
 The Claude Agent SDK is essentially a wrapper around Claude Code. It's the best framework for turning a user
 prompt into real action — existing tools plus bash make it extremely versatile, and file-based workflows keep
-things simple. No DSL to learn, no workflow engine to configure — just code as tools (MCP or CLI-based bash).
+things simple. No DSL to learn, no workflow engine to configure — code as tools (MCP or CLI-based bash).
 
 This matters because framework lock-in is one of the traps this project avoids. Other agent frameworks impose
 complex workflow patterns, abstract away the agent loop behind proprietary concepts, and make debugging feel
 like spelunking. The Agent SDK is a thin layer: it handles the agent loop, persistent sessions, compaction,
-and streaming, but everything else is just Python and bash. What the agent does is visible, debuggable, and
+and streaming, but everything else is Python and bash. What the agent does is visible, debuggable, and
 changeable without learning a framework-specific language.
 
 <Tip>See [How ollim-bot works](/architecture/how-it-works) for the technical details of the agent loop,
