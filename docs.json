@@ -135,7 +135,7 @@
             ]
           },
           {
-            "group": "Architecture",
+            "group": "Concepts",
             "icon": "sitemap",
             "root": "architecture/overview",
             "pages": [
