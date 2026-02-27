@@ -69,13 +69,13 @@ and their defaults.
 ## Explore the data directory
 
 All persistent state lives in `~/.ollim-bot/`, which is auto-created on first
-run and managed as a git repository. See
-[Data directory](/configuration/data-directory) for the full layout.
+run. See [Data directory](/configuration/data-directory) for the full layout.
 
 <Tip>
 Back up `~/.ollim-bot/` to preserve your routines, reminders, session history,
-and Google credentials. Since it's a git repo, you can push it to a private
-remote.
+and Google credentials. If you run `git init ~/.ollim-bot/`, ollim-bot
+auto-commits changes to tracked files — you can then push to a private remote
+for versioned backups.
 </Tip>
 
 ## Next steps
