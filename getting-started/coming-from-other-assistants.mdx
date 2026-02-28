@@ -1,0 +1,124 @@
+---
+title: "Coming from other AI assistants"
+description: "How ollim-bot compares to OpenClaw, Nanobot, and other AI agent tools — and what to expect when switching."
+---
+
+If you've been using OpenClaw, Nanobot, NanoClaw, or another AI assistant and you're
+considering ollim-bot, this page explains what's different, what you'll gain, and what
+you'll give up. No spin — just an honest comparison so you can decide if it fits.
+
+## The mental model shift
+
+Most AI agent tools optimize for **autonomy** — give the agent access to everything and
+let it act on your behalf. OpenClaw connects to 50+ integrations, runs shell commands,
+browses the web, and ships with permissive defaults. The pitch is "your AI can do anything."
+
+ollim-bot optimizes for **context quality**. The belief is that an assistant is only as
+useful as how well it understands you right now. Autonomy, features, integrations — they're
+all secondary to whether the agent actually knows what's going on in your life.
+
+This isn't a feature gap — it's a design choice. ollim-bot does less on purpose, because
+doing fewer things with deep personal context beats doing everything with shallow context.
+
+<Note>
+Read [Design philosophy](/architecture/design-philosophy) for the full reasoning behind
+these tradeoffs.
+</Note>
+
+## Feature comparison
+
+An honest mapping of what exists in typical AI agent tools vs ollim-bot. Blanks are
+intentional — not everything needs an equivalent.
+
+| Capability | OpenClaw / others | ollim-bot |
+|---|---|---|
+| **Messaging platforms** | WhatsApp, Telegram, Slack, Discord, 50+ | Discord DMs only |
+| **Persistent memory** | Markdown files + database indexes, session-independent | [Persistent sessions](/architecture/session-management) — one continuous conversation |
+| **Scheduling** | Cron jobs + periodic heartbeats | [Routines](/scheduling/routines) (contextual check-ins) + [reminders](/scheduling/reminders) with follow-ups |
+| **Background work** | Autonomous execution | [Background forks](/scheduling/background-forks) with [ping budget](/scheduling/ping-budget) |
+| **Proactive outreach** | Varies by tool | Core feature — the bot reaches out to you on schedule |
+| **Email** | Multi-provider | [Gmail integration](/integrations/google-gmail) |
+| **Calendar** | Multi-provider | [Google Calendar integration](/integrations/google-calendar) |
+| **Tasks** | Various providers | [Google Tasks integration](/integrations/google-tasks) |
+| **Shell access** | Direct host access by default (sandboxing optional) | Tool-based, permission-gated |
+| **Web browsing** | Built-in | Available via [MCP tools](/extending/mcp-tools) |
+| **Plugin marketplace** | Large community ecosystems | No marketplace — [MCP tools](/extending/mcp-tools) and [subagents](/extending/subagents) you configure yourself |
+| **Multi-user** | Yes | Single-user only — [by design](/architecture/design-philosophy#single-user-on-purpose) |
+| **Data storage** | Varies — Markdown + SQLite (OpenClaw), proprietary (commercial tools) | [Markdown + JSONL files](/configuration/file-formats) — no database dependency, git-trackable |
+| **Extensibility** | Plugin SDKs, community skills | [MCP tools](/extending/mcp-tools), [subagents](/extending/subagents), [system prompt](/extending/system-prompt) |
+
+## What you gain
+
+**Context that persists and compounds.** ollim-bot runs a single persistent session — one
+long conversation that picks up where you left off, days later, without re-explaining.
+Background tasks [fork from the main context](/core-usage/forks) rather than starting
+fresh, so they inherit what's already been discussed.
+
+**Proactive check-ins, not just reactive responses.** Most AI assistants wait for you to
+start a conversation. ollim-bot messages you on schedule — morning briefings, end-of-day
+reviews, task follow-ups. For ADHD, this is the difference between a tool you forget to
+open and an assistant that catches things before they fall through the cracks.
+
+**Notification management that respects your attention.** The [ping budget](/scheduling/ping-budget)
+limits how often background tasks can notify you, so scheduled work doesn't bury you in
+messages. The bot decides what's worth pinging you about and what can wait.
+
+**Transparent, auditable data.** Routines and reminders are markdown files with YAML
+frontmatter — open one in any editor and see exactly what it does. Session logs are
+append-only JSONL. Everything lives in `~/.ollim-bot/` and can be git-tracked for full
+version history. No database indexes to rebuild, no migrations to run.
+
+**Smaller attack surface.** OpenClaw has faced multiple critical vulnerabilities — including
+remote code execution via WebSocket hijacking and supply-chain attacks in its skill
+marketplace. ollim-bot's tools are permission-gated, actions are visible in your Discord
+DMs, and there's no plugin marketplace where unreviewed code can run.
+
+## What you give up
+
+Be clear-eyed about what ollim-bot doesn't do:
+
+- **Platform choice.** Discord only. No WhatsApp, Telegram, Slack, or SMS. If Discord
+  isn't where you spend your day, this isn't the right tool.
+- **Broad automation.** No unrestricted shell access, no browser automation, no
+  "do anything" capabilities. ollim-bot is a personal assistant, not an autonomous agent
+  platform.
+- **Plugin ecosystems.** No marketplace, no community skills repository. You extend it
+  with MCP tools and subagents, which means more control but more setup.
+- **Multi-provider integrations.** Email, calendar, and tasks are Google-only. If you're
+  on Outlook or another provider, those integrations don't exist yet.
+- **Multi-user support.** One bot, one person. If you need a team assistant or shared
+  workspace, look elsewhere.
+
+## Starting fresh
+
+There's no data migration path from other assistants. Memory formats, session stores, and
+configuration systems are too different across tools — and ollim-bot's value comes from
+building context over time through conversation, not from importing a memory dump.
+
+The good news: setup takes under 5 minutes, and the bot starts building context from your
+first message. Within a few days of regular use and scheduled routines, it'll have a
+working understanding of your situation.
+
+<Tip>
+If you have routines or automations set up in your current tool, note them down before
+switching. You can recreate them as [routines](/scheduling/routines) or
+[reminders](/scheduling/reminders) — just describe what you want in conversation and the
+bot will create the files.
+</Tip>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Get ollim-bot running in under 5 minutes.
+  </Card>
+  <Card title="Design philosophy" icon="lightbulb" href="/architecture/design-philosophy">
+    The full reasoning behind these tradeoffs.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Set up proactive check-ins — the feature that makes the difference.
+  </Card>
+  <Card title="How it works" icon="gears" href="/architecture/how-it-works">
+    The agent loop, sessions, and fork model under the hood.
+  </Card>
+</Columns>
