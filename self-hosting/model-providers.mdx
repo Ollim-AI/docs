@@ -43,10 +43,10 @@ changes.
 
 | Provider | Cost | Models | Notes |
 |----------|------|--------|-------|
-| [Z.AI](https://z.ai) | \$3–49/mo | GLM-5, GLM-4.7 | Free tier (GLM-4.7-Flash) |
-| [Qwen](https://alibabacloud.com/help/en/model-studio/coding-plan) | \$10–50/mo | Qwen3.5 + 5 other models | Multi-model under one subscription |
-| [MiniMax](https://platform.minimax.io) | \$10–150/mo | MiniMax M2.5 | 100+ tokens/sec throughput |
-| [Kimi](https://kimi.com/code) | ~\$7/week | Kimi K2.5 | 256K context window |
+| [Z.AI](https://z.ai) | \$3–49/mo | GLM-5, GLM-4.7 | Free tier (GLM-4.7-Flash). GLM-5 (744B/40B active MoE, MIT license) released Feb 2026 |
+| [Qwen](https://alibabacloud.com/help/en/model-studio/coding-plan) | \$10–50/mo | Qwen3.5, Qwen3-Coder-Next + others | Multi-model subscription. Qwen3.5 supports 1M context and multimodal |
+| [MiniMax](https://platform.minimax.io) | \$10–150/mo | MiniMax M2.5 | SWE-Bench 80.2%, 100+ tok/s, \$0.30/M input on API |
+| [Kimi](https://kimi.com/code) | ~\$7/week | Kimi K2.5 | 1T params (32B active MoE), agent swarm up to 100 sub-agents |
 
 All of these use the same pattern — `ANTHROPIC_BASE_URL` and
 `ANTHROPIC_AUTH_TOKEN` in your `.env` file:
@@ -69,6 +69,10 @@ ANTHROPIC_AUTH_TOKEN=your-zai-api-key
     offers subscription plans (Lite \$3/mo, Pro \$15/mo, Max ~\$60/mo)
     with prompt-based quotas, or pay-per-token. GLM-4.7-Flash and
     GLM-4.5-Flash are free.
+
+    **GLM-5** (released February 2026) is their frontier model — 744B
+    total / 40B active MoE, MIT license, \$1.00/M input / \$3.20/M
+    output via API. Requires server-grade hardware for self-hosting.
   </Accordion>
 
   <Accordion title="Qwen / Alibaba Cloud setup">
@@ -82,6 +86,11 @@ ANTHROPIC_AUTH_TOKEN=your-zai-api-key
     The standout feature — one subscription (\$10–50/mo), six models.
     Switch between Qwen3.5-Plus, Qwen3-Coder, GLM-4.7, Kimi-K2.5, and
     MiniMax M2.5 without changing providers.
+
+    **Qwen3.5** (released February 2026) adds 1M context, native
+    multimodal, and 201 languages. **Qwen3-Coder-Next** (80B/3B active
+    MoE, Apache 2.0) scores 70.6 on SWE-Bench Verified — purpose-built
+    for coding agents.
   </Accordion>
 
   <Accordion title="MiniMax setup">
@@ -94,6 +103,10 @@ ANTHROPIC_AUTH_TOKEN=your-zai-api-key
 
     Subscription tiers: Starter \$10/mo (100 prompts/5h), Plus \$20/mo
     (300/5h), Max \$50/mo (1,000/5h). 100+ tokens per second throughput.
+
+    **M2.5** (released February 2026) hits 80.2% on SWE-Bench Verified
+    and completes tasks 37% faster than M2.1. API pricing is aggressive
+    — \$0.30/M input, \$1.20/M output. Open weights under Modified MIT.
   </Accordion>
 
   <Accordion title="Kimi / Moonshot AI setup">
@@ -106,6 +119,10 @@ ANTHROPIC_AUTH_TOKEN=your-zai-api-key
 
     Weekly membership at ~\$7/week with 300–1,200 API calls per 5-hour
     window. 256K context window and 100 tokens/second output speed.
+
+    **K2.5** (released January 2026) is a 1T parameter / 32B active MoE
+    with native multimodal and an agent swarm that runs up to 100
+    sub-agents in parallel. Open weights under Modified MIT.
   </Accordion>
 </AccordionGroup>
 
@@ -115,8 +132,8 @@ If you prefer paying for what you use instead of a flat subscription:
 
 | Provider | Input cost | Output cost | Models | Notes |
 |----------|-----------|-------------|--------|-------|
-| [DeepSeek](https://platform.deepseek.com) | \$0.27/1M | \$0.42/1M | DeepSeek V3.2 | Cheapest option available |
-| [OpenRouter](https://openrouter.ai) | Varies | Varies | 400+ models | Gateway with unified billing |
+| [DeepSeek](https://platform.deepseek.com) | \$0.28/1M | \$0.42/1M | DeepSeek V3.2 | Cheapest option. Thinking integrated with tool use |
+| [OpenRouter](https://openrouter.ai) | Varies | Varies | 400+ models | Gateway with unified billing. 24 free models, `openrouter/free` auto-router |
 
 <AccordionGroup>
   <Accordion title="DeepSeek setup">
@@ -128,8 +145,13 @@ If you prefer paying for what you use instead of a flat subscription:
     ```
 
     The cheapest per-token option — roughly 10x cheaper than Claude
-    Sonnet 4.6. No subscription required. Tool use works but image input
-    is not supported through the Anthropic compatibility endpoint.
+    Sonnet 4.6. No subscription required. **V3.2** is the first model
+    to integrate thinking directly into tool use, supporting both
+    thinking and non-thinking modes. Image input is not supported
+    through the Anthropic compatibility endpoint.
+
+    Open weights (MIT license) — distilled 32B variants are available
+    for single-GPU self-hosting via Ollama (`ollama pull deepseek-v3.2`).
   </Accordion>
 
   <Accordion title="OpenRouter setup">
@@ -139,11 +161,12 @@ If you prefer paying for what you use instead of a flat subscription:
     ANTHROPIC_API_KEY=
     ```
 
-    Gateway to 400+ models with unified billing. The empty
-    `ANTHROPIC_API_KEY=` prevents Claude Code from authenticating directly
-    with Anthropic. **Only Claude models are guaranteed to work** —
-    non-Claude models require a
-    [translation proxy](https://github.com/luohy15/y-router).
+    Gateway to 400+ models with unified billing. 24 models are free
+    without a credit card, and `openrouter/free` auto-routes to a
+    compatible free model. The empty `ANTHROPIC_API_KEY=` prevents
+    Claude Code from authenticating directly with Anthropic. **Only
+    Claude models are guaranteed to work** — non-Claude models require
+    a [translation proxy](https://github.com/luohy15/y-router).
   </Accordion>
 </AccordionGroup>
 
@@ -156,47 +179,96 @@ If you prefer paying for what you use instead of a flat subscription:
 
 ## Self-hosted models
 
-If you want full control over your data — no tokens leaving your
-network — you can run models locally and point ollim-bot at them.
+Run models locally for full data sovereignty — no tokens leave your
+network. As of early 2026, all three major inference backends natively
+support the Anthropic Messages API with tool calling.
 
 <AccordionGroup>
   <Accordion title="Ollama">
-    [Ollama](https://ollama.com) runs open models locally and exposes an
-    Anthropic-compatible endpoint as of v0.14+:
+    [Ollama](https://ollama.com) (v0.17+) runs open models locally with
+    a native Anthropic-compatible endpoint, tool calling, and streaming:
 
     ```bash title=".env"
     ANTHROPIC_BASE_URL=http://localhost:11434
     ANTHROPIC_AUTH_TOKEN=ollama
-    ANTHROPIC_MODEL=qwen3-coder
+    ANTHROPIC_MODEL=qwen3-coder-next
     ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
     ```
 
-    Recommended models for tool use: **Qwen3-Coder** (32B), **GLM-4.7-Flash**.
-    Use q8 or fp16 quantization with at least 24GB VRAM for reliable results.
+    v0.17 (February 2026) ships a new inference engine with up to 40%
+    faster prompt processing, improved multi-GPU tensor parallelism, and
+    better KV cache management for long conversations.
 
-    **Limitations**: tool use is still experimental — smaller models get stuck
-    in reasoning loops, and inference is 50–70x slower than cloud providers.
-    Expect tinkering. Not recommended as a primary backend for a bot that
-    needs to respond reliably.
+    Tool use works well with larger models — expect tinkering with
+    smaller ones. Local inference is still significantly slower than
+    cloud providers. Not recommended as a primary backend for a bot
+    that needs sub-second response times.
   </Accordion>
 
-  <Accordion title="vLLM / other local inference">
-    Any local inference server that exposes an Anthropic Messages
-    API-compatible endpoint works with the same `ANTHROPIC_BASE_URL`
-    mechanism. [vLLM](https://docs.vllm.ai/) and
-    [llama.cpp server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server)
-    both support this with the right configuration.
+  <Accordion title="vLLM">
+    [vLLM](https://docs.vllm.ai/) (v0.16+) exposes a native Anthropic
+    `/v1/messages` endpoint with tool calling — the best option for
+    production multi-GPU deployments:
 
-    Route through a [LiteLLM proxy](https://docs.litellm.ai/) if your
-    inference server only speaks the OpenAI Chat Completions format —
-    LiteLLM translates to Anthropic format automatically.
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=http://localhost:8000
+    ANTHROPIC_AUTH_TOKEN=token-abc123
+    ANTHROPIC_MODEL=qwen3-coder-next
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
+    ```
+
+    v0.16 (February 2026) adds async scheduling with pipeline
+    parallelism for ~31% throughput improvement. See the
+    [vLLM Claude Code integration docs](https://docs.vllm.ai/en/latest/serving/integrations/claude_code/)
+    for full setup.
+  </Accordion>
+
+  <Accordion title="llama.cpp server">
+    [llama.cpp server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server)
+    added Anthropic Messages API support in January 2026 — the most
+    lightweight option for single-GPU setups:
+
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=http://localhost:8080
+    ANTHROPIC_AUTH_TOKEN=placeholder
+    ANTHROPIC_MODEL=qwen3-coder-next
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
+    ```
+
+    Supports tools, vision, streaming, and token counting. Up to 35%
+    faster with NVFP4/FP8 quantization on NVIDIA GPUs. See the
+    [Hugging Face walkthrough](https://huggingface.co/blog/ggml-org/anthropic-messages-api-in-llamacpp)
+    for setup details.
+  </Accordion>
+
+  <Accordion title="LiteLLM proxy">
+    If your inference server only speaks OpenAI Chat Completions,
+    route through a [LiteLLM proxy](https://docs.litellm.ai/)
+    (v1.81+) — it translates to Anthropic format automatically and
+    adds cost tracking, load balancing, and guardrails.
   </Accordion>
 </AccordionGroup>
 
+### Recommended models for self-hosting
+
+Pick based on your hardware. Use q8 or fp16 quantization for reliable
+tool calling.
+
+| Model | Active params | Hardware | Tool use | License |
+|-------|--------------|----------|----------|---------|
+| **Qwen3-Coder-Next** | 3B (80B MoE) | 32GB+ VRAM | Excellent — SWE-Bench 70.6 | Apache 2.0 |
+| **Qwen3.5-35B-A3B** | 3B (35B MoE) | 32GB VRAM | Good — 1M context | Apache 2.0 |
+| **GLM-4.7-Flash** | 30B | 24GB+ VRAM | Good — interleaved reasoning | Open weights |
+| **DeepSeek V3.2 (32B distill)** | 32B | 24GB+ VRAM | Good — thinking + tool use | MIT |
+| **GLM-5** | 40B (744B MoE) | Multi-GPU cluster | Excellent — frontier open-source | MIT |
+| **MiniMax M2.5** | Large MoE | Multi-GPU cluster | Excellent — SWE-Bench 80.2% | Modified MIT |
+| **Kimi K2.5** | 32B (1T MoE) | Multi-GPU cluster | Excellent — 1,500 tool calls | Modified MIT |
+
 <Tip>
-  Self-hosting makes sense for data sovereignty and experimentation.
-  For daily bot reliability, cloud providers still have the edge — tool
-  use support in local models is improving but not yet production-grade.
+  Self-hosting works well for data sovereignty and experimentation.
+  Tool use in local models has matured significantly in early 2026 —
+  but cloud providers still win on latency and reliability for a bot
+  that needs to respond quickly throughout the day.
 </Tip>
 
 ## Model version pinning
