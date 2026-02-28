@@ -26,6 +26,7 @@ updates, and background preambles — is injected dynamically at runtime.
 | Gmail | Delegation to gmail-reader subagent |
 | Claude History | Delegation to history-reviewer subagent |
 | Responsiveness | Delegation to responsiveness-reviewer |
+| User Proxy | Delegation to user-proxy subagent — when and how to use it, confidence level actions |
 | Discord embeds | When to use embeds vs plain text |
 | Web and docs | `WebSearch`, `WebFetch`, and `docs` MCP server |
 | Interactive forks | Fork rules, idle timeout, exit options |
@@ -121,7 +122,7 @@ Notion, Slack, or Trello.
 
 ### Subagent delegation
 
-Three tool sections — Gmail, Claude History, and Responsiveness — consist
+Four tool sections — Gmail, Claude History, Responsiveness, and User Proxy — consist
 entirely of delegation instructions. The main agent is told to never
 perform these tasks directly, instead spawning the appropriate
 [subagent](/extending/subagents) via the Task tool.
@@ -187,6 +188,7 @@ is prepended to the prompt. This is built by `build_bg_preamble` in
 | Busy state | User mid-conversation AND `allow_ping=True` | "Do NOT ping unless `critical=True`" |
 | Budget status | `allow_ping=True` | Ping budget and upcoming schedule |
 | Tool restrictions | Tools restricted | Available/unavailable tool list |
+| User-proxy hint | `Task` tool available | "For preference decisions, spawn the user-proxy subagent" |
 
 ### Update instruction variants
 
@@ -309,9 +311,11 @@ output format requirements, and triage rules.
 | `GMAIL_READER_PROMPT` | gmail-reader | Email triage, skip/surface criteria |
 | `HISTORY_REVIEWER_PROMPT` | history-reviewer | Session scanning, loose threads |
 | `RESPONSIVENESS_REVIEWER_PROMPT` | responsiveness-reviewer | Engagement analysis |
+| `USER_PROXY_PROMPT` | user-proxy | Preference decisions, evidence model, confidence calibration |
 
 The gmail-reader and history-reviewer prompts share a common philosophy:
-missing a real item is worse than a false positive.
+missing a real item is worse than a false positive. The user-proxy prompt
+has the opposite bias: a wrong answer is worse than "unknown."
 
 ## Next steps
 

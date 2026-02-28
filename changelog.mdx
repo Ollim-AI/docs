@@ -9,6 +9,19 @@ chronological order.
 
 <Info>ollim-bot has been in active development since February 9, 2026 with 334 commits across 17 days.</Info>
 
+## Feb 28, 2026
+
+**User-proxy subagent and shutdown notifications**
+
+- **User-proxy subagent** — a fourth subagent (`haiku`-powered, read-only)
+  that answers "what would the user do?" questions during background forks.
+  Searches preference files and conversation history, returns answers with
+  calibrated confidence (HIGH/MEDIUM/LOW). Background fork preambles
+  conditionally include a hint to use it when the `Task` tool is available.
+- **Shutdown DM** — the bot now sends a DM to the owner before shutting
+  down on crash, SIGINT, or SIGTERM. The message is best-effort and
+  includes the shutdown reason (e.g. `shutting down: received SIGTERM`).
+
 ## Feb 26, 2026
 
 **Docs MCP server, timezone, CI, and reliability**

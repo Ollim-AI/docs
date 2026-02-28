@@ -90,13 +90,14 @@ to change the bot's personality, communication style, or default behaviors.
 ### Subagent prompts
 
 Subagent prompts live in `src/ollim_bot/subagent_prompts.py`. ollim-bot ships
-with three subagents:
+with four subagents:
 
 | Subagent | Purpose |
 |----------|---------|
 | `gmail-reader` | Read-only email triage |
 | `history-reviewer` | Reviews session history for context |
 | `responsiveness-reviewer` | Evaluates the bot's own proactive behavior |
+| `user-proxy` | Answers "what would the user prefer?" during background forks |
 
 You can modify these prompts or add new subagents by defining additional
 `AgentDefinition` entries in `agent.py`.
