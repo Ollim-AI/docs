@@ -34,13 +34,14 @@ in Discord DMs. No server is required.
     1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**
     2. Go to **Bot** in the sidebar, uncheck **Public Bot**, click **Reset Token**, and copy the token
     3. Enable **Message Content Intent** under Privileged Gateway Intents
-    4. Create a `.env` file in the project root and paste your token:
+    4. Copy the example environment file and fill in your values:
 
-    ```bash title=".env"
-    DISCORD_TOKEN=paste-your-token-here
-    OLLIM_USER_NAME=YourName
-    OLLIM_BOT_NAME=Ollim
+    ```bash
+    cp .env.example .env
     ```
+
+    Open `.env` and set `DISCORD_TOKEN` to your bot token, `OLLIM_USER_NAME`
+    to your name, and `OLLIM_BOT_NAME` to whatever you want to call the bot.
 
     5. Go to **Installation** in the sidebar — check **User Install**, uncheck **Guild Install**
     6. Set the install link to **Discord Provided Link** and add the `applications.commands` scope

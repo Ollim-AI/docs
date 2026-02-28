@@ -26,7 +26,7 @@ A single user's `routines/` directory can define an entire day. Here's how
 | 4:30 PM | End-of-day wrap-up | bg | EOD triage, schedule follow-ups |
 | 6:00 PM | Chore time | bg | Pick one chore, 15 minutes |
 | 8:00 PM | Music practice | bg | Practice nudge with category rotation |
-| 10:00 PM | Nightly sleep | bg | Schedule dynamic bedtime chain |
+| 10:00 PM | Nightly sleep | bg | Schedule dynamic bedtime ping |
 | Every 4h | Identity stabilize | bg, no ping | Keep profile file current |
 
 Weekly additions: fitness review (Sun 9 AM), sleep review (Sun 9:30 AM),
@@ -56,7 +56,7 @@ buttons.
 ```yaml title="routines/morning-briefing.md"
 ---
 id: "fd4a54ba"
-description: "8:30 AM daily -- triage email + history, create tasks, check calendar, send dashboard embed"
+description: "8:30 AM daily -- triage email + history, create tasks, check calendar, review open/overdue tasks, send dashboard embed"
 cron: "30 8 * * *"
 background: true
 ---
@@ -89,16 +89,35 @@ embed, and continue. Always send the embed even with partial data.
    Match on task ID to avoid duplicates. Use chain reminders for
    tasks needing periodic follow-up.
 
+### Reschedule overdue tasks
+
+8. For overdue tasks, apply escalating rules:
+   - **1-2 days, no reschedules**: keep as overdue in embed
+   - **3+ days or already rescheduled**: auto-reschedule via the
+     user-proxy subagent (picks realistic dates based on calendar
+     load and task type)
+   - **Rescheduled 2+ times (stuck)**: show in a separate embed
+     section with decision buttons (keep, drop, delegate)
+
+### Prioritize
+
+9. Use the user-proxy subagent to pick the top 1-3 tasks for today.
+   If the proxy is confident, show as "Focus today" at the top of
+   the embed. If not, fall back to due-date ordering.
+
 ## Embed
 
 Single `discord_embed` dashboard. Omit empty sections.
 
 Always include (if content exists):
+- **Focus today** — proxy's top picks with one-line reasons
 - **Today's calendar**
 - **Due today**
 - **Overdue** (red-flag these)
 
 Include when relevant:
+- **Rescheduled** — tasks auto-moved today with new dates
+- **Stuck** — tasks rescheduled 2+ times that need a decision
 - **Email digest**
 - **History follow-ups**
 - **Upcoming** (next 3 days)
@@ -122,6 +141,11 @@ reminders scheduled.
 - **Graceful degradation** — the embed always sends, even with partial data
 - **Dedup awareness** — checks existing reminders before scheduling new ones
 - **Cap overwhelm** — limits "needs a deadline" suggestions to 2-3 items
+- **Subagent delegation** — uses the user-proxy subagent to make
+  judgment calls (prioritization, rescheduling dates) that benefit from
+  simulating user preferences
+- **Escalating overdue handling** — overdue tasks get progressively
+  more assertive treatment rather than nagging indefinitely
 
 ### Workout nudge — embeds with buttons and follow-up chains
 
@@ -195,23 +219,23 @@ needs this context.
 - **report_updates is critical** — without it, the main session can't
   handle button clicks ("Harder" with no workout context)
 
-### Nightly sleep — dynamic chain scheduling
+### Nightly sleep — dynamic single-reminder scheduling
 
 A silent scheduler routine that reads sleep data, calculates a
-custom bedtime, and schedules a 4-step nudge chain timed around it.
+bedtime, and schedules a single reminder timed to it.
 
 ```yaml title="routines/nightly-sleep.md"
 ---
 id: "eb56e06b"
 cron: "0 22 * * *"
-description: "10 PM daily -- calculate chain timing, schedule bedtime nudge chain"
+description: "10 PM daily -- read sleep data, calculate timing, schedule bedtime ping"
 background: true
 ---
 ## Goal
 
-Read sleep data and schedule a dynamically-timed chain of bedtime
-nudges. This routine is the **silent scheduler** — it does NOT ping.
-All user-facing nudges happen through the chain reminders.
+Read sleep data and schedule a single bedtime ping at the prescribed
+bedtime. This routine is the **silent scheduler** — it does NOT
+ping. The ping happens through a background reminder.
 
 ## 1. Read state
 
@@ -221,41 +245,43 @@ Read `~/.ollim-bot/sleep-log.md` and extract:
 - **SE% trend**: 7-day average
 - **Last night's entry**: quality, bedtime, SE%
 
-## 2. Calculate chain timing
+Check tomorrow's calendar for early events.
 
-| Nudge | Timing | Role |
-|-------|--------|------|
-| 1 — Wind-down | PB minus 90 min | Start wrapping up |
-| 2 — Screens off | PB minus 30 min | Screens away |
-| 3 — Bedtime | At PB | Sleep window open |
-| 4 — Final call | PB plus 30 min | Last nudge |
+## 2. Calculate timing
 
-Edge cases: if Nudge 1 is past or within 5 min, fire immediately.
-If >6h away, data is wrong — use 1:00 AM default. If ALL nudges
-are past, fire Nudge 4 immediately with max-chain 0.
+Delay from now (10:00 PM) to the prescribed bedtime.
 
-## 3. Build self-contained chain prompt
+Edge cases: if PB is past or within 5 min, fire immediately.
+If >7h away, data is wrong — use 1:00 AM default.
 
-The chain agent won't have this routine's context. Include:
-- Mode, prescribed bedtime, SE% trend
-- Tomorrow's first calendar event
-- Full nudge schedule with inter-nudge delays
+## 3. Build self-contained reminder prompt
+
+The reminder agent won't have this routine's context. Include
+enough for a single gentle ping:
+
+> Bedtime ping. It's [HH:MM] — prescribed bedtime. Use ping_user
+> (NOT an embed) to send a short bedtime nudge. Keep it to one
+> line. No buttons, no response needed.
 
 ## 4. Schedule
 
-Schedule with: `ollim-bot reminder add --delay <mins> --background --max-chain 3 -m "<prompt>" -d "Nightly sleep chain"`
+Schedule with: `ollim-bot reminder add --delay <mins> --background -m "<prompt>" -d "Bedtime ping"`
 
-Check for existing chain reminders first — don't duplicate.
+No chain needed — single ping, no follow-up. Check for existing
+bedtime reminders first — don't duplicate.
 ```
 
 **Key patterns:**
 - **Routine creates reminders** — the routine itself never pings; it
-  calculates timing and schedules a chain reminder that does
-- **Self-contained chain prompts** — each chain step must carry all
+  calculates timing and schedules a reminder that does
+- **Self-contained reminder prompt** — the reminder must carry all
   context since it runs in a fresh fork
-- **Dynamic timing** — chain delays are computed from data, not hardcoded
-- **Data-driven scheduling** — bedtime adjusts weekly based on sleep
-  efficiency metrics
+- **Dynamic timing** — the delay is computed from sleep data, not
+  hardcoded
+- **Data-driven scheduling** — prescribed bedtime adjusts weekly based
+  on sleep efficiency metrics
+- **Minimal nudge** — a single `ping_user` line, not an embed or chain.
+  Lower friction means less annoyance at bedtime
 
 ### Chore time — low-friction ADHD nudge
 
@@ -390,10 +416,9 @@ accurate. Runs every 4 hours, never pings, and uses the cheapest model.
 ```yaml title="routines/identity-stabilize.md"
 ---
 id: "e7f3a1b9"
-description: "Every 4 hrs — stabilize core identity file"
+description: "Every 4 hrs — stabilize core identity file. Ping blocked."
 cron: "0 2,6,10,14,18,22 * * *"
 background: true
-isolated: true
 model: "haiku"
 allow_ping: false
 update_main_session: "freely"
@@ -418,18 +443,19 @@ read for core context. Keep it accurate, current, and under 100 lines.
 2. Use history-reviewer subagent for new life context.
 3. Add, update, redate, or remove facts based on evidence.
 4. If changes made, `report_updates` with one-line summary.
+   If no changes, don't report.
 ```
 
 **Key patterns:**
-- **`isolated: true`** — fresh context since this routine doesn't need
-  conversation history
 - **`model: "haiku"`** — uses the cheapest model since this is simple
-  file maintenance (requires `isolated: true` to take effect)
+  file maintenance
 - **`allow_ping: false`** — can never notify the user; purely background
-- **`update_main_session: "freely"`** — reports updates even without
-  pinging, so the main session stays informed
+- **`update_main_session: "freely"`** — reports updates only when
+  changes are made, so the main session stays informed without noise
 - **Freshness protocol** — date-tagged facts with automatic staleness
   pruning
+- **Conservative edits** — only changes what has evidence; if the
+  history-reviewer subagent fails, the routine does nothing
 
 ---
 
@@ -462,15 +488,15 @@ Then head to pick up your friend (~4:30 PM).
 A reminder scheduled far in advance for a recurring financial event.
 The detailed message ensures a fresh agent fork has full context.
 
-```yaml title="reminders/token-unlock-reminder.md"
+```yaml title="reminders/token-thaw-reminder.md"
 ---
 id: "c1a05a18"
-description: "Remind to redeem token unlock on DeFi platform"
+description: "Remind to redeem token thaw on DeFi platform"
 run_at: "2026-04-06T16:00:55-07:00"
 ---
-## Token Unlock
+## Token Thaw
 
-Batch **2/4** should be available on the staking platform. Connect
+Batch **2/4** should be unlocked on the staking platform. Connect
 wallet and redeem. 3 more batches remaining. Don't let this slip.
 ```
 
@@ -482,27 +508,28 @@ wallet and redeem. 3 more batches remaining. Don't let this slip.
 - **Far future** — scheduled 6 weeks out; the scheduler handles this
   natively via `DateTrigger`
 
-### Chain reminders — spawned by routines
+### Chain reminders and single reminders — spawned by routines
 
-These aren't created manually. The workout nudge, nightly sleep, and
-chore routines all schedule chain reminders dynamically:
+Routines schedule reminders dynamically. Some use chains for
+progressive follow-up, others use a single fire-and-forget reminder:
 
 ```bash
-# Workout follow-up (from workout-nudge routine)
+# Workout follow-up — chain (from workout-nudge routine)
 ollim-bot reminder add --delay 120 --background --max-chain 2 \
   -m "Check if workout was completed. If not, offer quick 15-min option."
 
-# Nightly sleep chain (from nightly-sleep routine)
-ollim-bot reminder add --delay 90 --background --max-chain 3 \
-  -m "Nightly sleep chain — Nudge 1 of 4 (Wind-down). ..."
-
-# Chore follow-up (from chore-time routine)
+# Chore follow-up — chain (from chore-time routine)
 ollim-bot reminder add --delay 60 --background --max-chain 2 \
   -m "Check if chore task was completed. Gentle nudge if not."
+
+# Bedtime ping — single (from nightly-sleep routine)
+ollim-bot reminder add --delay 180 --background \
+  -m "Bedtime ping. It's 1:00 AM — prescribed bedtime. ..."
 ```
 
-Each chain step can call `follow_up_chain(minutes_from_now=N)` to
-schedule the next step, or end the chain by not calling it.
+Chain steps can call `follow_up_chain(minutes_from_now=N)` to
+schedule the next step, or end the chain by not calling it. Single
+reminders (no `--max-chain`) fire once and self-remove.
 
 ---
 
@@ -550,11 +577,15 @@ prompt:
 Chains create multi-step follow-up sequences without open-ended loops:
 
 1. **Workout**: suggest → 2h check-in → offer quick version (max 2)
-2. **Sleep**: wind-down → screens off → bedtime → final call (max 3)
-3. **Chores**: nudge → 1h check-in → gentle reminder (max 2)
+2. **Chores**: nudge → 1h check-in → gentle reminder (max 2)
+3. **Music**: suggest → 90-min check-in (max 1)
 
 Each step checks whether the user already responded and stays silent
 if so — chains are nudges, not nags.
+
+Not everything needs a chain. The nightly sleep routine schedules a
+single bedtime ping — no follow-up, no chain. A one-line `ping_user`
+at the right moment is less annoying than a sequence of embeds.
 
 ## Next steps
 
