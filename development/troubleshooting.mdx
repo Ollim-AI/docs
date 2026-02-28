@@ -68,6 +68,24 @@ the webhook server. The owner is automatically the Discord account that
 created the application — this error usually means the application was
 created by a team with no members.
 
+### Unexpected shutdown
+
+The bot sends a DM before exiting on crash, SIGINT, or SIGTERM:
+
+```text
+shutting down: received SIGTERM
+```
+
+Or for crashes:
+
+```text
+shutting down: ConnectionError: gateway disconnected
+```
+
+The notification is best-effort — if the Discord connection is already down,
+the DM is silently skipped. If you're running as a systemd service with
+`Restart=on-failure`, the bot comes back automatically after unexpected exits.
+
 ## Session issues
 
 <AccordionGroup>
@@ -218,6 +236,21 @@ its commit. Use `git log` inside the directory to review the change history.
     per 90 minutes, capped at a capacity of 5. Use `/ping-budget` in Discord
     to view a formatted status. See
     [ping budget](/scheduling/ping-budget) for details.
+  </Accordion>
+</AccordionGroup>
+
+## Background fork issues
+
+<AccordionGroup>
+  <Accordion title="Background fork fails to start (SDK timeout)">
+    Background fork client initialization can fail with a "Control request
+    timeout" error from the Claude Agent SDK. The bot automatically retries
+    up to 3 times with 5s and 15s backoff delays.
+
+    If all 3 attempts fail, the error is logged and the bot sends you a DM
+    that the background task failed. This is typically a transient issue —
+    the next scheduled fire usually succeeds. If it persists, check your
+    network connection and the Claude API status.
   </Accordion>
 </AccordionGroup>
 
