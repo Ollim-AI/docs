@@ -85,6 +85,10 @@ Scheduled tasks can run in two modes:
     agent can make informed decisions about whether to notify you or
     stay silent.
 
+    Most background sessions are disposable, but routines can opt into
+    [persistent sessions](/scheduling/routines#persistent-sessions) that
+    accumulate context across fires.
+
     See [Background forks](/scheduling/background-forks) for
     configuration options and [Context flow](/architecture/context-flow)
     for details on what context the agent receives.

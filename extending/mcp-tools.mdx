@@ -3,7 +3,7 @@ title: "MCP tools"
 description: "Reference all seven MCP tools the agent uses for embeds, pings, forks, and chains."
 ---
 
-ollim-bot exposes seven MCP tools to the agent via a server named `discord`. These tools let the agent send messages, manage forks, report findings, and schedule follow-ups — all without direct access to the Discord API.
+ollim-bot exposes eight MCP tools to the agent via a server named `discord`. These tools let the agent send messages, manage forks, report findings, schedule follow-ups, and manage persistent session context — all without direct access to the Discord API.
 
 The tools are defined in `agent_tools.py` and registered on a single `create_sdk_mcp_server("discord", ...)` instance. The agent also has access to a second MCP server named `docs` — a remote server at `https://docs.ollim.ai/mcp` that lets it look up its own documentation and architecture.
 
@@ -101,6 +101,26 @@ Exit the current interactive fork. The fork is discarded and the main session re
 Takes no parameters.
 
 **Availability:** Interactive forks only. Returns an error in background forks or the main session.
+
+## Session tool
+
+### `compact_session`
+
+Compact the current persistent session's context. Only available in [persistent routine sessions](/scheduling/routines#persistent-sessions).
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `instructions` | string | Yes | — | What to preserve and what to discard during compaction |
+
+The agent calls this when its context is growing large. Compaction is **deferred** — it doesn't run immediately. Instead, the instructions are stored and compaction executes after the agent finishes responding. This ensures the agent's current response isn't interrupted.
+
+Returns an error if called outside a persistent routine session.
+
+**Availability:** Persistent routine sessions only. Automatically added to `allowed_tools` for persistent routines.
+
+<Note>
+The `compact_session` tool is separate from the `/compact` slash command. `/compact` compacts the main session interactively; `compact_session` compacts a persistent routine's standalone session with deferred execution.
+</Note>
 
 ## Chain tool
 

@@ -34,6 +34,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
 | `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist (mutually exclusive with `disallowed_tools`) |
 | `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist (mutually exclusive with `allowed_tools`) |
+| `session` | `str \| null` | `null` | Session mode: `"persistent"` (requires `background`, mutex with `isolated`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
 
@@ -179,6 +180,7 @@ Event types:
 | `interactive_fork` | Interactive fork created |
 | `bg_fork` | Background fork created |
 | `isolated_bg` | Isolated background fork created |
+| `persistent_bg` | Persistent routine session started or resumed |
 
 ```json title="session_history.jsonl"
 {"session_id": "sess_abc", "event": "created",

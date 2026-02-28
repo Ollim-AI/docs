@@ -68,6 +68,7 @@ Every session transition is recorded in `~/.ollim-bot/state/session_history.json
 | `interactive_fork` | First `StreamEvent` or `ResultMessage` received on a fork client |
 | `bg_fork` | Background fork session started |
 | `isolated_bg` | Isolated background fork (no parent session) started |
+| `persistent_bg` | Persistent routine session started or resumed (no parent session) |
 
 `save_session_id()` automatically detects `created` and `compacted` events
 by comparing the new ID against the current one on disk. During
@@ -138,6 +139,41 @@ The mapping is stored in `~/.ollim-bot/state/fork_messages.json` as a JSON array
 
 <Tip>Records older than 7 days are automatically pruned on read.</Tip>
 
+## Persistent routine sessions
+
+Routines with `session: persistent` maintain their own standalone session
+across fires. Unlike forked or isolated background sessions, persistent
+sessions are not discarded — the session ID is saved to disk and resumed
+on the next fire.
+
+### Session storage
+
+Each persistent routine stores its session ID as a plain string in
+`~/.ollim-bot/state/routine_sessions/<routine-id>`. The file is created
+after the first fire and updated after every subsequent fire (including
+after deferred compaction).
+
+| Function | Behavior |
+|----------|----------|
+| `load_persistent_session(routine_id)` | Returns the session ID string, or `None` if no file exists |
+| `save_persistent_session(routine_id, session_id)` | Atomic write via tempfile + `os.replace` |
+| `delete_persistent_session(routine_id)` | Removes the session file. Called by `sync_all()` when a routine is removed |
+
+### Skip guard
+
+A module-level set (`_active_persistent`) prevents concurrent fires
+of the same persistent routine. If a persistent routine fires while
+its previous fire is still running, the new fire is silently skipped.
+The guard is released in the `finally` block of `run_agent_background`.
+
+### Deferred compaction
+
+Persistent sessions support agent-driven compaction via the
+`compact_session` MCP tool. When the agent calls this tool, the
+compaction instructions are stored in a contextvar and executed
+**after** the agent finishes responding. This avoids interrupting the
+agent mid-response. After compaction, the new session ID is saved.
+
 ## Files reference
 
 | File | Format | Purpose |
@@ -145,6 +181,7 @@ The mapping is stored in `~/.ollim-bot/state/fork_messages.json` as a JSON array
 | `~/.ollim-bot/state/sessions.json` | Plain string | Current main session ID |
 | `~/.ollim-bot/state/session_history.jsonl` | JSONL (`SessionEvent`) | Append-only lifecycle event log |
 | `~/.ollim-bot/state/fork_messages.json` | JSON array | Discord message to fork session mapping |
+| `~/.ollim-bot/state/routine_sessions/<id>` | Plain string | Persistent routine session ID (one file per routine) |
 
 ## Next steps
 

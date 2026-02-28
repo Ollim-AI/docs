@@ -57,10 +57,12 @@ Summarize what's on my plate and flag anything urgent.
 | `allow_ping` | `bool` | `true` | Allow pings and embeds (bg only) |
 | `allowed_tools` | `list[str]` | `null` | MCP tool whitelist (bg only) |
 | `disallowed_tools` | `list[str]` | `null` | MCP tool blacklist (bg only) |
+| `session` | `str` | `null` | Session mode: `persistent` (bg only, mutex with `isolated`) |
 
 <Warning>
   `allowed_tools` and `disallowed_tools` cannot both be set on the same
-  routine.
+  routine. `session: persistent` and `isolated: true` are mutually
+  exclusive.
 </Warning>
 
 ### File naming
@@ -181,6 +183,63 @@ fork. Text output is discarded — the agent must use `ping_user` or
   keeps the fork lightweight.
 </Tip>
 
+## Persistent sessions
+
+Most background forks are disposable — they run, report, and get
+discarded. **Persistent sessions** are different: they accumulate
+context across fires. Each fire resumes from where the last one left
+off, building up knowledge over time.
+
+Set `session: persistent` in the YAML frontmatter to enable this.
+The routine gets its own standalone session stored at
+`~/.ollim-bot/state/routine_sessions/<routine-id>`, completely
+separate from the main session.
+
+```yaml title="routines/market-tracker.md"
+---
+id: "b2c3d4e5"
+cron: "0 9 * * 1-5"
+description: "Track market conditions"
+background: true
+session: persistent
+---
+Check current market conditions and compare with
+your observations from previous sessions.
+Update your running analysis.
+```
+
+<Note>
+  `session: persistent` requires `background: true` and cannot be
+  combined with `isolated: true`. Persistent sessions are standalone
+  lineages — not forked from the main session and not isolated fresh
+  starts.
+</Note>
+
+### How persistent sessions work
+
+1. On the first fire, a fresh standalone session is created (no fork
+   from main)
+2. The session ID is saved to disk after the agent finishes
+3. On subsequent fires, the session is resumed via `resume=session_id`
+4. The agent has access to a `compact_session` tool to compress context
+   when it grows large — compaction runs after the agent finishes
+   responding
+5. A skip guard prevents the same persistent routine from running
+   concurrently — if the previous fire is still running, the new one
+   is skipped
+6. When the routine is removed, its session file is cleaned up
+
+### When to use persistent sessions
+
+Persistent sessions are for specialized, self-contained tasks that
+accumulate useful context over time — research tracking, ongoing
+analysis, or any task where remembering past observations makes future
+runs more valuable.
+
+They are **not** for general-purpose routines like morning briefings
+or email checks. Those work better as disposable forks (or isolated
+sessions) that get fresh context each time.
+
 ## Cron expressions
 
 Routines use standard 5-field cron syntax:
@@ -223,6 +282,20 @@ description: "Friday weekly review"
 ---
 Let's do a weekly review. What did I accomplish this week?
 What's carrying over to next week?
+```
+
+### Persistent research tracker (accumulates context)
+
+```yaml title="routines/market-research.md"
+---
+id: "g7h8i9j0"
+cron: "0 9 * * 1-5"
+description: "Market research tracker"
+background: true
+session: persistent
+---
+Check current market conditions. Compare with your running analysis
+from previous sessions. Call compact_session if context is getting large.
 ```
 
 ### Quiet background check (no pings)
