@@ -89,22 +89,56 @@ Be clear-eyed about what ollim-bot doesn't do:
 - **Multi-user support.** One bot, one person. If you need a team assistant or shared
   workspace, look elsewhere.
 
-## Starting fresh
+## Migration tips
 
-There's no data migration path from other assistants. Memory formats, session stores, and
-configuration systems are too different across tools — and ollim-bot's value comes from
-building context over time through conversation, not from importing a memory dump.
+There's no automated migration path — memory formats, session stores, and configuration
+systems are too different across tools. But you can get up to speed faster than starting
+from scratch.
 
-The good news: setup takes under 5 minutes, and the bot starts building context from your
-first message. Within a few days of regular use and scheduled routines, it'll have a
-working understanding of your situation.
+<AccordionGroup>
+  <Accordion title="Import your context">
+    If your previous assistant stored memory as Markdown files (OpenClaw's `MEMORY.md`,
+    daily logs, etc.), drop them into `~/.ollim-bot/imports/`. Then ask the bot to read
+    through them:
 
-<Tip>
-If you have routines or automations set up in your current tool, note them down before
-switching. You can recreate them as [routines](/scheduling/routines) or
-[reminders](/scheduling/reminders) — just describe what you want in conversation and the
-bot will create the files.
-</Tip>
+    > "I put some files from my previous assistant in the imports folder. Can you read
+    > through them and pull out anything useful about me — preferences, routines, projects,
+    > whatever seems relevant?"
+
+    The bot will extract what matters and fold it into your conversation context. This
+    isn't a memory import — it's a conversation where the bot gets to know you faster by
+    reading what your last assistant learned.
+  </Accordion>
+
+  <Accordion title="Recreate your automations">
+    ollim-bot has access to its own documentation via MCP, so everything in these docs
+    directly helps the bot set you up. Browse the [scheduling docs](/scheduling/overview)
+    for patterns that match what you had, then ask the bot:
+
+    > "I used to have a morning check-in that reviewed my calendar and tasks. Can you set
+    > up a routine like that?"
+
+    The bot reads the same [routine](/scheduling/routines) and
+    [reminder](/scheduling/reminders) docs you do — it knows the file formats, frontmatter
+    options, and scheduling patterns. Describe what you want in conversation and it creates
+    the files. See [real-world examples](/scheduling/examples) for common patterns.
+  </Accordion>
+
+  <Accordion title="Extend with MCP tools">
+    Missing capabilities you had before — web browsing, file management, code execution?
+    ollim-bot supports these through [MCP tools](/extending/mcp-tools) that you configure
+    yourself. No marketplace, but full control over what runs and what doesn't.
+
+    See [adding integrations](/extending/adding-integrations) for how to connect new tools,
+    and [subagents](/extending/subagents) for delegating specialized tasks.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+ollim-bot is open source and contributions are welcome — especially new integrations and
+MCP tool configurations. If you build something that follows the
+[design philosophy](/architecture/design-philosophy), open a PR.
+</Note>
 
 ## Next steps
 
