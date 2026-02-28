@@ -1,22 +1,23 @@
 ---
 title: "Subagents"
-description: "Understand how specialized subagents handle email triage, history review, and engagement analysis."
+description: "Understand how specialized subagents handle email triage, history review, engagement analysis, and preference decisions."
 ---
 
 Subagents are isolated agent instances that the main ollim-bot agent spawns to handle specialized tasks. Each subagent runs with its own system prompt, a restricted set of tools, and a cheaper model — keeping the main agent focused on orchestration while subagents do the legwork.
 
 ## Overview
 
-ollim-bot defines three subagents, all configured as `AgentDefinition` objects in `agent.py` and invoked via the Claude Agent SDK's built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
+ollim-bot defines four subagents, all configured as `AgentDefinition` objects in `agent.py` and invoked via the Claude Agent SDK's built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
 
 | Subagent | Purpose | Model | Tools |
 |----------|---------|-------|-------|
 | `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | `Bash(ollim-bot gmail *)` |
 | `history-reviewer` | Session review — finds loose threads in recent Claude Code sessions | `sonnet` | `Bash(claude-history *)` |
 | `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | `Bash(claude-history *)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
+| `user-proxy` | Preference proxy — answers "what would the user do?" during background forks | `haiku` | `Read(**.md)`, `Glob(**.md)`, `Bash(claude-history *)` |
 
 <Note>
-Each subagent only has access to the tools listed above. This follows the principle of least privilege — the gmail-reader cannot access session history, and the history-reviewer cannot read email.
+Each subagent only has access to the tools listed above. This follows the principle of least privilege — the gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
 </Note>
 
 ## gmail-reader
@@ -152,6 +153,50 @@ Suggestions:
 
 The reviewer reports engaged vs. ignored as the core signal rather than exact response times, since user activity is bursty and timestamps are too coarse for precise latency measurements.
 
+## user-proxy
+
+The user-proxy answers one question: "what would the user do or prefer in this situation?" It is designed for background forks where the agent needs to make a preference-based decision but cannot ask the user directly.
+
+**Triggered by:** The main agent spawning it via the Task tool during any background fork where the `Task` tool is available.
+
+**How it works:**
+
+1. Discovers preference and identity files by globbing `*.md` at the data directory root, plus `routines/*.md` and `reminders/*.md`
+2. Reads the most relevant files (max 3-4) related to the question
+3. Searches conversation history via `claude-history` for past decisions, corrections, and stated preferences
+4. Returns a structured answer with calibrated confidence
+
+**Evidence model:**
+
+The user-proxy distinguishes between two types of evidence:
+
+- **Preference files** — maintained by automated routines that infer from conversation. Treated as hypotheses, not ground truth.
+- **Conversation transcripts** — records of what the user actually said and did. Treated as ground truth.
+
+A file-only answer is MEDIUM confidence at best. HIGH confidence requires corroboration from multiple independent sources.
+
+**Confidence levels:**
+
+| Level | Evidence required | Main agent action |
+|-------|-------------------|-------------------|
+| **HIGH** | Two+ independent sources agree, or user-authored content directly answers | Act on it, no hedging |
+| **MEDIUM** | Single source only — file claim without transcript verification | Act on it, but note uncertainty when reporting to the user |
+| **LOW** | No direct signal found in files or history | Use a safe default or escalate to a ping if the decision matters |
+
+**Output format:**
+
+```text
+Answer: <one sentence — what the user would most likely do or prefer>
+
+Reasoning: <evidence — cites specific files or search results>
+
+Confidence: HIGH | MEDIUM | LOW — <why this level>
+```
+
+<Note>
+The user-proxy is the only subagent that runs on `haiku` — the other three use `sonnet`. It is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
+</Note>
+
 ## Developer reference
 
 <AccordionGroup>
@@ -185,6 +230,12 @@ ClaudeAgentOptions(
             ],
             model="sonnet",
         ),
+        "user-proxy": AgentDefinition(
+            description="User preference proxy...",
+            prompt=USER_PROXY_PROMPT,
+            tools=["Read(**.md)", "Glob(**.md)", "Bash(claude-history *)"],
+            model="haiku",
+        ),
     },
 )
 ```
@@ -196,7 +247,7 @@ Each `AgentDefinition` takes four fields:
 | `description` | `str` | Used by the SDK to determine when/how to invoke the subagent |
 | `prompt` | `str` | System prompt specific to the subagent |
 | `tools` | `list[str]` | Restricted tool access (principle of least privilege) |
-| `model` | `str` | Model to use (`sonnet` for all three) |
+| `model` | `str` | Model to use (`sonnet` or `haiku`) |
 
 The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
 </Accordion>
@@ -219,6 +270,11 @@ The main agent's system prompt in `prompts.py` contains explicit delegation inst
     Engagement analysis is always delegated to the responsiveness-reviewer:
 
     > Analyze reminder effectiveness by spawning the responsiveness-reviewer subagent (via the Task tool). It correlates reminder firings with your responses to measure engagement and suggest schedule changes. When you see `[reminder:resp-rev]`, use the responsiveness-reviewer to generate the weekly report. Don't run the analysis yourself — always delegate to the responsiveness-reviewer subagent.
+  </Tab>
+  <Tab title="User Proxy">
+    Preference decisions in background forks are delegated to the user-proxy:
+
+    > When you need to make a decision that depends on the user's preferences and you can't ask him directly, spawn the user-proxy subagent (via the Task tool). Ask it: "What would the user do if [situation]?" Act on HIGH confidence answers directly. For MEDIUM, note uncertainty when reporting. For LOW, use a safe default or escalate to a ping. Don't use it from interactive sessions — the user is present, ask him directly.
   </Tab>
 </Tabs>
 </Accordion>
