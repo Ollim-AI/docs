@@ -51,6 +51,14 @@ Use **reminders** when you want a one-shot prompt at a specific time. For progre
 
 Both run as background forks. Use **webhooks** when the trigger comes from an external system (a GitHub push, a monitoring alert). Use **routines** when the trigger is time-based. Webhooks include 4-layer input security: JSON Schema validation, content fencing, Haiku screening of strings, and operational limits.
 
+<Tip>
+Not sure which mechanism fits? Describe what you want to the bot — it can look up its
+own docs and recommend the right approach:
+
+> "I want to get a nudge when I've been sitting for too long, but only during work hours,
+> and it should back off if I just finished a workout. Check your docs and set it up."
+</Tip>
+
 ## Shared configuration
 
 Routines, reminders, and webhooks share these YAML frontmatter fields for background execution:
