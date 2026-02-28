@@ -101,33 +101,39 @@ from scratch.
     daily logs, etc.), drop them into `~/.ollim-bot/imports/`. Then ask the bot to read
     through them:
 
-    > "I put some files from my previous assistant in the imports folder. Can you read
-    > through them and pull out anything useful about me — preferences, routines, projects,
-    > whatever seems relevant?"
+    > "I put some files from my previous assistant in the imports folder. Read through
+    > them, then check your docs to see what you can actually do with what you find —
+    > routines, reminders, integrations, whatever fits."
 
-    The bot will extract what matters and fold it into your conversation context. This
-    isn't a memory import — it's a conversation where the bot gets to know you faster by
-    reading what your last assistant learned.
+    The bot reads your imported files, cross-references them against its own documentation,
+    and suggests what it can set up for you. This isn't a memory import — it's a
+    conversation where the bot gets to know you faster by reading what your last assistant
+    learned and connecting it to what it can do.
   </Accordion>
 
   <Accordion title="Recreate your automations">
     ollim-bot has access to its own documentation via MCP, so everything in these docs
-    directly helps the bot set you up. Browse the [scheduling docs](/scheduling/overview)
-    for patterns that match what you had, then ask the bot:
+    directly helps the bot set you up. You don't need to know the exact feature names —
+    describe what you had and let the bot figure out how it maps:
 
-    > "I used to have a morning check-in that reviewed my calendar and tasks. Can you set
-    > up a routine like that?"
+    > "I used to have a morning check-in that reviewed my calendar and tasks, plus
+    > reminders that followed up until I actually did the thing. Check your docs and set
+    > up whatever fits."
 
-    The bot reads the same [routine](/scheduling/routines) and
-    [reminder](/scheduling/reminders) docs you do — it knows the file formats, frontmatter
-    options, and scheduling patterns. Describe what you want in conversation and it creates
-    the files. See [real-world examples](/scheduling/examples) for common patterns.
+    The bot reads the same [routine](/scheduling/routines),
+    [reminder](/scheduling/reminders), and [scheduling](/scheduling/overview) docs you do.
+    It knows the file formats, frontmatter options, and scheduling patterns — describe
+    what you want and it creates the files. See
+    [real-world examples](/scheduling/examples) for common patterns.
   </Accordion>
 
   <Accordion title="Extend with MCP tools">
     Missing capabilities you had before — web browsing, file management, code execution?
     ollim-bot supports these through [MCP tools](/extending/mcp-tools) that you configure
     yourself. No marketplace, but full control over what runs and what doesn't.
+
+    > "I used to have web search and file management tools. Check your extending docs and
+    > tell me what MCP tools would cover that — and how to set them up."
 
     See [adding integrations](/extending/adding-integrations) for how to connect new tools,
     and [subagents](/extending/subagents) for delegating specialized tasks.
