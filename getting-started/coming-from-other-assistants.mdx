@@ -40,7 +40,7 @@ intentional — not everything needs an equivalent.
 | **Email** | Multi-provider | [Gmail integration](/integrations/google-gmail) |
 | **Calendar** | Multi-provider | [Google Calendar integration](/integrations/google-calendar) |
 | **Tasks** | Various providers | [Google Tasks integration](/integrations/google-tasks) |
-| **Shell access** | Direct host access by default (sandboxing optional) | Tool-based, permission-gated |
+| **Shell access** | Direct host access by default (sandboxing optional) | Full SDK capabilities, [permission-gated](/core-usage/permissions) per session |
 | **Web browsing** | Built-in | Available via [MCP tools](/extending/mcp-tools) |
 | **Plugin marketplace** | Large community ecosystems | No marketplace — [MCP tools](/extending/mcp-tools) and [subagents](/extending/subagents) you configure yourself |
 | **Multi-user** | Yes | Single-user only — [by design](/architecture/design-philosophy#single-user-on-purpose) |
@@ -127,16 +127,17 @@ from scratch.
     [real-world examples](/scheduling/examples) for common patterns.
   </Accordion>
 
-  <Accordion title="Extend with MCP tools">
-    Missing capabilities you had before — web browsing, file management, code execution?
-    ollim-bot supports these through [MCP tools](/extending/mcp-tools) that you configure
-    yourself. No marketplace, but full control over what runs and what doesn't.
+  <Accordion title="Add new integrations">
+    ollim-bot already has shell access, file tools, and code execution through the Claude
+    Agent SDK — but the [permission system](/core-usage/permissions) restricts tools to an
+    explicit allowlist per session. New integrations (Google services, webhook endpoints,
+    structured tool APIs) follow established patterns in the codebase.
 
-    > "I used to have web search and file management tools. Check your extending docs and
-    > tell me what MCP tools would cover that — and how to set them up."
+    > "I want to connect a new service. Check the extending docs and walk me through
+    > what's possible — integrations, subagents, webhooks."
 
-    See [adding integrations](/extending/adding-integrations) for how to connect new tools,
-    and [subagents](/extending/subagents) for delegating specialized tasks.
+    See [adding integrations](/extending/adding-integrations) for the full procedure, and
+    [subagents](/extending/subagents) for delegating specialized tasks.
   </Accordion>
 </AccordionGroup>
 
