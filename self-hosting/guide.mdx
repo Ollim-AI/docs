@@ -163,6 +163,13 @@ systemctl --user daemon-reload
 systemctl --user enable --now ollim-bot
 ```
 
+<Tip>
+  The bot sends you a DM before shutting down on crash, SIGINT, or SIGTERM —
+  you'll see a message like `shutting down: received SIGTERM`. Combined with
+  `Restart=on-failure`, this means you get notified and the bot comes back
+  automatically.
+</Tip>
+
 <Warning>
   Claude Code must be authenticated before starting the service. Run
   `ollim-bot` interactively first to complete any auth flows, then
