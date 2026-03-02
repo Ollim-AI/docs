@@ -148,7 +148,7 @@ Stored in `~/.ollim-bot/skills/<name>/SKILL.md`. Each skill is a directory conta
 |-------|------|---------|-------------|
 | `name` | `str` | — | Skill name (lowercase with hyphens, matches directory name) |
 | `description` | `str` | — | What the skill does and when to use it |
-| `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
+| `allowed_tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
 
 The markdown body contains the skill's instructions. It can include dynamic context markers using the `` !`command` `` syntax — shell commands the scheduler expands to their stdout at fire time.
 
