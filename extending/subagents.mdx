@@ -278,7 +278,7 @@ agents = build_agent_definitions(specs)  # dict[str, AgentDefinition]
 
 **Template variables:** `subagents.py` substitutes `{USER_NAME}` and `{BOT_NAME}` in the prompt and description at load time from `config.py`.
 
-**Runtime overrides:** Drop a `.md` file with the same `name` field into `~/.ollim-bot/subagents/` to replace the entire spec for that subagent. The override file must be a complete spec — there is no partial merge.
+**Runtime overrides and additions:** Drop a `.md` file into `~/.ollim-bot/subagents/` to override a built-in subagent (same `name` field) or add an entirely new one. Override files must be complete specs — there is no partial merge.
 
 The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
 </Accordion>
