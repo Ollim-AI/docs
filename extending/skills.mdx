@@ -1,0 +1,226 @@
+---
+title: "Skills"
+description: "Create reusable instruction sets that routines and reminders can reference for repeatable workflows."
+---
+
+Skills are reusable instruction sets stored as markdown files with YAML frontmatter — one directory per skill under `~/.ollim-bot/skills/`. They solve a common problem: routines and reminders that need the same detailed instructions shouldn't duplicate them. Define a **skill** once, reference it by name, and every job that uses it gets the same instructions loaded at fire time.
+
+Skills are the newest extensibility mechanism in ollim-bot, designed for repeatable workflows where the instructions are too detailed to inline into a routine or reminder message.
+
+## How skills work
+
+When a routine or reminder fires, the scheduler checks its `skills:` field. For each referenced skill:
+
+1. The skill's `SKILL.md` is loaded from `~/.ollim-bot/skills/<name>/`
+2. Any **dynamic context injection** markers (`` !`command` ``) are expanded to command output
+3. The expanded instructions are prepended to the job message as a `SKILL INSTRUCTIONS:` block
+4. Tool dependencies from the skill's `allowed_tools` are merged into the host job's tool set
+
+The agent sees the skill instructions before the job's own message — like a preamble that teaches it how to do something before telling it what to do.
+
+<Note>
+Skills are loaded fresh every time a job fires. If you update a skill's instructions, the next firing picks up the changes automatically.
+</Note>
+
+## File format
+
+Each skill lives in its own directory: `~/.ollim-bot/skills/<name>/SKILL.md`. The directory name must match the skill's `name` field — lowercase with hyphens.
+
+```yaml title="skills/code-review/SKILL.md"
+---
+name: "code-review"
+description: "Review code changes for style, correctness, and test coverage."
+allowed_tools:
+  - "Bash(git *)"
+  - "Read(**)"
+  - "Glob(**)"
+---
+Review the staged changes in the repository.
+
+Check for:
+- Style violations against the project's conventions
+- Logic errors or edge cases
+- Missing test coverage for new behavior
+
+Summarize findings as a bulleted list, grouped by file.
+```
+
+### Frontmatter fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | — | Lowercase with hyphens — must match the directory name |
+| `description` | `str` | — | What the skill does and when to use it (shown in the system prompt index) |
+| `allowed_tools` | `list[str]` | `null` | Tool dependencies merged into the host job's allowed tools |
+
+The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
+
+<Tip>
+Keep `description` concise and action-oriented. It appears in the system prompt's skill index, so the agent uses it to decide when a skill is relevant — even outside of scheduled jobs.
+</Tip>
+
+## Dynamic context injection
+
+Skill instructions can embed shell commands using the `` !`command` `` syntax. These markers are expanded to their stdout at fire time — before the agent sees the prompt. This lets skills pull in fresh data without hardcoding values.
+
+```markdown title="skills/repo-status/SKILL.md (body)"
+Current branch and recent commits:
+
+!`git -C ~/my-project rev-parse --abbrev-ref HEAD`
+
+!`git -C ~/my-project log --oneline -5`
+
+Use this context when reviewing the latest changes.
+```
+
+When the skill loads, each `` !`command` `` is replaced by the command's output. The agent sees the actual branch name and commit log, not the commands themselves.
+
+### Expansion rules
+
+| Rule | Value |
+|------|-------|
+| Per-command timeout | 10 seconds |
+| Total wall-clock cap | 30 seconds across all commands in one expansion |
+| Max output per command | 2000 characters (truncated with `[...truncated]` if longer) |
+| Working directory | `~/.ollim-bot/` |
+| Error handling | Failed commands are replaced with `[command failed (exit N): cmd: error_line]` |
+| Timed-out commands | Replaced with `[command timed out: cmd]` |
+| Skipped commands | If the total 30s cap is reached, remaining commands become `[command skipped (total timeout): cmd]` |
+
+<Warning>
+Commands run synchronously and block the scheduler for their duration. Keep commands fast — read-only queries, not long-running processes. The 10-second per-command and 30-second total timeouts are hard caps.
+</Warning>
+
+## Using skills in routines and reminders
+
+Reference skills by name in the `skills:` array of a routine or reminder's YAML frontmatter:
+
+```yaml title="routines/morning-code-review.md"
+---
+id: "f3a8b1c2"
+cron: "0 9 * * 1-5"
+description: "Morning code review"
+background: true
+skills:
+  - "code-review"
+  - "repo-status"
+---
+Review any open PRs in the main project repository.
+Ping me if anything needs my attention before standup.
+```
+
+When this routine fires, the agent receives:
+
+```text
+SKILL INSTRUCTIONS:
+
+### code-review
+Review the staged changes in the repository.
+...
+
+### repo-status
+Current branch and recent commits:
+main
+a1b2c3d Fix login redirect
+...
+
+[routine-bg:f3a8b1c2] Review any open PRs in the main project repository.
+Ping me if anything needs my attention before standup.
+```
+
+### Tool merging
+
+If a skill declares `allowed_tools`, those tools are merged into the host job's tool set via `collect_skill_tools()`. This means a routine with no explicit `allowed_tools` of its own can still grant the agent tool access through its referenced skills. Tool lists are deduplicated — referencing two skills that both need `Bash(git *)` results in a single entry.
+
+### Reminders with skills
+
+Reminders work the same way. Skills can also be passed via the CLI:
+
+```bash
+ollim-bot reminder add --delay 60 -m "Check deployment status" \
+  --background --skills repo-status
+```
+
+For chained reminders, skills propagate through the chain — the `follow_up_chain` tool forwards the `skills` field from the `ChainContext`, so subsequent chain links inherit the same skill set.
+
+## Creating skills
+
+The agent creates skills by writing `SKILL.md` files directly using its file tools (Write, Edit). You can also create them manually:
+
+```bash
+mkdir -p ~/.ollim-bot/skills/my-skill
+```
+
+Then create `~/.ollim-bot/skills/my-skill/SKILL.md` with the frontmatter and instructions body.
+
+For the full format specification — including edge cases and advanced patterns — the agent reads `~/.ollim-bot/skill-spec.md` on demand. You can also ask the bot to create a skill conversationally:
+
+> "Create a skill called 'deploy-check' that verifies the production deployment is healthy by checking the status endpoint and recent error logs."
+
+The agent will read the spec file, create the skill directory, and write the `SKILL.md` with appropriate frontmatter and instructions.
+
+## Developer reference
+
+<AccordionGroup>
+<Accordion title="System prompt integration">
+`build_skill_index()` in `skills.py` generates a dynamic index of all available skills, appended to the system prompt. The format is:
+
+```text
+Available skills:
+- **code-review**: Review code changes for style, correctness, and test coverage.
+- **repo-status**: Show current branch and recent commits for context.
+```
+
+This index lets the agent know which skills exist — it can reference them when creating routines or suggest them when the user describes a workflow that matches a skill's description.
+
+The index is rebuilt every time the agent starts, so newly created skills appear in the next session.
+</Accordion>
+
+<Accordion title="Tool propagation">
+`collect_skill_tools()` collects `allowed_tools` from all referenced skills and returns a deduplicated list. The scheduler calls this in `_merge_skill_tools()` to extend the background fork's tool configuration before launching.
+
+```python
+def collect_skill_tools(skill_names: list[str] | None) -> list[str]:
+    """Collect tool dependencies from referenced skills. Deduplicated."""
+    if not skill_names:
+        return []
+    tools: list[str] = []
+    seen: set[str] = set()
+    for name in skill_names:
+        skill = read_skill(name)
+        if skill is not None and skill.allowed_tools:
+            for tool in skill.allowed_tools:
+                if tool not in seen:
+                    seen.add(tool)
+                    tools.append(tool)
+    return tools
+```
+
+This ensures skills can declare their own tool dependencies without requiring the host routine or reminder to know about them.
+</Accordion>
+
+<Accordion title="Chain propagation">
+The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the skill names are forwarded via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up — no manual re-specification needed.
+</Accordion>
+
+<Accordion title="Path traversal protection">
+`read_skill()` validates that the resolved skill path is relative to the `skills/` directory before reading. Skill names containing path traversal sequences (e.g., `../../etc/passwd`) are rejected with a warning log.
+</Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Extending overview" icon="puzzle-piece" href="/extending/overview">
+    Compare skills with routines, reminders, webhooks, and other extensibility mechanisms.
+  </Card>
+  <Card title="Routines" icon="clock" href="/scheduling/routines">
+    Create recurring jobs that reference skills via the `skills:` frontmatter field.
+  </Card>
+  <Card title="File formats" icon="file" href="/configuration/file-formats">
+    Full YAML frontmatter reference for all markdown data files.
+  </Card>
+  <Card title="System prompt" icon="terminal" href="/extending/system-prompt">
+    How the system prompt is structured and what gets injected — including the skill index.
+  </Card>
+</Columns>

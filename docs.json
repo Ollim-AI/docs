@@ -107,6 +107,7 @@
             "pages": [
               "extending/mcp-tools",
               "extending/subagents",
+              "extending/skills",
               "extending/system-prompt",
               "extending/adding-integrations"
             ]
