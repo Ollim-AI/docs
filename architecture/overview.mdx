@@ -66,10 +66,11 @@ updates and prepends them to the next user message. Forks peek at
 updates (read-only) to avoid consuming another fork's output.
 
 <Note>
-Background forks run without the agent lock. Channel references,
-chain context, fork state, busy state, and fork config are all scoped
-via `contextvars` so concurrent forks don't interfere with each other
-or the main session.
+Background forks run without the agent lock. Fork state, busy state,
+chain context, background tracking, and fork config are all scoped via
+`contextvars` so concurrent forks don't interfere with each other or
+the main session. The DM channel is a module-level global set once at
+startup — safe to share because it never changes.
 </Note>
 
 ## Key architectural patterns
@@ -84,9 +85,10 @@ swapped, cleared, interactive_fork, bg_fork, isolated_bg) are logged to `session
 ### Contextvar isolation
 
 Background forks use `ContextVar` instances to scope mutable state.
-Key variables include `_in_fork_var`, `_busy_var`, `_channel_var`,
-`_chain_context_var`, `_bg_fork_config_var`, `_bg_output_flag`,
-`_bg_reported_flag`, `_bg_ping_count`, and `_msg_collector`. This lets
+Key variables include `_in_fork_var`, `_busy_var`,
+`_bg_tracking` (a `BgForkTracking` dataclass holding `output_sent`,
+`reported`, and `ping_count`), `_bg_fork_config_var`,
+`_chain_context_var`, and `_msg_collector`. This lets
 multiple forks run concurrently while the main session uses module-level
 globals for the same values.
 
@@ -106,8 +108,9 @@ rename) and optional git auto-commit.
 
 MCP tools in `agent_tools.py` maintain two parallel references — a
 module-level global for the main session and a `ContextVar` for
-background forks. Functions like `set_channel` / `set_fork_channel`
-set the appropriate reference based on execution context.
+background forks. Functions like `set_chain_context` /
+`set_fork_chain_context` set the appropriate reference based on
+execution context.
 
 ### Persistent buttons
 
@@ -118,9 +121,9 @@ agent-generated button prompts to disk with a 7-day TTL.
 
 ## Module map
 
-The codebase has 28 modules organized into five layers.
+The codebase has 33 modules organized into five layers.
 
-<Accordion title="Full module map (28 modules)">
+<Accordion title="Full module map (33 modules)">
 
 ### Core loop
 
@@ -133,7 +136,9 @@ The main path from a Discord message to a streamed response.
 | `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
 | `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
 | `prompts.py` | System prompt for the main agent and fork prompt helpers |
+| `subagents.py` | Loads subagent specs from `subagents/` with data-dir overrides |
 | `subagents/` | Subagent specs as markdown files (guide, gmail-reader, history-reviewer, responsiveness-reviewer, user-proxy) |
+| `channel.py` | DM channel reference — set once at startup, read everywhere |
 
 ### Tool system
 
@@ -145,6 +150,7 @@ Discord and the outside world.
 | `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
 | `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
 | `forks.py` | Fork state (bg + interactive), pending updates, `run_agent_background` |
+| `tool_policy.py` | Tool restriction enforcement for background forks, subagents, and skills |
 | `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks, and streamer |
 
 ### Storage and state
@@ -160,6 +166,8 @@ Persistence, configuration, and cross-cutting concerns.
 | `embeds.py` | Embed/button types and builders shared by `agent_tools` and `views` |
 | `inquiries.py` | Persists button inquiry prompts to disk (7-day TTL, survives restarts) |
 | `ping_budget.py` | Refill-on-read ping budget — capacity 5, refills 1 per 90 min |
+| `runtime_config.py` | Persistent runtime config — model/thinking per context, timeouts, permission mode |
+| `skills.py` | Skill data model and directory-based persistence (`skills/*/SKILL.md`) |
 | `formatting.py` | Tool-label formatting helpers shared by agent and permissions |
 
 ### Google integration (`google/`)
