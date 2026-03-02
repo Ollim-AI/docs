@@ -3,7 +3,7 @@ title: "Slash commands"
 description: "All Discord slash commands available in ollim-bot."
 ---
 
-Nine slash commands for session management, model control, forks, and configuration — all restricted to the **bot owner** via DMs.
+Ten slash commands for session management, model control, forks, and configuration — all restricted to the **bot owner** via DMs.
 
 ## Quick reference
 
@@ -18,6 +18,7 @@ Nine slash commands for session management, model control, forks, and configurat
 | `/interrupt` | Stop the current response | None |
 | `/permissions` | Set permission mode | `mode` (required) |
 | `/ping-budget` | View or set ping budget | `capacity`, `refill_rate` (both optional) |
+| `/config` | View or set runtime configuration | `key` (optional), `value` (optional) |
 
 ## Session commands
 
@@ -144,6 +145,50 @@ how often background forks can notify you.
   </Tab>
 </Tabs>
 
+### /config
+
+Views or sets persistent runtime configuration. Settings survive bot
+restarts and are stored in `~/.ollim-bot/state/config.json`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `key` | choice | No | Configuration key to view or set |
+| `value` | string | No | New value for the key |
+
+<Tabs>
+  <Tab title="View all">
+    Run `/config` with no parameters to see all settings and their current values.
+  </Tab>
+  <Tab title="View one">
+    Provide `key` only to see that setting's current value and default.
+  </Tab>
+  <Tab title="Set a value">
+    Provide both `key` and `value` to update a setting. The change takes
+    effect immediately.
+  </Tab>
+</Tabs>
+
+#### Available keys
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `model.main` | model | SDK default | Default model for the main session |
+| `model.fork` | model | Inherits from main | Default model for interactive forks |
+| `thinking.main` | boolean | `off` | Extended thinking for the main session |
+| `thinking.fork` | boolean | `on` | Extended thinking for interactive forks |
+| `max_thinking_tokens` | integer | `10000` | Token budget when thinking is enabled |
+| `bg_fork_timeout` | integer | `1800` | Max background fork runtime in seconds |
+| `fork_idle_timeout` | integer | `10` | Interactive fork idle timeout in minutes |
+| `permission_mode` | permission mode | `dontAsk` | Default [permission mode](/core-usage/permissions) |
+
+Model values: `opus`, `sonnet`, `haiku`, or empty to reset to default.
+Boolean values: `on`/`off`, `yes`/`no`, `true`/`false`.
+
+<Tip>
+Use `/config` to set fork-specific defaults — for example, always use
+`opus` with thinking in forks while keeping `sonnet` for the main session.
+</Tip>
+
 ## Next steps
 
 <Columns cols={2}>
@@ -158,5 +203,8 @@ how often background forks can notify you.
   </Card>
   <Card title="Ping budget" icon="bell" href="/scheduling/ping-budget">
     How the notification rate limiter works.
+  </Card>
+  <Card title="Configuration reference" icon="gear" href="/configuration/reference">
+    Environment variables and runtime configuration keys.
   </Card>
 </Columns>
