@@ -10,15 +10,15 @@ You can also query Gmail directly from the CLI.
 
 ## Prerequisites
 
-- Google OAuth configured with the `gmail.readonly` scope (see [Google OAuth setup](/self-hosting/google-oauth-setup))
-- `credentials.json` in `~/.ollim-bot/state/` from the Google Cloud Console
-- `token.json` in `~/.ollim-bot/state/` (auto-generated on first auth)
+- Google OAuth credentials configured (see [Google OAuth setup](/self-hosting/google-oauth-setup))
+- Completed the initial OAuth consent flow — the `gmail.readonly` scope is included by default
 
 ## Setup
 
-Gmail shares the same OAuth flow as Google Tasks and Google Calendar.
-If you already have Google integration working, Gmail is available
-automatically — no additional setup required.
+No additional setup is required beyond the shared Google OAuth flow. The
+`https://www.googleapis.com/auth/gmail.readonly` scope is part of the default scope
+list in `google/auth.py`. Once you've completed the
+[Google integration](/integrations/google-overview) setup, Gmail is ready to use.
 
 <Note>
 Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify emails.
@@ -39,7 +39,7 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
 
     Output format:
 
-    ```
+    ```text
       MSG_ID  2026-02-24 09:15  Alice Smith  Meeting follow-up
       MSG_ID  2026-02-24 08:30  Bob Jones    Invoice #1234
     ```
@@ -124,7 +124,7 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
 
     ### Report format
 
-    ```
+    ```text
     Action items:
     - [Alice Smith] [2026-02-24 09:15] Meeting follow-up -- respond with availability
     - [Bank] [2026-02-24 08:00] Payment failed -- check payment method
@@ -156,10 +156,11 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
     The reader extracts `text/plain` first, then falls back to stripped
     `text/html`. Emails that are purely image-based will show no body.
   </Accordion>
-  <Accordion title="Dates display in configured timezone">
+  <Accordion title="Dates show in the wrong timezone">
     All Gmail timestamps are displayed in the configured timezone
     (`OLLIM_TIMEZONE`, defaults to auto-detected system timezone with a
-    UTC fallback).
+    UTC fallback). If dates appear incorrect, verify your `OLLIM_TIMEZONE`
+    setting matches your local timezone.
   </Accordion>
 </AccordionGroup>
 
