@@ -3,11 +3,11 @@ title: "Subagents"
 description: "Understand how specialized subagents handle documentation help, email triage, history review, engagement analysis, and preference decisions."
 ---
 
-Subagents are isolated agent instances that the main ollim-bot agent spawns to handle specialized tasks. Each subagent runs with its own system prompt, a restricted set of tools, and a cheaper model — keeping the main agent focused on orchestration while subagents do the legwork.
+Subagents are isolated agent instances that the main ollim-bot agent spawns to handle specialized tasks. Each subagent has its own system prompt, a restricted tool set, and a cheaper model — the main agent focuses on orchestration while subagents do the legwork.
 
 ## Overview
 
-ollim-bot defines five subagents in `src/ollim_bot/subagents/`, each as a markdown file with YAML frontmatter. The SDK invokes them via the built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
+ollim-bot defines five subagents in `src/ollim_bot/subagents/`, each as a markdown file with YAML frontmatter. The main agent invokes them via the SDK's built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
 
 | Subagent | Purpose | Model | Tools |
 |----------|---------|-------|-------|
@@ -276,7 +276,7 @@ agents = build_agent_definitions(specs)  # dict[str, AgentDefinition]
 | `model` | `str \| None` | Model to use (`sonnet`, `haiku`, `opus`, or `inherit`) |
 | `tools` | `list[str] \| None` | Restricted tool access (principle of least privilege) |
 
-**Template variables:** `{USER_NAME}` and `{BOT_NAME}` in the prompt and description are substituted at load time from `config.py`.
+**Template variables:** `subagents.py` substitutes `{USER_NAME}` and `{BOT_NAME}` in the prompt and description at load time from `config.py`.
 
 **Runtime overrides:** Drop a `.md` file with the same `name` field into `~/.ollim-bot/subagents/` to replace the entire spec for that subagent. The override file must be a complete spec — there is no partial merge.
 

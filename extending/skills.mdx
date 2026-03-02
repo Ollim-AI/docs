@@ -155,13 +155,13 @@ For the full format specification — including edge cases and advanced patterns
 
 > "Create a skill called 'deploy-check' that verifies the production deployment is healthy by checking the status endpoint and recent error logs."
 
-The agent will read the spec file, create the skill directory, and write the `SKILL.md` with appropriate frontmatter and instructions.
+The agent reads the spec file, creates the skill directory, and writes the `SKILL.md` with appropriate frontmatter and instructions.
 
 ## Developer reference
 
 <AccordionGroup>
 <Accordion title="System prompt integration">
-`build_skill_index()` in `skills.py` generates a dynamic index of all available skills, appended to the system prompt. The format is:
+`build_skill_index()` in `skills.py` generates a dynamic index of all available skills and appends it to the system prompt. The format is:
 
 ```text
 Available skills:
@@ -169,7 +169,7 @@ Available skills:
 - **repo-status**: Show current branch and recent commits for context.
 ```
 
-This index lets the agent know which skills exist — it can reference them when creating routines or suggest them when the user describes a workflow that matches a skill's description.
+This index tells the agent which skills exist. It references them when creating routines and suggests them when you describe a matching workflow.
 
 The agent rebuilds the index every time it starts, so newly created skills appear in the next session.
 </Accordion>
@@ -191,7 +191,7 @@ def collect_skill_tools(skills: list[Skill]) -> list[str]:
     return tools
 ```
 
-Skills are loaded by `load_skills()` in the scheduler before being passed to this function.
+`load_skills()` in the scheduler loads skills before passing them to this function.
 </Accordion>
 
 <Accordion title="Chain propagation">
@@ -199,7 +199,7 @@ The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When
 </Accordion>
 
 <Accordion title="Path traversal protection">
-`read_skill()` validates that the resolved skill path is relative to the `skills/` directory before reading. `read_skill()` rejects skill names containing path traversal sequences (e.g., `../../etc/passwd`) with a warning log.
+`read_skill()` resolves the skill path and verifies it stays within the `skills/` directory, catching both path traversal sequences (e.g., `../../etc/passwd`) and symlink escapes.
 </Accordion>
 </AccordionGroup>
 
