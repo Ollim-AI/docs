@@ -30,7 +30,7 @@ The guide answers setup, configuration, and usage questions by searching the oll
 **What it does:**
 - Searches the `docs` MCP server for relevant documentation pages
 - Includes the actual docs text in its response — never rewrites or summarizes
-- Cross-references the user's config files (routines, reminders, webhooks) against the docs when diagnosing setup issues
+- Cross-references your config files (routines, reminders, webhooks) against the docs when diagnosing setup issues
 - Reports explicitly when docs don't cover a topic, listing what it searched
 
 **Scope:**
@@ -288,7 +288,7 @@ The main agent's system prompt in `prompts.py` contains explicit delegation inst
 
 <Tabs>
   <Tab title="Guide">
-    Setup and usage questions are delegated to the guide:
+    The main agent delegates setup and usage questions to the guide:
 
     > When the user asks how to set up, configure, or use an ollim-bot feature, delegate to the guide subagent (via the Task tool). It searches docs.ollim.ai and returns the actual documentation text — prefer it over answering yourself, because paraphrasing docs introduces subtle errors. If the guide finds nothing, you can answer from code.
   </Tab>

@@ -252,10 +252,13 @@ pointing to specification documents in the project's `docs/` directory:
 |------|------|---------------|
 | `routine-reminder-spec.md` | Symlink → `docs/routine-reminder-spec.md` | System prompt (routines/reminders section) |
 | `webhook-spec.md` | Symlink → `docs/webhook-spec.md` | System prompt (webhooks section), webhook handler |
-| `skill-spec.md` | Regular file | System prompt (skills section) |
 
 Symlinks are only created if the target doesn't already exist — they
 survive bot restarts and are never overwritten.
+
+`skill-spec.md` is a regular file (not a symlink) referenced by the
+system prompt's skills section. It is not managed by
+`_ensure_spec_symlinks()`.
 
 ## Git tracking
 
