@@ -130,10 +130,12 @@ MCP tools are defined in `src/ollim_bot/agent_tools.py` using the `@tool` decora
             return budget_error
     ```
 
-    For accessing the Discord channel, use the dual-pattern that works in both main and forked contexts:
+    For accessing the Discord channel, use the `get_channel()` helper from `channel.py`:
 
     ```python
-    channel = _channel_var.get() or _channel
+    from ollim_bot.channel import get_channel
+
+    channel = get_channel()
     ```
   </Step>
   <Step title="Register the tool">
@@ -158,7 +160,7 @@ MCP tools are defined in `src/ollim_bot/agent_tools.py` using the `@tool` decora
 </Steps>
 
 <Note>
-The channel global `_channel` is set by `set_channel()` (main session, protected by the agent lock), while `_channel_var` is a `ContextVar` set by `set_fork_channel()` (background forks, no lock needed). Every path into `stream_chat` must call both `agent_tools.set_channel` and `permissions.set_channel` — this is the channel-sync invariant.
+The DM channel is set once at startup via `init_channel()` in `channel.py` (called from `on_ready` after `owner.create_dm()`). MCP tools read it via `get_channel()` — there is no per-fork channel state since all forks share the same DM channel.
 </Note>
 
 ## Adding a CLI command
