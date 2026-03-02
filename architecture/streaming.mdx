@@ -159,11 +159,12 @@ visible annotation in the DM so the user knows what happened.
 
 The flow:
 
-1. The SDK emits a `StreamStatus` event with `kind="compact_start"` and
-   an optional `compact_tokens` count
+1. The SDK emits a `SystemMessage` with `subtype="compact_boundary"`. The
+   agent layer detects this and signals the streamer with a `StreamStatus`
+   event (`kind="compact_start"`) including an optional `compact_tokens` count.
 2. The streamer flushes any pre-compaction text to its own message
 3. An ephemeral status message appears with a timer:
-   `-# *auto-compacting... (3s)*`
+   `-# *Auto-compacting 5k tokens... (3s)*`
 4. When compaction completes, the status is edited to a permanent
    annotation: `-# *auto-compacted · 5k tokens · 8s*`
 5. Post-compaction content continues in a new message

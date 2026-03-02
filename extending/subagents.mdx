@@ -11,14 +11,14 @@ ollim-bot defines five subagents, each specified as a markdown file with YAML fr
 
 | Subagent | Purpose | Model | Tools |
 |----------|---------|-------|-------|
-| `guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | `mcp__docs__*`, `Read(**.md)`, `Glob(**.md)`, `Bash(ollim-bot help)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
+| `guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | `mcp__docs__*`, `Read(**.md)`, `Glob(**.md)`, `Bash(ollim-bot help)`, `Bash(ollim-bot routine list)`, `Bash(ollim-bot reminder list)` |
 | `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | `Bash(ollim-bot gmail *)` |
 | `history-reviewer` | Session review — finds loose threads in recent Claude Code sessions | `sonnet` | `Bash(claude-history *)` |
 | `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | `Bash(claude-history *)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
 | `user-proxy` | Preference proxy — answers "what would the user do?" during background forks | `haiku` | `Read(**.md)`, `Glob(**.md)`, `Bash(claude-history *)` |
 
 <Note>
-Each subagent only has access to the tools listed above. This follows the principle of least privilege — the guide cannot access session history, the gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
+Each subagent only has access to the tools listed above. This follows the principle of least privilege — the guide and gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
 </Note>
 
 ## guide

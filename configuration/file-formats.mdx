@@ -165,12 +165,12 @@ When designing user-facing features, follow these principles:
 ```
 
 <Note>
-Dynamic context markers (`` !`command` ``) have a 10-second per-command timeout and a 30-second total cap. Each command's output is truncated to 2000 characters.
+Dynamic context markers (`` !`command` ``) have a 10-second per-command timeout and a 30-second total cap. Each command's output is truncated to 2000 characters. See [Dynamic context injection](/extending/skills#dynamic-context-injection) for the full expansion rules.
 </Note>
 
 ## Shared markdown conventions
 
-These rules apply to all three markdown file types (routines, reminders, webhooks):
+These rules apply to routines, reminders, and webhooks. Skills use a directory-based structure (`skills/<name>/SKILL.md`) instead of slug-generated filenames, but share the same atomic write and git conventions.
 
 | Behavior | Details |
 |----------|---------|
@@ -288,7 +288,7 @@ Ping budget is **not** git-committed — it is ephemeral state that resets to de
 
 ### Runtime configuration (`config.json`)
 
-JSON object storing persistent settings configured via the `/config` slash command.
+JSON object storing persistent settings configured via the [`/config`](/core-usage/slash-commands#config) slash command.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|

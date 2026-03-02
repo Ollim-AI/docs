@@ -179,9 +179,9 @@ immediately.
 
 ## Runtime configuration
 
-`config.json` stores persistent settings configured via `/config`. These
+`config.json` stores persistent settings configured via [`/config`](/core-usage/slash-commands#config). These
 include per-context model and thinking defaults, timeouts, and the default
-permission mode.
+permission mode. See [Configuration reference](/configuration/reference#runtime-configuration) for the full key listing.
 
 This file is **not** git-committed — it is local configuration that may
 vary between instances.
@@ -200,7 +200,7 @@ is authoritative — filenames are for human readability.
 | `webhooks/` | `*.md` | Webhook endpoint specs with prompt templates |
 | `skills/` | `*/SKILL.md` | Reusable instruction sets referenced by routines and reminders |
 
-All three use the same storage format: YAML frontmatter delimited by
+Routines, reminders, webhooks, and skills use the same storage format: YAML frontmatter delimited by
 `---`, followed by a markdown body. See
 [File formats](/configuration/file-formats) for the full field specs.
 

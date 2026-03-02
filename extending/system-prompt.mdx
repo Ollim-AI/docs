@@ -39,8 +39,7 @@ The entire prompt is a string literal — no template rendering or
 conditional logic. Two dynamic values are injected into `SYSTEM_PROMPT`
 via f-string substitution: `USER_NAME` (personality section, fork
 instructions) and `TZ` (Google Calendar section), both from `config.py`.
-Additionally, the skill index is injected dynamically via
-`build_skill_index()` at `Agent.__init__`.
+`build_skill_index()` also injects a dynamic skill index at `Agent.__init__`.
 </Note>
 
 ## Personality section
@@ -125,7 +124,7 @@ Notion, Slack, or Trello.
 
 ### Subagent delegation
 
-Four tool sections — Gmail, Claude History, Responsiveness, and User Proxy — consist
+Five tool sections — Guide, Gmail, Claude History, Responsiveness, and User Proxy — consist
 entirely of delegation instructions. The main agent is told to never
 perform these tasks directly, instead spawning the appropriate
 [subagent](/extending/subagents) via the Task tool.

@@ -5,7 +5,7 @@ description: "Create reusable instruction sets that routines and reminders can r
 
 Skills are reusable instruction sets stored as markdown files with YAML frontmatter — one directory per skill under `~/.ollim-bot/skills/`. They solve a common problem: routines and reminders that need the same detailed instructions shouldn't duplicate them. Define a **skill** once, reference it by name, and every job that uses it gets the same instructions loaded at fire time.
 
-Skills are the newest extensibility mechanism in ollim-bot, designed for repeatable workflows where the instructions are too detailed to inline into a routine or reminder message.
+Use skills when instructions are too detailed to inline into a routine or reminder message, or when multiple jobs need the same workflow.
 
 ## How skills work
 
@@ -130,7 +130,11 @@ Ping me if anything needs my attention before standup.
 
 ### Tool merging
 
-If a skill declares `allowed_tools`, those tools are merged into the host job's tool set via `collect_skill_tools()`. This means a routine with no explicit `allowed_tools` of its own can still grant the agent tool access through its referenced skills. Tool lists are deduplicated — referencing two skills that both need `Bash(git *)` results in a single entry.
+If a skill declares `allowed-tools`, those tools are merged into the host job's tool set via `collect_skill_tools()`. Tool lists are deduplicated — referencing two skills that both need `Bash(git *)` results in a single entry.
+
+<Warning>
+Skill tools only merge when the host routine or reminder already has its own `allowed-tools` list. If the host job has no `allowed-tools` set, skill tools are silently ignored. Always declare at least a minimal `allowed-tools` on the host job when referencing skills that need tool access.
+</Warning>
 
 ### Reminders with skills
 
