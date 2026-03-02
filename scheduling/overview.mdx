@@ -5,11 +5,11 @@ description: "Proactive scheduling with routines and reminders."
 
 ollim-bot doesn't wait to be asked. Its scheduling system runs
 **routines** (recurring schedules) and **reminders** (one-shot or
-chainable nudges) that fire automatically. Each scheduled
-task becomes an agent prompt — the bot reads the task, decides what to
-do, and optionally pings you with findings.
+chainable nudges) that fire automatically. Each one becomes an agent
+prompt — the bot reads it, decides what to do, and optionally pings
+you with findings.
 
-Most scheduled tasks run as
+Most routines and reminders run as
 [background forks](/scheduling/background-forks) — disposable sessions
 where the agent works silently and only reaches out when something
 warrants attention, governed by a
@@ -31,11 +31,11 @@ warrants attention, governed by a
     icon="code-branch"
     href="/scheduling/background-forks"
   >
-    Disposable sessions for scheduled tasks. Text output is
-    discarded — the agent pings or reports findings.
+    Disposable sessions for routines and reminders. Text output
+    is discarded — the agent pings or reports findings.
   </Card>
   <Card title="Ping budget" icon="gauge" href="/scheduling/ping-budget">
-    Rate-limited ping budget that prevents scheduled tasks
+    Rate-limited ping budget that prevents background forks
     from over-pinging.
   </Card>
   <Card
@@ -61,7 +61,7 @@ Changes are picked up within seconds, no restart needed.
 
 ## Foreground vs background
 
-Scheduled tasks can run in two modes:
+Routines and reminders can run in two modes:
 
 <Tabs>
   <Tab title="Foreground">
