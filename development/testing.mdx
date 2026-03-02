@@ -73,6 +73,7 @@ def data_dir(tmp_path, monkeypatch):
     import ollim_bot.forks as forks_mod
     import ollim_bot.inquiries as inquiries_mod
     import ollim_bot.ping_budget as ping_budget_mod
+    import ollim_bot.runtime_config as runtime_config_mod
     import ollim_bot.scheduling.reminders as reminders_mod
     import ollim_bot.scheduling.routines as routines_mod
     import ollim_bot.sessions as sessions_mod
@@ -85,17 +86,16 @@ def data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(reminders_mod, "REMINDERS_DIR", tmp_path / "reminders")
     monkeypatch.setattr(inquiries_mod, "INQUIRIES_FILE", state_dir / "inquiries.json")
     monkeypatch.setattr(ping_budget_mod, "BUDGET_FILE", state_dir / "ping_budget.json")
+    monkeypatch.setattr(runtime_config_mod, "CONFIG_FILE", state_dir / "config.json")
     monkeypatch.setattr(sessions_mod, "SESSIONS_FILE", state_dir / "sessions.json")
-    monkeypatch.setattr(
-        sessions_mod, "HISTORY_FILE", state_dir / "session_history.jsonl"
-    )
-    monkeypatch.setattr(
-        sessions_mod, "FORK_MESSAGES_FILE", state_dir / "fork_messages.json"
-    )
+    monkeypatch.setattr(sessions_mod, "HISTORY_FILE", state_dir / "session_history.jsonl")
+    monkeypatch.setattr(sessions_mod, "FORK_MESSAGES_FILE", state_dir / "fork_messages.json")
     monkeypatch.setattr(forks_mod, "_UPDATES_FILE", state_dir / "pending_updates.json")
 
+    import ollim_bot.skills as skills_mod
     import ollim_bot.webhook as webhook_mod
 
+    monkeypatch.setattr(skills_mod, "SKILLS_DIR", tmp_path / "skills")
     monkeypatch.setattr(webhook_mod, "WEBHOOKS_DIR", tmp_path / "webhooks")
     return tmp_path
 ```
@@ -121,9 +121,15 @@ All tests live in `tests/` as module-level functions — no test classes. Each f
 | `test_ping_budget.py` | `ping_budget.py` |
 | `test_reminders.py` | `scheduling/reminders.py` |
 | `test_routines.py` | `scheduling/routines.py` |
+| `test_runtime_config.py` | `runtime_config.py` |
 | `test_scheduler_prompts.py` | `scheduling/preamble.py`, `prompts.py` |
 | `test_sessions.py` | `sessions.py` |
+| `test_skills.py` | `skills.py` |
 | `test_storage.py` | `storage.py` |
+| `test_stream_compact.py` | `streamer.py`, `sessions.py` |
+| `test_streamer.py` | `streamer.py` |
+| `test_subagents.py` | `subagents.py` |
+| `test_tool_policy.py` | `tool_policy.py` |
 | `test_tool_restrictions.py` | `agent_tools.py` |
 | `test_webhook.py` | `webhook.py` |
 
