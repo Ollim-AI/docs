@@ -14,7 +14,7 @@ When a routine or reminder fires, the scheduler checks its `skills:` field. For 
 1. The skill's `SKILL.md` is loaded from `~/.ollim-bot/skills/<name>/`
 2. Any **dynamic context injection** markers (`` !`command` ``) are expanded to command output
 3. The expanded instructions are prepended to the job message as a `SKILL INSTRUCTIONS:` block
-4. Tool dependencies from the skill's `allowed_tools` are merged into the host job's tool set
+4. Tool dependencies from the skill's `allowed-tools` are merged into the host job's tool set
 
 The agent sees the skill instructions before the job's own message — like a preamble that teaches it how to do something before telling it what to do.
 
@@ -30,7 +30,7 @@ Each skill lives in its own directory: `~/.ollim-bot/skills/<name>/SKILL.md`. Th
 ---
 name: "code-review"
 description: "Review code changes for style, correctness, and test coverage."
-allowed_tools:
+allowed-tools:
   - "Bash(git *)"
   - "Read(**)"
   - "Glob(**)"
@@ -51,7 +51,7 @@ Summarize findings as a bulleted list, grouped by file.
 |-------|------|---------|-------------|
 | `name` | `str` | — | Lowercase with hyphens — must match the directory name |
 | `description` | `str` | — | What the skill does and when to use it (shown in the system prompt index) |
-| `allowed_tools` | `list[str]` | `null` | Tool dependencies merged into the host job's allowed tools |
+| `allowed-tools` | `list[str]` | `null` | Tool dependencies merged into the host job's allowed tools |
 
 The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
 
