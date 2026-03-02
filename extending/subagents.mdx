@@ -1,23 +1,56 @@
 ---
 title: "Subagents"
-description: "Understand how specialized subagents handle email triage, history review, engagement analysis, and preference decisions."
+description: "Understand how specialized subagents handle documentation help, email triage, history review, engagement analysis, and preference decisions."
 ---
 
 Subagents are isolated agent instances that the main ollim-bot agent spawns to handle specialized tasks. Each subagent runs with its own system prompt, a restricted set of tools, and a cheaper model — keeping the main agent focused on orchestration while subagents do the legwork.
 
 ## Overview
 
-ollim-bot defines four subagents, all configured as `AgentDefinition` objects in `agent.py` and invoked via the Claude Agent SDK's built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
+ollim-bot defines five subagents, each specified as a markdown file with YAML frontmatter in `src/ollim_bot/subagents/`. The SDK invokes them via the built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
 
 | Subagent | Purpose | Model | Tools |
 |----------|---------|-------|-------|
+| `guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | `mcp__docs__*`, `Read(**.md)`, `Glob(**.md)`, `Bash(ollim-bot help)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
 | `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | `Bash(ollim-bot gmail *)` |
 | `history-reviewer` | Session review — finds loose threads in recent Claude Code sessions | `sonnet` | `Bash(claude-history *)` |
 | `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | `Bash(claude-history *)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
 | `user-proxy` | Preference proxy — answers "what would the user do?" during background forks | `haiku` | `Read(**.md)`, `Glob(**.md)`, `Bash(claude-history *)` |
 
 <Note>
-Each subagent only has access to the tools listed above. This follows the principle of least privilege — the gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
+Each subagent only has access to the tools listed above. This follows the principle of least privilege — the guide cannot access session history, the gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
+</Note>
+
+## guide
+
+The guide answers setup, configuration, and usage questions by searching the ollim-bot documentation at docs.ollim.ai and cross-referencing local config files. It shows docs text verbatim rather than paraphrasing — paraphrasing introduces subtle errors that cascade into bad configuration.
+
+**Triggered by:** The main agent delegating "how do I set up/configure/use..." questions via the Task tool.
+
+**What it does:**
+- Searches the `docs` MCP server for relevant documentation pages
+- Includes the actual docs text in its response — never rewrites or summarizes
+- Cross-references the user's config files (routines, reminders, webhooks) against the docs when diagnosing setup issues
+- Reports explicitly when docs don't cover a topic, listing what it searched
+
+**Scope:**
+- Setup and configuration: "How do I set up...", "What's the YAML format for..."
+- Usage questions: "How does X work?"
+- Config validation: "Is my routine configured correctly?"
+- NOT runtime debugging ("what happened last night?", "why did the bot miss my ping?") — those require session transcripts the guide doesn't have access to
+
+**Commands available:**
+
+| Command | Description |
+|---------|-------------|
+| `ollim-bot help` | Top-level command reference |
+| `ollim-bot routine list` | All active routines with cron schedules and IDs |
+| `ollim-bot reminder list` | Currently pending reminders |
+
+The guide also uses the `docs` MCP tools (`mcp__docs__*`) for full-text search across docs.ollim.ai, and can read and glob `.md` files to inspect local configuration.
+
+<Note>
+The guide is read-only — it never creates or modifies files. Like the user-proxy, it runs on `haiku` since its job is retrieval and comparison rather than complex reasoning.
 </Note>
 
 ## gmail-reader
@@ -194,60 +227,58 @@ Confidence: HIGH | MEDIUM | LOW — <why this level>
 ```
 
 <Note>
-The user-proxy is the only subagent that runs on `haiku` — the other three use `sonnet`. It is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
+The user-proxy and guide are the only subagents that run on `haiku` — the other three use `sonnet`. The user-proxy is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
 </Note>
 
 ## Developer reference
 
 <AccordionGroup>
-<Accordion title="Agent configuration in code">
-Subagents are defined in `agent.py` as `AgentDefinition` objects passed to `ClaudeAgentOptions`:
+<Accordion title="File-based subagent specs">
+Subagents are defined as markdown files with YAML frontmatter in `src/ollim_bot/subagents/*.md`. Each file contains the spec metadata in frontmatter and the prompt body as markdown content. Here is the guide subagent as an example:
 
-```python
-from claude_agent_sdk import AgentDefinition, ClaudeAgentOptions
-
-ClaudeAgentOptions(
-    agents={
-        "gmail-reader": AgentDefinition(
-            description="Email triage specialist...",
-            prompt=GMAIL_READER_PROMPT,
-            tools=["Bash(ollim-bot gmail *)"],
-            model="sonnet",
-        ),
-        "history-reviewer": AgentDefinition(
-            description="Session history reviewer...",
-            prompt=HISTORY_REVIEWER_PROMPT,
-            tools=["Bash(claude-history *)"],
-            model="sonnet",
-        ),
-        "responsiveness-reviewer": AgentDefinition(
-            description="Reminder responsiveness analyst...",
-            prompt=RESPONSIVENESS_REVIEWER_PROMPT,
-            tools=[
-                "Bash(claude-history *)",
-                "Bash(ollim-bot routine *)",
-                "Bash(ollim-bot reminder *)",
-            ],
-            model="sonnet",
-        ),
-        "user-proxy": AgentDefinition(
-            description="User preference proxy...",
-            prompt=USER_PROXY_PROMPT,
-            tools=["Read(**.md)", "Glob(**.md)", "Bash(claude-history *)"],
-            model="haiku",
-        ),
-    },
-)
+```yaml
+---
+name: guide
+description: >-
+  ollim-bot setup and usage guide. Searches docs.ollim.ai and checks
+  configuration files to answer 'how do I...', 'what's the format for...',
+  and 'is my config correct?' questions. Shows full docs text verbatim.
+model: haiku
+tools:
+  - mcp__docs__*
+  - Read(**.md)
+  - Glob(**.md)
+  - Bash(ollim-bot help)
+  - Bash(ollim-bot routine list)
+  - Bash(ollim-bot reminder list)
+---
+You are {USER_NAME}'s ollim-bot guide. Your goal: answer questions about
+ollim-bot setup, configuration, and usage by surfacing relevant documentation
+verbatim...
 ```
 
-Each `AgentDefinition` takes four fields:
+At startup, `subagents.py` parses these files with `parse_md()` into `SubagentSpec` dataclass instances, then `build_agent_definitions()` converts them to SDK `AgentDefinition` objects:
+
+```python
+from ollim_bot.subagents import load_subagent_specs, build_agent_definitions
+
+specs = load_subagent_specs()        # dict[str, SubagentSpec]
+agents = build_agent_definitions(specs)  # dict[str, AgentDefinition]
+```
+
+**`SubagentSpec` fields:**
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `name` | `str` | Subagent identifier (matches the filename without `.md`) |
 | `description` | `str` | Used by the SDK to determine when/how to invoke the subagent |
-| `prompt` | `str` | System prompt specific to the subagent |
-| `tools` | `list[str]` | Restricted tool access (principle of least privilege) |
-| `model` | `str` | Model to use (`sonnet` or `haiku`) |
+| `message` | `str` | Prompt body — the markdown content below the frontmatter |
+| `model` | `str \| None` | Model to use (`sonnet`, `haiku`, `opus`, or `inherit`) |
+| `tools` | `list[str] \| None` | Restricted tool access (principle of least privilege) |
+
+**Template variables:** `{USER_NAME}` and `{BOT_NAME}` in the prompt and description are substituted at load time from `config.py`.
+
+**Runtime overrides:** Drop a `.md` file with the same `name` field into `~/.ollim-bot/subagents/` to replace the entire spec for that subagent. The override file must be a complete spec — there is no partial merge.
 
 The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
 </Accordion>
@@ -256,6 +287,11 @@ The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
 The main agent's system prompt in `prompts.py` contains explicit delegation instructions for each subagent:
 
 <Tabs>
+  <Tab title="Guide">
+    Setup and usage questions are delegated to the guide:
+
+    > When the user asks how to set up, configure, or use ollim-bot, spawn the guide subagent (via the Task tool). It searches docs.ollim.ai and checks local config files. Don't answer setup questions yourself — always delegate to the guide subagent. It shows docs verbatim rather than paraphrasing.
+  </Tab>
   <Tab title="Gmail">
     The system prompt instructs the main agent to always delegate email reading to the gmail-reader:
 
