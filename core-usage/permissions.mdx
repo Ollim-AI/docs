@@ -79,6 +79,22 @@ through `allowed_tools` and `disallowed_tools` in the fork's YAML
 configuration — see [Background forks](/scheduling/background-forks) for
 details.
 
+## Visual feedback
+
+Tool invocations appear inline during streaming as small italic labels.
+When a tool is denied — whether by `dontAsk` mode or an explicit
+rejection — the label shows with strikethrough text:
+
+| Outcome | Rendering |
+|---------|-----------|
+| Approved/executed | `-# *Read(reminders/foo.md)*` |
+| Denied | `-# *~~Read(reminders/foo.md)~~ — denied*` |
+
+In `dontAsk` mode, denied tools appear struck through so you can see
+what the agent tried to use without being interrupted for approval.
+In `default` mode, tools you reject via the ❌ reaction also appear
+struck through.
+
 ## Cancellation
 
 Pending approval prompts are automatically cancelled (treated as denials)

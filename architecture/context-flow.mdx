@@ -158,6 +158,14 @@ sections.
     Listed only when `allowed_tools` or `disallowed_tools` are
     configured. Shows which tools are available or excluded.
   </Accordion>
+  <Accordion title="Skill instructions">
+    When a routine or reminder has a `skills` field referencing one or
+    more [skills](/extending/skills), the skill instructions are loaded
+    and prepended to the job message at fire time. Tool dependencies
+    declared in the skills (`allowed_tools`) are merged into the job's
+    tool set via `collect_skill_tools()`. Skills propagate through
+    chain reminders via `ChainContext`.
+  </Accordion>
 </AccordionGroup>
 
 ### Forward schedule

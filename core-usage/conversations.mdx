@@ -33,7 +33,7 @@ Responses stream to Discord progressively — you see text appear in real time a
 During pauses (such as when the bot is using a tool), typing indicators show it is still working.
 
 <Tip>
-  Tool invocations appear inline as dimmed labels (e.g., <code>Tool(args)</code>) so you can see what the agent is doing in real time.
+  Tool invocations appear inline as dimmed labels (e.g., <code>Tool(args)</code>) so you can see what the agent is doing in real time. Denied tools show with ~~strikethrough~~ — see [Permissions](/core-usage/permissions#visual-feedback).
 </Tip>
 
 For technical details on how streaming works, see [Streaming](/architecture/streaming).
@@ -42,7 +42,20 @@ For technical details on how streaming works, see [Streaming](/architecture/stre
 
 Your conversation persists across bot restarts. Every message builds on the full conversation history, so the bot remembers what you've been talking about — even days later.
 
-When the conversation gets very long, the bot automatically compresses older context to stay within limits. You can also manage this manually:
+When the conversation gets very long, the bot automatically compresses older context to stay within limits.
+
+When auto-compaction happens mid-response, a small annotation appears in
+the chat showing what occurred:
+
+```text
+auto-compacted · 5k tokens · 8s
+```
+
+This tells you compaction happened, how much context was compressed, and
+how long it took. The response continues in a new message after the
+annotation.
+
+You can also manage this manually:
 
 - **`/compact`** — compress conversation context while keeping the session. Use the optional `instructions` parameter to tell it what to preserve (e.g., "keep the routine config details").
 - **`/clear`** — reset the conversation entirely and start fresh. All prior context is dropped.
