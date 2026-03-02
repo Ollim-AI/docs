@@ -7,7 +7,7 @@ Subagents are isolated agent instances that the main ollim-bot agent spawns to h
 
 ## Overview
 
-ollim-bot defines five subagents, each specified as a markdown file with YAML frontmatter in `src/ollim_bot/subagents/`. The SDK invokes them via the built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
+ollim-bot defines five subagents in `src/ollim_bot/subagents/`, each as a markdown file with YAML frontmatter. The SDK invokes them via the built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
 
 | Subagent | Purpose | Model | Tools |
 |----------|---------|-------|-------|
@@ -234,7 +234,7 @@ The user-proxy and guide are the only subagents that run on `haiku` — the othe
 
 <AccordionGroup>
 <Accordion title="File-based subagent specs">
-Subagents are defined as markdown files with YAML frontmatter in `src/ollim_bot/subagents/*.md`. Each file contains the spec metadata in frontmatter and the prompt body as markdown content. Here is the guide subagent as an example:
+Each `.md` file in `src/ollim_bot/subagents/` defines one subagent: YAML frontmatter for metadata, markdown body for the prompt. Here is the guide subagent as an example:
 
 ```yaml
 ---

@@ -32,7 +32,7 @@ updates, and background preambles — is injected dynamically at runtime.
 | Discord embeds | When to use embeds vs plain text |
 | Web and docs | `WebSearch`, `WebFetch`, and `docs` MCP server |
 | Interactive forks | Fork rules, idle timeout, exit options |
-| Background sessions | Ping budget, reporting modes |
+| Background forks | Ping budget, reporting modes |
 | Webhooks | Webhook spec format reference |
 
 <Note>
@@ -311,8 +311,8 @@ report_updates / exit_fork) so {USER_NAME} can choose.
 
 ## Subagent prompts
 
-Each [subagent](/extending/subagents) has its own system prompt defined as
-standalone markdown files with YAML frontmatter in `subagents/`. These are
+Each [subagent](/extending/subagents) has its own system prompt — a standalone
+markdown file with YAML frontmatter in `subagents/`. These are
 not derived from `SYSTEM_PROMPT` — each file contains task-specific
 instructions, available commands, output format requirements, and triage
 rules.

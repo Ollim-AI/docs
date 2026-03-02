@@ -3,7 +3,7 @@ title: "Extend ollim-bot"
 description: "When to use routines, reminders, webhooks, skills, MCP tools, or subagents."
 ---
 
-ollim-bot has six extensibility mechanisms: routines, reminders, webhooks, skills, MCP tools, and subagents. Each serves a different trigger pattern and interaction model, but the scheduling mechanisms share a common execution path and configuration schema.
+ollim-bot has seven extensibility mechanisms: routines, reminders, webhooks, skills, MCP tools, subagents, and interactive forks. Each serves a different trigger pattern and interaction model, but the scheduling mechanisms share a common execution path and configuration schema.
 
 All scheduling mechanisms — routines, reminders, and webhooks — are data-driven. Each is a markdown file with YAML frontmatter stored in `~/.ollim-bot/`. The scheduler picks up changes every 10 seconds. No code changes required to add new instances.
 

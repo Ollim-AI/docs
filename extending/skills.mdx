@@ -14,7 +14,7 @@ When a routine or reminder fires, the scheduler checks its `skills:` field. For 
 3. The scheduler prepends the expanded instructions to the job message as a `SKILL INSTRUCTIONS:` block
 4. `collect_skill_tools()` merges tool dependencies from the skill's `allowed-tools` into the routine or reminder's tool set
 
-The agent sees the skill instructions before the job's own message — like a preamble that teaches it how to do something before telling it what to do.
+The agent sees skill instructions before the job's own message — like a preamble.
 
 <Note>
 The scheduler loads skills fresh every time a job fires. If you update a skill's instructions, the next firing picks up the changes automatically.
@@ -54,7 +54,7 @@ Summarize findings as a bulleted list, grouped by file.
 The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
 
 <Tip>
-Keep `description` concise and action-oriented. It appears in the system prompt's skill index, so the agent uses it to decide when a skill is relevant — even outside of scheduled jobs.
+Keep `description` concise and action-oriented. It appears in the [system prompt's skill index](/extending/system-prompt#skill-index), so the agent uses it to decide when a skill is relevant — even outside of scheduled jobs.
 </Tip>
 
 ## Dynamic context injection
@@ -71,7 +71,7 @@ Current branch and recent commits:
 Use this context when reviewing the latest changes.
 ```
 
-When the skill loads, the scheduler replaces each `` !`command` `` with the command's output. The agent sees the actual branch name and commit log, not the commands themselves.
+When the skill loads, the scheduler replaces each `` !`command` `` with the command's output.
 
 ### Expansion rules
 
@@ -128,7 +128,7 @@ Ping me if anything needs my attention before standup.
 
 ### Tool merging
 
-If a skill declares `allowed-tools`, `collect_skill_tools()` merges those tools into the host job's tool set. Background forks always have at least a minimal default tool set, so skill tools always merge successfully. The merger deduplicates tool lists — referencing two skills that both need `Bash(git *)` results in a single entry.
+If a skill declares `allowed-tools`, `collect_skill_tools()` merges those tools into the host job's tool set. Background forks always have at least a minimal default tool set, so skill tools always merge. The function deduplicates — if two skills both need `Bash(git *)`, only one entry appears.
 
 ### Reminders with skills
 
@@ -178,15 +178,12 @@ The agent rebuilds the index every time it starts, so newly created skills appea
 `collect_skill_tools()` collects `allowed-tools` from all referenced skills and returns a deduplicated list. The scheduler calls this in `_merge_skill_tools()` to extend the background fork's tool configuration before launching.
 
 ```python
-def collect_skill_tools(skill_names: list[str] | None) -> list[str]:
+def collect_skill_tools(skills: list[Skill]) -> list[str]:
     """Collect tool dependencies from referenced skills. Deduplicated."""
-    if not skill_names:
-        return []
     tools: list[str] = []
     seen: set[str] = set()
-    for name in skill_names:
-        skill = read_skill(name)
-        if skill is not None and skill.allowed_tools:
+    for skill in skills:
+        if skill.allowed_tools:
             for tool in skill.allowed_tools:
                 if tool not in seen:
                     seen.add(tool)
@@ -194,11 +191,11 @@ def collect_skill_tools(skill_names: list[str] | None) -> list[str]:
     return tools
 ```
 
-This lets skills declare their own tool dependencies. Background forks always have at least a minimal default tool set, so skill tools always merge.
+Skills are loaded by `load_skills()` in the scheduler before being passed to this function.
 </Accordion>
 
 <Accordion title="Chain propagation">
-The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the tool forwards skill names via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up — no manual re-specification needed.
+The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the tool forwards skill names via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up.
 </Accordion>
 
 <Accordion title="Path traversal protection">
