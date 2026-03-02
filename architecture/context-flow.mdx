@@ -155,8 +155,8 @@ sections.
     - Note about `critical=True` bypass
   </Accordion>
   <Accordion title="Tool restrictions">
-    Listed only when `allowed_tools` or `disallowed_tools` are
-    configured. Shows which tools are available or excluded.
+    Listed only when `allowed_tools` is configured. Shows which tools
+    are available.
   </Accordion>
   <Accordion title="Skill instructions">
     When a routine or reminder has a `skills` field referencing one or
@@ -236,8 +236,8 @@ reminder has `max_chain > 0`, the preamble includes:
   follow-up can be scheduled
 
 Chain reminders inherit tool restrictions and skills from the parent via
-`ChainContext`, so `allowed_tools`, `disallowed_tools`, and `skills`
-propagate through the entire chain.
+`ChainContext`, so `allowed_tools` and `skills` propagate through the
+entire chain.
 
 ## Next steps
 

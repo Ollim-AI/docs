@@ -130,13 +130,11 @@ never sees restricted tools — they're removed at the SDK level.
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `allowed_tools` | — | Whitelist. `Bash(ollim-bot help)` auto-included. |
-| `disallowed_tools` | — | Blacklist. Subtracted from default set. |
+| `allowed_tools` | Minimal defaults | Allowlist — overrides defaults when set. |
 
-<Warning>
-`allowed_tools` and `disallowed_tools` are mutually exclusive. Setting
-both raises a validation error.
-</Warning>
+<Note>
+When `allowed_tools` is not set, background forks receive a minimal default tool set (principle of least privilege).
+</Note>
 
 Tool names use the SDK format:
 
@@ -159,8 +157,7 @@ Send an embed summary if anything needs attention.
 ```
 
 Tool restrictions are inherited by chain reminders — `follow_up_chain`
-propagates `allowed_tools` and `disallowed_tools` to child reminders
-automatically.
+propagates `allowed_tools` and `skills` to child reminders automatically.
 
 ## Configuration
 
@@ -175,8 +172,8 @@ frontmatter:
 | `thinking` | `bool` | `true` | Extended thinking override |
 | `update_main_session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
 | `allow_ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
-| `allowed_tools` | `list[string]` | — | Tool whitelist (SDK format) |
-| `disallowed_tools` | `list[string]` | — | Tool blacklist (SDK format) |
+| `allowed_tools` | `list[string]` | — | Tool allowlist (SDK format) |
+| `skills` | `list[string]` | — | [Skills](/extending/skills) to load at fire time |
 
 ## Examples
 

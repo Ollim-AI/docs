@@ -62,14 +62,8 @@ If there were errors, send me an embed with the details.
 | `isolated` | `bool` | `false` | Fresh context, not forked (bg only) |
 | `update_main_session` | `str` | `"on_ping"` | Sync mode: `always` / `on_ping` / `freely` / `blocked` |
 | `allow_ping` | `bool` | `true` | Allow pings and embeds (bg only) |
-| `allowed_tools` | `list[str]` | `null` | MCP tool whitelist (bg only) |
-| `disallowed_tools` | `list[str]` | `null` | MCP tool blacklist (bg only) |
+| `allowed_tools` | `list[str]` | `null` | MCP tool allowlist (bg only) |
 | `skills` | `list[str]` | `null` | [Skills](/extending/skills) to load at fire time |
-
-<Warning>
-  `allowed_tools` and `disallowed_tools` cannot both be set on the same
-  reminder.
-</Warning>
 
 ### File naming
 

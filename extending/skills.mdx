@@ -9,15 +9,15 @@ Routines and reminders that need the same detailed instructions shouldn't duplic
 
 When a routine or reminder fires, the scheduler checks its `skills:` field. For each referenced skill:
 
-1. The skill's `SKILL.md` is loaded from `~/.ollim-bot/skills/<name>/`
+1. The scheduler loads the skill's `SKILL.md` from `~/.ollim-bot/skills/<name>/`
 2. The scheduler expands any **dynamic context injection** markers (`` !`command` ``) to command output
 3. The scheduler prepends the expanded instructions to the job message as a `SKILL INSTRUCTIONS:` block
-4. `collect_skill_tools()` merges tool dependencies from the skill's `allowed-tools` into the host job's (the routine or reminder referencing the skill) tool set
+4. `collect_skill_tools()` merges tool dependencies from the skill's `allowed-tools` into the routine or reminder's tool set
 
 The agent sees the skill instructions before the job's own message — like a preamble that teaches it how to do something before telling it what to do.
 
 <Note>
-Skills are loaded fresh every time a job fires. If you update a skill's instructions, the next firing picks up the changes automatically.
+The scheduler loads skills fresh every time a job fires. If you update a skill's instructions, the next firing picks up the changes automatically.
 </Note>
 
 ## File format
@@ -128,15 +128,11 @@ Ping me if anything needs my attention before standup.
 
 ### Tool merging
 
-If a skill declares `allowed-tools`, those tools are merged into the host job's tool set via `collect_skill_tools()`. Tool lists are deduplicated — referencing two skills that both need `Bash(git *)` results in a single entry.
-
-<Warning>
-Skill tools only merge when the host routine or reminder already has its own `allowed-tools` list. If the host job has no `allowed-tools` set, skill tools are silently ignored. Always declare at least a minimal `allowed-tools` on the host job when referencing skills that need tool access.
-</Warning>
+If a skill declares `allowed-tools`, `collect_skill_tools()` merges those tools into the host job's tool set. Background forks always have at least a minimal default tool set, so skill tools always merge successfully. The merger deduplicates tool lists — referencing two skills that both need `Bash(git *)` results in a single entry.
 
 ### Reminders with skills
 
-Reminders work the same way. Skills can also be passed via the CLI:
+Reminders work the same way. You can also pass skills via the CLI:
 
 ```bash
 ollim-bot reminder add --delay 60 -m "Check deployment status" \
@@ -198,15 +194,15 @@ def collect_skill_tools(skill_names: list[str] | None) -> list[str]:
     return tools
 ```
 
-This lets skills declare their own tool dependencies. Note that the host routine or reminder must have its own `allowed-tools` list for skill tools to merge — see [Tool merging](#tool-merging).
+This lets skills declare their own tool dependencies. Background forks always have at least a minimal default tool set, so skill tools always merge.
 </Accordion>
 
 <Accordion title="Chain propagation">
-The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the skill names are forwarded via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up — no manual re-specification needed.
+The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the tool forwards skill names via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up — no manual re-specification needed.
 </Accordion>
 
 <Accordion title="Path traversal protection">
-`read_skill()` validates that the resolved skill path is relative to the `skills/` directory before reading. Skill names containing path traversal sequences (e.g., `../../etc/passwd`) are rejected with a warning log.
+`read_skill()` validates that the resolved skill path is relative to the `skills/` directory before reading. `read_skill()` rejects skill names containing path traversal sequences (e.g., `../../etc/passwd`) with a warning log.
 </Accordion>
 </AccordionGroup>
 

@@ -112,7 +112,7 @@ Schedule a follow-up reminder that continues the current chain. Used by [reminde
 |-----------|------|----------|---------|-------------|
 | `minutes_from_now` | integer | Yes | — | Minutes until the next check fires |
 
-The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. All configuration from the current `ChainContext` is forwarded: `background`, `model`, `thinking`, `isolated`, `update_main_session`, `allow_ping`, `allowed_tools`, `disallowed_tools`, and `skills`.
+The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. All configuration from the current `ChainContext` is forwarded: `background`, `model`, `thinking`, `isolated`, `update_main_session`, `allow_ping`, `allowed_tools`, and `skills`.
 
 Returns an error if:
 - No active reminder context exists (the tool was called outside a reminder-triggered session)

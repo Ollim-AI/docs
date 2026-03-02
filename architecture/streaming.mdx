@@ -165,14 +165,14 @@ The flow:
 2. The streamer flushes any pre-compaction text to its own message
 3. An ephemeral status message appears with a timer:
    `-# *Auto-compacting 5k tokens... (3s)*`
-4. When compaction completes, the status is edited to a permanent
+4. When compaction completes, the streamer edits the status to a permanent
    annotation: `-# *auto-compacted · 5k tokens · 8s*`
 5. Post-compaction content continues in a new message
 
 <Note>
-The annotation stays visible in chat history — it is not deleted after
-compaction finishes. This gives you a clear record of when and why
-context was compacted.
+The annotation stays visible in chat history — the streamer does not
+delete it after compaction finishes. This gives you a clear record of
+when and why context was compacted.
 </Note>
 
 ## Next steps

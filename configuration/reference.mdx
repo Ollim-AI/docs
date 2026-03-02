@@ -49,9 +49,9 @@ require `DISCORD_TOKEN` — it is only loaded when starting the bot.
 ## Runtime configuration
 
 In addition to environment variables, ollim-bot has persistent runtime
-settings configured via the [`/config`](/core-usage/slash-commands#config)
-slash command. These settings are stored in
-`~/.ollim-bot/state/config.json` and survive bot restarts.
+settings you configure via the [`/config`](/core-usage/slash-commands#config)
+slash command. ollim-bot stores these in
+`~/.ollim-bot/state/config.json`, and they survive bot restarts.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -132,7 +132,7 @@ See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full credenti
     Detailed layout of the ~/.ollim-bot/ directory.
   </Card>
   <Card title="File formats" icon="file-code" href="/configuration/file-formats">
-    YAML frontmatter specs for routines, reminders, and webhooks.
+    YAML frontmatter specs for routines, reminders, webhooks, and skills.
   </Card>
   <Card title="Self-host ollim-bot" icon="server" href="/self-hosting/guide">
     Running your own instance of ollim-bot.

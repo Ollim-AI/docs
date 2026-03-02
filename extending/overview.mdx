@@ -79,8 +79,7 @@ Routines, reminders, and webhooks share these YAML frontmatter fields for backgr
 | `isolated` | boolean | `false` | Run without main session history or fork state |
 | `update_main_session` | string | `on_ping` | `always`, `on_ping`, `freely`, or `blocked` — controls `report_updates` behavior |
 | `allow_ping` | boolean | `true` | Whether `ping_user` and `discord_embed` are available |
-| `allowed_tools` | list | — | Allowlist of tools — routines and reminders only (overrides defaults, mutually exclusive with `disallowed_tools`) |
-| `disallowed_tools` | list | — | Blocklist of tools — routines and reminders only (mutually exclusive with `allowed_tools`) |
+| `allowed_tools` | list | — | Allowlist of tools — routines and reminders only (overrides defaults) |
 | `skills` | list | — | Skill names to load at fire time — routines and reminders only |
 
 <Tip>Routines, reminders, webhooks, and skills are all markdown files with YAML frontmatter stored in `~/.ollim-bot/`. The agent can create and manage them directly using Glob, Read, Write, and Edit tools — no CLI required.</Tip>
@@ -92,7 +91,7 @@ Routines, reminders, and webhooks share these YAML frontmatter fields for backgr
     Reference for all agent-initiated tools: discord_embed, ping_user, follow_up_chain, and more.
   </Card>
   <Card title="Subagents" icon="robot" href="/extending/subagents">
-    How gmail-reader, history-reviewer, and responsiveness-reviewer work.
+    How the five specialized subagents handle documentation, email, history, and more.
   </Card>
   <Card title="System prompt" icon="terminal" href="/extending/system-prompt">
     How the system prompt is structured and what gets injected.

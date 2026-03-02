@@ -32,8 +32,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `isolated` | `bool` | `false` | Run in isolated session (no conversation history) |
 | `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist (mutually exclusive with `disallowed_tools`) |
-| `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist (mutually exclusive with `allowed_tools`) |
+| `allowed_tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
@@ -50,7 +49,7 @@ Check the sleep tracker for any anomalies.
 ```
 
 <Note>
-Specifying both `allowed_tools` and `disallowed_tools` raises a `ValueError`. Use one or the other.
+When `allowed_tools` is not set, background forks receive a minimal default tool set.
 </Note>
 
 ### Reminders
@@ -71,8 +70,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `isolated` | `bool` | `false` | Run in isolated session |
 | `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist |
-| `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist |
+| `allowed_tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 ```yaml title="reminders/pick-up-groceries.md"
@@ -288,7 +286,7 @@ Ping budget is **not** git-committed — it is ephemeral state that resets to de
 
 ### Runtime configuration (`config.json`)
 
-JSON object storing persistent settings configured via the [`/config`](/core-usage/slash-commands#config) slash command.
+JSON object storing persistent settings you configure via the [`/config`](/core-usage/slash-commands#config) slash command.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|

@@ -290,7 +290,7 @@ The main agent's system prompt in `prompts.py` contains explicit delegation inst
   <Tab title="Guide">
     Setup and usage questions are delegated to the guide:
 
-    > When the user asks how to set up, configure, or use ollim-bot, spawn the guide subagent (via the Task tool). It searches docs.ollim.ai and checks local config files. Don't answer setup questions yourself — always delegate to the guide subagent. It shows docs verbatim rather than paraphrasing.
+    > When the user asks how to set up, configure, or use an ollim-bot feature, delegate to the guide subagent (via the Task tool). It searches docs.ollim.ai and returns the actual documentation text — prefer it over answering yourself, because paraphrasing docs introduces subtle errors. If the guide finds nothing, you can answer from code.
   </Tab>
   <Tab title="Gmail">
     The system prompt instructs the main agent to always delegate email reading to the gmail-reader:
