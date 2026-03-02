@@ -50,6 +50,14 @@
     {
       "source": "/getting-started/design-philosophy",
       "destination": "/architecture/design-philosophy"
+    },
+    {
+      "source": "/extending/system-prompt",
+      "destination": "/development/system-prompt"
+    },
+    {
+      "source": "/extending/adding-integrations",
+      "destination": "/development/adding-integrations"
     }
   ],
   "navigation": {
@@ -107,9 +115,7 @@
             "pages": [
               "extending/mcp-tools",
               "extending/subagents",
-              "extending/skills",
-              "extending/system-prompt",
-              "extending/adding-integrations"
+              "extending/skills"
             ]
           },
           {
@@ -155,7 +161,9 @@
               "development/guide",
               "development/testing",
               "development/cli-reference",
-              "development/troubleshooting"
+              "development/troubleshooting",
+              "development/system-prompt",
+              "development/adding-integrations"
             ]
           }
         ]

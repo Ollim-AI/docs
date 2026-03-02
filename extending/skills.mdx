@@ -54,7 +54,7 @@ Summarize findings as a bulleted list, grouped by file.
 The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
 
 <Tip>
-Keep `description` concise and action-oriented. It appears in the [system prompt's skill index](/extending/system-prompt#skill-index), so the agent uses it to decide when a skill is relevant — even outside of scheduled jobs.
+Keep `description` concise and action-oriented. It appears in the [system prompt's skill index](/development/system-prompt#skill-index), so the agent uses it to decide when a skill is relevant — even outside of scheduled jobs.
 </Tip>
 
 ## Dynamic context injection
@@ -217,7 +217,7 @@ The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When
   <Card title="File formats" icon="file" href="/configuration/file-formats">
     Full YAML frontmatter reference for all markdown data files.
   </Card>
-  <Card title="System prompt" icon="terminal" href="/extending/system-prompt">
+  <Card title="System prompt" icon="terminal" href="/development/system-prompt">
     How the system prompt is structured and what gets injected — including the skill index.
   </Card>
 </Columns>
