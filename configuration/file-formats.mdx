@@ -108,6 +108,7 @@ Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `allow_ping` | `bool` | `true` | Allow notification tools |
 | `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+| `allowed_tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
 
 The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
 
