@@ -1,6 +1,6 @@
 ---
 title: "Conversations"
-description: "Learn how DM conversations, message flow, and context management work."
+description: "Talk to the bot through Discord DMs — message flow, streaming, images, and context management."
 ---
 
 ollim-bot maintains a single persistent conversation per user. You talk to it through Discord DMs, and the bot streams its response back in real time. Context carries across messages and survives restarts — every message builds on what came before.
@@ -42,7 +42,7 @@ For technical details on how streaming works, see [Streaming](/architecture/stre
 
 Your conversation persists across bot restarts. Every message builds on the full conversation history, so the bot remembers what you've been talking about — even days later.
 
-When the conversation gets very long, the bot automatically compresses older context to stay within limits.
+When the conversation gets very long, the bot automatically compacts older context to stay within limits.
 
 When auto-compaction happens mid-response, a small annotation appears in
 the chat showing what occurred:
@@ -51,13 +51,13 @@ the chat showing what occurred:
 auto-compacted · 5k tokens · 8s
 ```
 
-This tells you compaction happened, how much context was compressed, and
+This tells you compaction happened, how much context was compacted, and
 how long it took. The response continues in a new message after the
 annotation. See [Auto-compaction annotation](/architecture/streaming#auto-compaction-annotation) for the technical flow.
 
 You can also manage this manually:
 
-- **`/compact`** — compress conversation context while keeping the session. Use the optional `instructions` parameter to tell it what to preserve (e.g., "keep the routine config details").
+- **`/compact`** — compact conversation context while keeping the session. Use the optional `instructions` parameter to tell it what to preserve (e.g., "keep the routine config details").
 - **`/clear`** — reset the conversation entirely and start fresh. All prior context is dropped.
 
 For details on session lifecycle events, compaction mechanics, and fork tracking, see [Session management](/architecture/session-management).
