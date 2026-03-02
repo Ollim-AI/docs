@@ -34,6 +34,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
 | `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist (mutually exclusive with `disallowed_tools`) |
 | `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist (mutually exclusive with `allowed_tools`) |
+| `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
 
@@ -72,6 +73,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
 | `allowed_tools` | `list[str] \| null` | `null` | Tool whitelist |
 | `disallowed_tools` | `list[str] \| null` | `null` | Tool blacklist |
+| `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 ```yaml title="reminders/pick-up-groceries.md"
 ---
@@ -138,6 +140,33 @@ String properties in the `fields` schema that lack an explicit `maxLength`
 automatically get a default limit of 500 characters. The total payload size
 is capped at 10 KB, with a maximum of 20 properties.
 </Tip>
+
+### Skills
+
+Stored in `~/.ollim-bot/skills/<name>/SKILL.md`. Each skill is a directory containing a single `SKILL.md` file.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | — | Skill name (lowercase with hyphens, matches directory name) |
+| `description` | `str` | — | What the skill does and when to use it |
+| `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
+
+The markdown body contains the skill's instructions. It can include dynamic context markers using the `` !`command` `` syntax — shell commands that are expanded to their stdout at fire time.
+
+```yaml title="skills/ux-principles/SKILL.md"
+---
+name: "ux-principles"
+description: "User-facing design principles for notifications, proactive outreach, and bot responses"
+---
+When designing user-facing features, follow these principles:
+
+1. Surface errors clearly — the user should never wonder what happened.
+2. Prefer report_updates over pinging when the information isn't time-sensitive.
+```
+
+<Note>
+Dynamic context markers (`` !`command` ``) have a 10-second per-command timeout and a 30-second total cap. Each command's output is truncated to 2000 characters.
+</Note>
 
 ## Shared markdown conventions
 
@@ -256,6 +285,31 @@ JSON object tracking the refill-on-read ping budget for background forks.
 <Warning>
 Ping budget is **not** git-committed — it is ephemeral state that resets to defaults if the file is deleted.
 </Warning>
+
+### Runtime configuration (`config.json`)
+
+JSON object storing persistent settings configured via the `/config` slash command.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `model_main` | `str \| null` | `null` | Default model for the main session |
+| `model_fork` | `str \| null` | `null` | Default model for interactive forks |
+| `thinking_main` | `bool` | `false` | Extended thinking for the main session |
+| `thinking_fork` | `bool` | `true` | Extended thinking for interactive forks |
+| `max_thinking_tokens` | `int` | `10000` | Token budget when thinking is enabled |
+| `bg_fork_timeout` | `int` | `1800` | Max background fork runtime (seconds) |
+| `fork_idle_timeout` | `int` | `10` | Interactive fork idle timeout (minutes) |
+| `permission_mode` | `str` | `"dontAsk"` | Default permission mode |
+
+```json title="config.json"
+{
+  "model_main": "sonnet",
+  "thinking_fork": true,
+  "fork_idle_timeout": 15
+}
+```
+
+Only non-default values are stored. Missing keys use their defaults.
 
 ## Next steps
 

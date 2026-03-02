@@ -24,6 +24,8 @@ subdirectory, keeping the agent's working directory clean.
 │   └── *.md                         # One-shot reminder specs
 ├── webhooks/
 │   └── *.md                         # Webhook specs
+├── skills/                          # Reusable instruction sets
+│   └── */SKILL.md
 └── state/
     ├── bot.pid                      # PID file for single-instance check
     ├── credentials.json             # Google OAuth credentials (from Cloud Console)
@@ -33,6 +35,7 @@ subdirectory, keeping the agent's working directory clean.
     ├── pending_updates.json         # Background fork updates queued for main session
     ├── inquiries.json               # Button inquiry prompts (7-day TTL)
     ├── fork_messages.json           # Discord message → fork session mapping (7-day TTL)
+    ├── config.json                  # Runtime configuration (persistent, no git commit)
     └── ping_budget.json             # Ping budget state (ephemeral, no git commit)
 ```
 
@@ -174,9 +177,18 @@ On every `load()`, time-based refill is computed and daily counters are
 reset if the date has changed. The updated state is saved back
 immediately.
 
-## Scheduling directories
+## Runtime configuration
 
-Routines, reminders, and webhooks are each stored as `.md` files in
+`config.json` stores persistent settings configured via `/config`. These
+include per-context model and thinking defaults, timeouts, and the default
+permission mode.
+
+This file is **not** git-committed — it is local configuration that may
+vary between instances.
+
+## Agent-managed directories
+
+Routines, reminders, webhooks, and skills are each stored as files in
 their own subdirectory. Filenames are auto-generated slugs from the
 message content (max 50 characters). The `id` field in YAML frontmatter
 is authoritative — filenames are for human readability.
@@ -186,6 +198,7 @@ is authoritative — filenames are for human readability.
 | `routines/` | `*.md` | Recurring cron-scheduled routines |
 | `reminders/` | `*.md` | One-shot and chainable reminders |
 | `webhooks/` | `*.md` | Webhook endpoint specs with prompt templates |
+| `skills/` | `*/SKILL.md` | Reusable instruction sets referenced by routines and reminders |
 
 All three use the same storage format: YAML frontmatter delimited by
 `---`, followed by a markdown body. See
@@ -258,6 +271,7 @@ The `~/.ollim-bot/` directory is initialized as a git repository.
 | `state/fork_messages.json` | Ephemeral mapping with 7-day TTL |
 | `state/pending_updates.json` | Ephemeral cross-fork messaging |
 | `state/inquiries.json` | Ephemeral button state with 7-day TTL |
+| `state/config.json` | Local runtime preferences |
 
 All other files — session history, routines, reminders, and webhooks —
 are auto-committed on every write.
