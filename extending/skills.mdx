@@ -3,18 +3,16 @@ title: "Skills"
 description: "Create reusable instruction sets that routines and reminders can reference for repeatable workflows."
 ---
 
-Skills are reusable instruction sets stored as markdown files with YAML frontmatter — one directory per skill under `~/.ollim-bot/skills/`. They solve a common problem: routines and reminders that need the same detailed instructions shouldn't duplicate them. Define a **skill** once, reference it by name, and every job that uses it gets the same instructions loaded at fire time.
-
-Use skills when instructions are too detailed to inline into a routine or reminder message, or when multiple jobs need the same workflow.
+Routines and reminders that need the same detailed instructions shouldn't duplicate them. **Skills** solve this — reusable instruction sets stored as markdown files under `~/.ollim-bot/skills/<name>/SKILL.md`. Define a skill once, reference it by name, and every job that uses it gets the same instructions loaded at fire time.
 
 ## How skills work
 
 When a routine or reminder fires, the scheduler checks its `skills:` field. For each referenced skill:
 
 1. The skill's `SKILL.md` is loaded from `~/.ollim-bot/skills/<name>/`
-2. Any **dynamic context injection** markers (`` !`command` ``) are expanded to command output
-3. The expanded instructions are prepended to the job message as a `SKILL INSTRUCTIONS:` block
-4. Tool dependencies from the skill's `allowed-tools` are merged into the host job's tool set
+2. The scheduler expands any **dynamic context injection** markers (`` !`command` ``) to command output
+3. The scheduler prepends the expanded instructions to the job message as a `SKILL INSTRUCTIONS:` block
+4. `collect_skill_tools()` merges tool dependencies from the skill's `allowed-tools` into the host job's (the routine or reminder referencing the skill) tool set
 
 The agent sees the skill instructions before the job's own message — like a preamble that teaches it how to do something before telling it what to do.
 
@@ -51,7 +49,7 @@ Summarize findings as a bulleted list, grouped by file.
 |-------|------|---------|-------------|
 | `name` | `str` | — | Lowercase with hyphens — must match the directory name |
 | `description` | `str` | — | What the skill does and when to use it (shown in the system prompt index) |
-| `allowed-tools` | `list[str]` | `null` | Tool dependencies merged into the host job's allowed tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
 
 The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
 
@@ -61,7 +59,7 @@ Keep `description` concise and action-oriented. It appears in the system prompt'
 
 ## Dynamic context injection
 
-Skill instructions can embed shell commands using the `` !`command` `` syntax. These markers are expanded to their stdout at fire time — before the agent sees the prompt. This lets skills pull in fresh data without hardcoding values.
+Skills sometimes need fresh data at fire time — not hardcoded values. The `` !`command` `` syntax embeds shell commands that the scheduler expands to their stdout before the agent sees the prompt.
 
 ```markdown title="skills/repo-status/SKILL.md (body)"
 Current branch and recent commits:
@@ -73,7 +71,7 @@ Current branch and recent commits:
 Use this context when reviewing the latest changes.
 ```
 
-When the skill loads, each `` !`command` `` is replaced by the command's output. The agent sees the actual branch name and commit log, not the commands themselves.
+When the skill loads, the scheduler replaces each `` !`command` `` with the command's output. The agent sees the actual branch name and commit log, not the commands themselves.
 
 ### Expansion rules
 
@@ -145,7 +143,7 @@ ollim-bot reminder add --delay 60 -m "Check deployment status" \
   --background --skills repo-status
 ```
 
-For chained reminders, skills propagate through the chain — the `follow_up_chain` tool forwards the `skills` field from the `ChainContext`, so subsequent chain links inherit the same skill set.
+For chained reminders, skills propagate through the chain — the `follow_up_chain` tool forwards the `skills` field from the [`ChainContext`](/architecture/context-flow#chain-reminder-context), so subsequent chain links inherit the same skill set.
 
 ## Creating skills
 
@@ -177,11 +175,11 @@ Available skills:
 
 This index lets the agent know which skills exist — it can reference them when creating routines or suggest them when the user describes a workflow that matches a skill's description.
 
-The index is rebuilt every time the agent starts, so newly created skills appear in the next session.
+The agent rebuilds the index every time it starts, so newly created skills appear in the next session.
 </Accordion>
 
 <Accordion title="Tool propagation">
-`collect_skill_tools()` collects `allowed_tools` from all referenced skills and returns a deduplicated list. The scheduler calls this in `_merge_skill_tools()` to extend the background fork's tool configuration before launching.
+`collect_skill_tools()` collects `allowed-tools` from all referenced skills and returns a deduplicated list. The scheduler calls this in `_merge_skill_tools()` to extend the background fork's tool configuration before launching.
 
 ```python
 def collect_skill_tools(skill_names: list[str] | None) -> list[str]:
@@ -200,7 +198,7 @@ def collect_skill_tools(skill_names: list[str] | None) -> list[str]:
     return tools
 ```
 
-This ensures skills can declare their own tool dependencies without requiring the host routine or reminder to know about them.
+This lets skills declare their own tool dependencies. Note that the host routine or reminder must have its own `allowed-tools` list for skill tools to merge — see [Tool merging](#tool-merging).
 </Accordion>
 
 <Accordion title="Chain propagation">

@@ -18,6 +18,7 @@ subdirectory, keeping the agent's working directory clean.
 ~/.ollim-bot/
 ├── routine-reminder-spec.md →       # Symlink to docs/routine-reminder-spec.md
 ├── webhook-spec.md →                # Symlink to docs/webhook-spec.md
+├── skill-spec.md                    # Skill format specification
 ├── routines/
 │   └── *.md                         # Recurring routine specs
 ├── reminders/
@@ -189,9 +190,11 @@ vary between instances.
 ## Agent-managed directories
 
 Routines, reminders, webhooks, and skills are each stored as files in
-their own subdirectory. Filenames are auto-generated slugs from the
-message content (max 50 characters). The `id` field in YAML frontmatter
-is authoritative — filenames are for human readability.
+their own subdirectory. For routines, reminders, and webhooks, filenames
+are auto-generated slugs from the message content (max 50 characters)
+and the `id` field in YAML frontmatter is authoritative. Skills use a
+different structure: each skill is a directory named after the skill,
+containing a `SKILL.md` file.
 
 | Directory | Contents | Description |
 |-----------|----------|-------------|
@@ -235,22 +238,21 @@ when you first authenticate.
 `/proc/<pid>/cmdline` to prevent duplicate instances. The file is
 deleted on exit via `atexit`.
 
-## Spec-file symlinks
+## Spec files
 
-On startup, `_ensure_spec_symlinks()` in `main.py` creates symlinks in
-`~/.ollim-bot/` pointing to specification documents in the project's
-`docs/` directory:
+The agent reads format specification files from `~/.ollim-bot/` when
+creating routines, reminders, webhooks, or skills. Because the agent's
+working directory is `~/.ollim-bot/`, it can read them by name without
+hardcoding paths to the source tree.
 
-| Symlink | Target | Referenced by |
-|---------|--------|---------------|
-| `routine-reminder-spec.md` | `docs/routine-reminder-spec.md` | System prompt (routines/reminders section) |
-| `webhook-spec.md` | `docs/webhook-spec.md` | System prompt (webhooks section), webhook handler |
+On startup, `_ensure_spec_symlinks()` in `main.py` creates symlinks
+pointing to specification documents in the project's `docs/` directory:
 
-The system prompt directs the agent to "enter a fork and read
-`routine-reminder-spec.md`" (or `webhook-spec.md`) when it needs the
-full YAML specification. Because the agent's working directory is
-`~/.ollim-bot/`, the symlinks make these files accessible by name
-without hardcoding paths to the source tree.
+| File | Type | Referenced by |
+|------|------|---------------|
+| `routine-reminder-spec.md` | Symlink → `docs/routine-reminder-spec.md` | System prompt (routines/reminders section) |
+| `webhook-spec.md` | Symlink → `docs/webhook-spec.md` | System prompt (webhooks section), webhook handler |
+| `skill-spec.md` | Regular file | System prompt (skills section) |
 
 Symlinks are only created if the target doesn't already exist — they
 survive bot restarts and are never overwritten.
@@ -273,8 +275,8 @@ The `~/.ollim-bot/` directory is initialized as a git repository.
 | `state/inquiries.json` | Ephemeral button state with 7-day TTL |
 | `state/config.json` | Local runtime preferences |
 
-All other files — session history, routines, reminders, and webhooks —
-are auto-committed on every write.
+All other files — session history, routines, reminders, webhooks, and
+skills — are auto-committed on every write.
 
 <Warning>
 All writes use atomic temp-file-then-rename

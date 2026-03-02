@@ -179,9 +179,10 @@ session still sees them.
 
 ### Skill index
 
-When skills exist in `~/.ollim-bot/skills/`, a dynamic skill index is
-appended to the system prompt at startup. Each entry lists the skill name
-and description, so the agent knows what skills are available.
+The agent needs to know what skills are available so it can reference
+them when creating routines. When skills exist in `~/.ollim-bot/skills/`,
+`build_skill_index()` appends a dynamic index to the system prompt at
+startup listing each skill's name and description.
 
 ## Background preamble
 

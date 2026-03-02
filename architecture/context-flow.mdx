@@ -160,11 +160,11 @@ sections.
   </Accordion>
   <Accordion title="Skill instructions">
     When a routine or reminder has a `skills` field referencing one or
-    more [skills](/extending/skills), the skill instructions are loaded
-    and prepended to the job message at fire time. Tool dependencies
-    declared in the skills (`allowed_tools`) are merged into the job's
-    tool set via `collect_skill_tools()`. Skills propagate through
-    chain reminders via `ChainContext`.
+    more [skills](/extending/skills), the scheduler loads the skill
+    instructions and prepends them to the job message at fire time.
+    `collect_skill_tools()` merges tool dependencies declared in the
+    skills (`allowed-tools`) into the job's tool set. Skills propagate
+    through [chain reminders](/architecture/context-flow#chain-reminder-context) via `ChainContext`.
   </Accordion>
 </AccordionGroup>
 
@@ -235,9 +235,9 @@ reminder has `max_chain > 0`, the preamble includes:
 - On the final check: a warning that this is the last chance and no
   follow-up can be scheduled
 
-Chain reminders inherit tool restrictions from the parent via
-`ChainContext`, so `allowed_tools` and `disallowed_tools` propagate
-through the entire chain.
+Chain reminders inherit tool restrictions and skills from the parent via
+`ChainContext`, so `allowed_tools`, `disallowed_tools`, and `skills`
+propagate through the entire chain.
 
 ## Next steps
 

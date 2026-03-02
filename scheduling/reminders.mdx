@@ -64,6 +64,7 @@ If there were errors, send me an embed with the details.
 | `allow_ping` | `bool` | `true` | Allow pings and embeds (bg only) |
 | `allowed_tools` | `list[str]` | `null` | MCP tool whitelist (bg only) |
 | `disallowed_tools` | `list[str]` | `null` | MCP tool blacklist (bg only) |
+| `skills` | `list[str]` | `null` | [Skills](/extending/skills) to load at fire time |
 
 <Warning>
   `allowed_tools` and `disallowed_tools` cannot both be set on the same
@@ -179,7 +180,7 @@ If no response yet, chain a follow-up. If they replied, send me an embed.
 ```
 
 When the agent chains, the next reminder inherits the `chain_parent` and
-increments `chain_depth`. Chain reminders also inherit tool restrictions
+increments `chain_depth`. Chain reminders also inherit tool restrictions and skills
 from the parent via `ChainContext`.
 
 ## Background vs foreground
