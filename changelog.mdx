@@ -77,7 +77,7 @@ chronological order.
   with a token bucket that refills over time (`capacity: 5`,
   `refill_rate: 90` minutes per token)
 - Forward schedule injected into background fork preambles so the agent sees upcoming jobs
-- Per-job tool restrictions (`disallowed_tools`) for background routines and reminders
+- Per-job tool restrictions (`allowed-tools`) for background routines and reminders
 - Permission approval flow fixed with anyio primitives to prevent hangs
 
 ## Feb 22, 2026
@@ -98,7 +98,7 @@ chronological order.
 **Interactive fork resume and model overrides**
 
 - **Background fork resume** — buttons on background fork embeds open
-  an interactive fork that continues the background session's context
+  an interactive fork that continues the background fork's context
 - `/thinking` slash command to toggle extended thinking mid-conversation
 - `model` and `isolated` fields added to routines, reminders, and
   chain context — per-job model and isolation overrides
@@ -151,11 +151,11 @@ chronological order.
 
 ## Feb 17, 2026
 
-**Architecture refactor and background sessions**
+**Architecture refactor and background forks**
 
 - Package reorganization — `google/` and `scheduling/` sub-packages
   replace 20 top-level modules
-- **Forked background sessions** — `save_context` and `report_updates`
+- **Background fork tools** — `save_context` and `report_updates`
   MCP tools for background forks to communicate results back to the
   main session
 - Pending updates system with atomic file writes
