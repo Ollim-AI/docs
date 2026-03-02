@@ -20,6 +20,7 @@ updates, and background preambles — is injected dynamically at runtime.
 | Task capture | When and how to capture tasks |
 | Output guidance | One-thing-at-a-time vs full lists |
 | Configuration notes | CLI style, timestamps, prompt tags, tool whitelisting |
+| Skills | Skill index (dynamic — lists available skills with descriptions) |
 | Google Tasks | Commands, conventions |
 | Google Calendar | Commands, timezone |
 | Routines and Reminders | Quick CLI commands, spec-file reference, chain follow-ups |
@@ -38,6 +39,8 @@ The entire prompt is a string literal — no template rendering or
 conditional logic. Two dynamic values are injected into `SYSTEM_PROMPT`
 via f-string substitution: `USER_NAME` (personality section, fork
 instructions) and `TZ` (Google Calendar section), both from `config.py`.
+Additionally, the skill index is injected dynamically via
+`build_skill_index()` at `Agent.__init__`.
 </Note>
 
 ## Personality section
@@ -175,6 +178,12 @@ In the main session, pending updates are consumed (cleared after injection).
 In interactive forks, they are peeked (read without clearing) so the main
 session still sees them.
 
+### Skill index
+
+When skills exist in `~/.ollim-bot/skills/`, a dynamic skill index is
+appended to the system prompt at startup. Each entry lists the skill name
+and description, so the agent knows what skills are available.
+
 ## Background preamble
 
 When a routine, reminder, or webhook fires as a background fork, a preamble
@@ -301,17 +310,19 @@ report_updates / exit_fork) so {USER_NAME} can choose.
 
 ## Subagent prompts
 
-Each [subagent](/extending/subagents) has its own system prompt defined in
-`subagent_prompts.py`. These are standalone constants — not derived from
-`SYSTEM_PROMPT` — containing task-specific instructions, available commands,
-output format requirements, and triage rules.
+Each [subagent](/extending/subagents) has its own system prompt defined as
+standalone markdown files with YAML frontmatter in `subagents/`. These are
+not derived from `SYSTEM_PROMPT` — each file contains task-specific
+instructions, available commands, output format requirements, and triage
+rules.
 
-| Constant | Subagent | Key focus |
-|----------|----------|-----------|
-| `GMAIL_READER_PROMPT` | gmail-reader | Email triage, skip/surface criteria |
-| `HISTORY_REVIEWER_PROMPT` | history-reviewer | Session scanning, loose threads |
-| `RESPONSIVENESS_REVIEWER_PROMPT` | responsiveness-reviewer | Engagement analysis |
-| `USER_PROXY_PROMPT` | user-proxy | Preference decisions, evidence model, confidence calibration |
+| File | Subagent | Key focus |
+|------|----------|-----------|
+| `guide.md` | guide | Setup and usage help, docs verbatim |
+| `gmail-reader.md` | gmail-reader | Email triage, skip/surface criteria |
+| `history-reviewer.md` | history-reviewer | Session scanning, loose threads |
+| `responsiveness-reviewer.md` | responsiveness-reviewer | Engagement analysis |
+| `user-proxy.md` | user-proxy | Preference decisions, evidence model, confidence calibration |
 
 The gmail-reader and history-reviewer prompts share a common philosophy:
 missing a real item is worse than a false positive. The user-proxy prompt

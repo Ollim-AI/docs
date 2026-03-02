@@ -25,6 +25,9 @@ All scheduling mechanisms — routines, reminders, and webhooks — are data-dri
   <Card title="Subagents" icon="robot" href="/extending/subagents">
     Specialized agents for delegated tasks like email triage and history review.
   </Card>
+  <Card title="Skills" icon="graduation-cap" href="/extending/skills">
+    Reusable instruction sets loaded into routines and reminders at fire time.
+  </Card>
   <Card title="Interactive forks" icon="code-branch" href="/core-usage/forks">
     User-initiated branched conversations for focused work.
   </Card>
@@ -39,6 +42,7 @@ All scheduling mechanisms — routines, reminders, and webhooks — are data-dri
 | **Webhooks** | HTTP POST from external system | On-demand | Background fork | GitHub events, monitoring alerts, form submissions |
 | **MCP tools** | Agent decision during conversation | Per-interaction | Current session | Structured embeds, user pings, fork management |
 | **Subagents** | Delegated by main agent | Per-invocation | Background fork | Email triage, history review, responsiveness analysis |
+| **Skills** | Referenced by routine/reminder | Per-fire (loaded at fire time) | Injected into host session | Reusable instruction sets, shared workflows, dynamic context |
 | **Interactive forks** | `/fork` command or `enter_fork` tool | Per-session | Forked from main | Deep dives, research, tangents without context bloat |
 
 ### Choosing between routines and reminders
@@ -50,6 +54,10 @@ Use **reminders** when you want a one-shot prompt at a specific time. For progre
 ### Choosing between webhooks and routines
 
 Both run as background forks. Use **webhooks** when the trigger comes from an external system (a GitHub push, a monitoring alert). Use **routines** when the trigger is time-based. Webhooks include 4-layer input security: JSON Schema validation, content fencing, Haiku screening of strings, and operational limits.
+
+### Choosing between skills and system prompt customization
+
+Use **skills** when you want a reusable set of instructions that multiple routines or reminders can reference — skills are loaded on demand, so they don't bloat the system prompt. Use [system prompt customization](/extending/system-prompt) when the instructions should apply to every interaction, not just specific scheduled tasks.
 
 <Tip>
 Not sure which mechanism fits? Describe what you want to the bot — it can look up its
@@ -73,6 +81,7 @@ Routines, reminders, and webhooks share these YAML frontmatter fields for backgr
 | `allow_ping` | boolean | `true` | Whether `ping_user` and `discord_embed` are available |
 | `allowed_tools` | list | — | Allowlist of tools — routines and reminders only (overrides defaults, mutually exclusive with `disallowed_tools`) |
 | `disallowed_tools` | list | — | Blocklist of tools — routines and reminders only (mutually exclusive with `allowed_tools`) |
+| `skills` | list | — | Skill names to load at fire time — routines and reminders only |
 
 <Tip>All three mechanisms are markdown files with YAML frontmatter stored in `~/.ollim-bot/`. The agent can create and manage them directly using Glob, Read, Write, and Edit tools — no CLI required.</Tip>
 
