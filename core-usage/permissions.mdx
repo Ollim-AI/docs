@@ -9,9 +9,8 @@ silent denial of unapproved tools all the way to full bypass.
 
 ## Permission modes
 
-Switch modes with the `/permissions` slash command. The mode is
-**fork-scoped**: changing it inside an interactive fork does not affect
-the main session, and vice versa.
+Switch modes with the `/permissions` slash command or persistently
+with [`/config permission_mode`](/core-usage/slash-commands#config).
 
 | Mode | Behavior |
 |------|----------|
@@ -25,6 +24,22 @@ the main session, and vice versa.
 permission system. It silently blocks unapproved tools before
 the agent sees them.
 </Note>
+
+### Persistence
+
+`/permissions` changes the mode for the current session only — it
+resets to the default (`dontAsk`) on restart. Use `/config permission_mode`
+to persist the mode across restarts.
+
+### Fork scoping
+
+The SDK permission mode (`default`, `acceptEdits`, `bypassPermissions`)
+is **fork-scoped**: `set_permission_mode()` targets the fork client
+when inside an interactive fork, leaving the main session unchanged.
+
+`dontAsk` is **not** fork-scoped — it uses a module-level flag in
+`permissions.py`. Switching to or from `dontAsk` inside an interactive
+fork affects the main session too.
 
 ## Approval flow
 
@@ -73,10 +88,12 @@ in `dontAsk` mode.
 ## Background forks
 
 Background forks always deny tool permission requests, regardless of the
-current mode. The agent in a background fork cannot trigger approval
-prompts. Tools available to background forks are controlled separately
-through `allowed_tools` in the fork's YAML configuration — see
-[Background forks](/scheduling/background-forks) for details.
+current mode — `handle_tool_permission()` returns a denial before
+checking the session-allowed set. The agent in a background fork cannot
+trigger approval prompts. Tools available to background forks are
+controlled separately through `allowed_tools` in the fork's YAML
+configuration — see [Background forks](/scheduling/background-forks)
+for details.
 
 ## Visual feedback
 
@@ -112,7 +129,7 @@ Cancelled prompts are edited to show `cancelled` with strikethrough text.
     In `dontAsk` mode, any tool not in the session-allowed set is silently
     denied — no message appears.
 
-    ```
+    ```text
     /permissions dontAsk
     ```
 
@@ -123,7 +140,7 @@ Cancelled prompts are edited to show `cancelled` with strikethrough text.
     In `default` mode, each tool use not already in the session-allowed set
     produces an approval message. You review and react.
 
-    ```
+    ```text
     /permissions default
     ```
 
@@ -134,7 +151,7 @@ Cancelled prompts are edited to show `cancelled` with strikethrough text.
     In `bypassPermissions` mode, all tools are auto-approved. No prompts
     appear.
 
-    ```
+    ```text
     /permissions bypassPermissions
     ```
 
