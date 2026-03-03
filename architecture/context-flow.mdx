@@ -99,7 +99,7 @@ pinged but didn't report.
 The main session and forks read pending updates differently. The
 injected header also varies by context — the main session sees
 "RECENT BACKGROUND UPDATES (mention key findings in your response)"
-while forks see "RECENT BACKGROUND UPDATES (read-only -- main session
+while forks see "RECENT BACKGROUND UPDATES (read-only — main session
 will also see these)".
 
 <Tabs>
@@ -269,10 +269,10 @@ reminder has `max_chain > 0`, the preamble includes:
 
 - The current check number and total (e.g., "check 2/4")
 - Whether `follow_up_chain(minutes_from_now=N)` is available
-- On the final check: `follow_up_chain` returns an error with recovery
-  guidance — "follow-up limit reached -- this was the last check. If the
-  task still needs attention, ping the user now." This prompts the agent
-  to escalate via `ping_user` rather than silently dropping the task.
+- On the final check: the preamble warns that `follow_up_chain` is not
+  available and this is the last chance to act. If the agent calls
+  `follow_up_chain` anyway, the tool returns an error with recovery
+  guidance prompting the agent to escalate via `ping_user`.
 
 Chain reminders inherit tool restrictions and skills from the parent via
 `ChainContext`, so `allowed_tools` and `skills` propagate through the
