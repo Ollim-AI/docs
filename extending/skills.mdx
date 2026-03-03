@@ -162,18 +162,16 @@ The agent reads the spec file, creates the skill directory, and writes the `SKIL
 ## Developer reference
 
 <AccordionGroup>
-<Accordion title="System prompt integration">
-`build_skill_index()` in `skills.py` generates a dynamic index of all available skills and appends it to the system prompt. The format is:
+<Accordion title="Skill discovery">
+The SDK discovers skills natively — no custom index needed. At startup, `_ensure_sdk_layout()` in `main.py` creates a symlink:
 
 ```text
-Available skills:
-- **code-review**: Review code changes for style, correctness, and test coverage.
-- **repo-status**: Show current branch and recent commits for context.
+~/.ollim-bot/.claude/skills/ → ../skills/
 ```
 
-This index tells the agent which skills exist. It references them when creating routines and suggests them when you describe a matching workflow.
+The agent session uses `setting_sources=["project"]`, which tells the SDK to scan `.claude/skills/` for skill directories. The SDK reads each `SKILL.md`, extracts the `description` from frontmatter, and registers the skill as available. The agent can then invoke any skill interactively via the SDK's built-in `Skill` tool.
 
-The agent rebuilds the index every time it starts, so newly created skills appear in the next session.
+For **per-job injection** (routines and reminders), skill loading is still custom. When a job fires, the scheduler calls `load_skills()` to read referenced skills by name, then `build_skills_section()` expands `` !`command` `` markers and formats the results as a `SKILL INSTRUCTIONS:` block prepended to the job message.
 </Accordion>
 
 <Accordion title="Tool propagation">
