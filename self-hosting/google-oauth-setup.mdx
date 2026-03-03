@@ -8,6 +8,17 @@ from Google Cloud Console. This tutorial walks through creating a project,
 enabling APIs, downloading credentials, and completing the first
 authentication flow.
 
+### What you'll have after this
+
+| Key | Value |
+|-----|-------|
+| **APIs enabled** | Google Tasks API, Google Calendar API, Gmail API |
+| **OAuth scopes** | `tasks` (read/write), `calendar.events` (read/write), `gmail.readonly` |
+| **Application type** | Desktop application (must be `"installed"` key, not `"web"`) |
+| **Credentials file** | `~/.ollim-bot/state/credentials.json` |
+| **Token file** | `~/.ollim-bot/state/token.json` (auto-created on first OAuth flow) |
+| **Consent screen** | External, Testing mode (only listed test users can authenticate) |
+
 ## Prerequisites
 
 - A Google account

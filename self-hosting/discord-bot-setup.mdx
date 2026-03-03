@@ -7,6 +7,17 @@ This tutorial walks through creating a Discord application,
 generating a bot token, and enabling the required privileged intent.
 ollim-bot runs entirely in DMs — no server invite is needed.
 
+### What you'll have after this
+
+| Key | Value |
+|-----|-------|
+| **Environment variables** | `DISCORD_TOKEN`, `OLLIM_USER_NAME`, `OLLIM_BOT_NAME` in `.env` |
+| **Required intent** | Message Content Intent (privileged) |
+| **Installation context** | User Install (not Guild Install) |
+| **Install scope** | `applications.commands` |
+| **Bot setting** | Public Bot unchecked |
+| **PID file** | `~/.ollim-bot/state/bot.pid` (single-instance guard) |
+
 ## Prerequisites
 
 - A [Discord account](https://discord.com)
