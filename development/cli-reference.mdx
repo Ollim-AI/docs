@@ -22,6 +22,7 @@ ollim-bot [command] [subcommand] [options]
 | `ollim-bot tasks` | Manage Google Tasks |
 | `ollim-bot cal` | Manage Google Calendar events |
 | `ollim-bot gmail` | Read and search Gmail |
+| `ollim-bot auth` | Manage Claude Code authentication |
 | `ollim-bot help` | Show help message |
 
 ## `routine`
@@ -303,6 +304,36 @@ List all Gmail labels. No arguments.
 
 ```bash
 ollim-bot gmail labels
+```
+
+## `auth`
+
+Manage Claude Code authentication. ollim-bot uses the Claude CLI bundled with
+the Agent SDK for OAuth — you don't need to install Claude Code separately.
+
+### `auth login`
+
+Start the login flow. Suppresses the browser and prints an auth URL for you
+to visit manually.
+
+```bash
+ollim-bot auth login
+```
+
+### `auth status`
+
+Show current authentication status. No arguments.
+
+```bash
+ollim-bot auth status
+```
+
+### `auth logout`
+
+Log out from your Anthropic account. No arguments.
+
+```bash
+ollim-bot auth logout
 ```
 
 ## Background mode options

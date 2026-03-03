@@ -121,9 +121,9 @@ agent-generated button prompts to disk with a 7-day TTL.
 
 ## Module map
 
-The codebase has 33 modules organized into five layers.
+The codebase has 34 modules organized into five layers.
 
-<Accordion title="Full module map (33 modules)">
+<Accordion title="Full module map (34 modules)">
 
 ### Core loop
 
@@ -132,6 +132,7 @@ The main path from a Discord message to a streamed response.
 | Module | Role |
 |--------|------|
 | `main.py` | CLI entry point — dispatches to bot or subcommands |
+| `auth.py` | Claude Code auth — headless login via bundled CLI, startup auth check |
 | `bot.py` | Discord interface — DMs, slash commands, reaction acks |
 | `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
 | `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
