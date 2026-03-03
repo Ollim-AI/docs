@@ -29,12 +29,12 @@ The steps below cover self-hosting-specific setup.
     cd ollim-bot
     uv sync
     uv tool install --editable .
-    uv tool install claude-history@git+https://github.com/Ollim-AI/claude-history.git
     ```
 
-    `uv sync` installs dependencies. The next two commands install `ollim-bot`
-    as a global command and `claude-history` — a CLI tool used by
-    [subagents](/extending/subagents) to review Claude Code session transcripts.
+    `uv sync` installs dependencies. `uv tool install` makes `ollim-bot`
+    and `claude-history` available as global commands. `claude-history` is
+    a CLI tool used by [subagents](/extending/subagents) to review Claude
+    Code session transcripts.
 
     Working from a fork lets you customize the system prompt, subagent prompts,
     and integrations while still pulling upstream changes.

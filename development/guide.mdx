@@ -26,15 +26,15 @@ and conventions.
   <Step title="Install dependencies">
     ```bash
     uv tool install --editable .
-    uv tool install claude-history@git+https://github.com/Ollim-AI/claude-history.git
     uv sync
     uv run pre-commit install
     ```
 
-    The first command installs `ollim-bot` as a global command. `claude-history`
-    is a global CLI tool required by [subagents](/extending/subagents). `uv sync`
-    installs dev dependencies (pytest, ruff, ty). Pre-commit hooks enforce linting
-    and type checking on every commit.
+    The first command installs `ollim-bot` and `claude-history` as global
+    commands. `claude-history` is a CLI tool required by
+    [subagents](/extending/subagents). `uv sync` installs dev dependencies
+    (pytest, ruff, ty). Pre-commit hooks enforce linting and type checking
+    on every commit.
   </Step>
   <Step title="Configure environment variables">
     Copy the example file and fill in your values:
