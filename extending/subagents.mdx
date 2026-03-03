@@ -267,7 +267,7 @@ tool_sets = load_agent_tool_sets()  # dict[str, list[str]]
 ```
 
 - `install_agents()` expands `{USER_NAME}` and `{BOT_NAME}` template variables (from `config.py`) and writes each spec to `~/.ollim-bot/.claude/agents/`. It skips files that already exist, so user customizations persist across bot updates.
-- `load_agent_tool_sets()` reads YAML frontmatter from installed agents to extract tool declarations for [tool policy](/architecture/tool-policy) validation. Returns a mapping of `"subagent:name"` to tool list.
+- `load_agent_tool_sets()` reads YAML frontmatter from installed agents to extract tool declarations for tool policy validation. Returns a mapping of `"subagent:name"` to tool list.
 
 **Spec file format:** Each `.md` file is a raw markdown file with YAML frontmatter — no Python dataclass involved. The SDK reads these files directly.
 
