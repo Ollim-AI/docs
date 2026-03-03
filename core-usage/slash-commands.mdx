@@ -30,6 +30,10 @@ resets [permission](/core-usage/permissions) approvals, and cancels
 any pending permission prompts. The next message starts a fresh
 session.
 
+If you run `/clear` while inside an interactive fork, the fork is
+discarded and a "Fork Ended" exit embed is sent before the
+conversation resets. The confirmation message notes the discarded fork.
+
 ### /compact
 
 Compacts conversation context to free up space.
@@ -39,8 +43,8 @@ Useful when a long conversation starts hitting context limits.
 |-----------|------|----------|-------------|
 | `instructions` | string | No | Optional focus for the summary (e.g., "keep the routine config details") |
 
-The command responds immediately with "compacting..." (to avoid Discord's
-interaction timeout), then sends a followup with productivity stats:
+The command defers the interaction (showing a thinking indicator), then
+sends a followup with productivity stats:
 
 ```text
 15 turns · 3h 12m · 45k tokens compacted
@@ -70,10 +74,14 @@ Switches the AI model for subsequent messages. The change applies to both the ma
 
 The change takes effect immediately — the next message uses the new model.
 
+<Warning>
+  `/model` is blocked during interactive forks — exit the fork first. Switching the model mid-fork would silently kill the fork client.
+</Warning>
+
 ### /thinking
 
 Toggles extended thinking (chain-of-thought reasoning) for deeper
-analysis. The token budget is controlled by the `max_thinking_tokens`
+analysis. The token budget is controlled by the `thinking.max_tokens`
 [runtime config](/core-usage/slash-commands#config) key (default:
 10,000).
 
@@ -82,7 +90,7 @@ analysis. The token budget is controlled by the `max_thinking_tokens`
 | `enabled` | choice | Yes | `on`, `off` |
 
 <Warning>
-  Changing thinking mode exits any active fork.
+  `/thinking` is blocked during interactive forks — exit the fork first. Switching thinking mode mid-fork would silently kill the fork client.
 </Warning>
 
 ## Fork commands
@@ -180,7 +188,7 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 | `model.fork` | model | Inherits from main | Default model for interactive forks |
 | `thinking.main` | boolean | `off` | Extended thinking for the main session |
 | `thinking.fork` | boolean | `on` | Extended thinking for interactive forks |
-| `max_thinking_tokens` | integer | `10000` | Token budget when thinking is enabled |
+| `thinking.max_tokens` | integer | `10000` | Token budget when thinking is enabled |
 | `bg_fork_timeout` | integer | `1800` | Max background fork runtime in seconds |
 | `fork_idle_timeout` | integer | `10` | Interactive fork idle timeout in minutes |
 | `permission_mode` | permission mode | `dontAsk` | Default [permission mode](/core-usage/permissions) |

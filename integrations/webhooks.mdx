@@ -136,6 +136,11 @@ The body is a prompt template. Use `{field_name}` placeholders that
 correspond to properties in the `fields` schema. These are filled from
 the validated payload data when the webhook fires.
 
+Every `{field_name}` placeholder in the template must have a matching
+key in the validated payload. If any template fields are missing from
+the payload, the request is rejected with a `400` error before prompt
+construction — even if the payload passes JSON Schema validation.
+
 ### Fields schema
 
 The `fields` value is a JSON Schema object (Draft 7). Best practices
@@ -162,6 +167,7 @@ Invalid requests are rejected with descriptive errors:
 | Unknown webhook slug | `404` | `{"error": "webhook not found: <slug>"}` |
 | Invalid JSON body | `400` | `{"error": "invalid json"}` |
 | Schema validation failure | `400` | `{"error": "validation failed", "details": [...]}` |
+| Template field mismatch | `400` | `{"error": "payload missing fields referenced in template: [...]"}` |
 
 <AccordionGroup>
   <Accordion title="Request processing pipeline">
@@ -169,13 +175,14 @@ Invalid requests are rejected with descriptive errors:
     2. **Spec lookup** — matches the URL slug to a spec's `id` field.
     3. **JSON parse** — reads request body as JSON.
     4. **Schema validation** — validates payload against `fields` schema.
-    5. **Prompt construction** — payload data fills the template. The
+    5. **Template validation** — checks that all `{field_name}` placeholders in the body have matching keys in the payload. Missing fields return a 400 error before prompt construction.
+    6. **Prompt construction** — payload data fills the template. The
        prompt separates untrusted webhook data from the spec's
        instructions.
-    6. **202 Accepted** — response sent immediately.
-    7. **Haiku screening** — free-form string fields are screened for
+    7. **202 Accepted** — response sent immediately.
+    8. **Haiku screening** — free-form string fields are screened for
        prompt injection patterns. Flagged payloads are skipped silently.
-    8. **Dispatch** — a background fork runs with the spec's
+    9. **Dispatch** — a background fork runs with the spec's
        configuration.
   </Accordion>
 

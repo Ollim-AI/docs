@@ -78,7 +78,7 @@ level — neither mode triggers the interactive flow below.)
 </Steps>
 
 Approvals time out after **60 seconds**. An unanswered prompt is treated
-as a denial, and the message is edited to show `timed out`.
+as a denial, and the message is edited to show `expired`.
 
 ## Session-allowed set
 
@@ -159,7 +159,7 @@ when any of the following occur:
 - You interrupt the agent — cancels pending approvals for the current turn
 - You exit an interactive fork — cancels any approvals pending inside the fork
 
-Cancelled prompts are edited to show `cancelled` with strikethrough text.
+Cancelled prompts are deleted to avoid orphaned messages in the channel.
 
 ## Examples
 

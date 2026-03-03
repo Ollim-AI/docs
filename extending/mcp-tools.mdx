@@ -21,7 +21,7 @@ Available in all contexts. Send a rich embed message with optional action button
 | `description` | string | No | — | Embed body text |
 | `color` | string | No | `"blue"` | `blue` (info), `green` (success), `red` (urgent), `yellow` (warning), `purple` (fork) |
 | `fields` | array | No | `[]` | Objects with `name` (string, required), `value` (string, required), `inline` (boolean, optional) |
-| `buttons` | array | No | `[]` | Objects with `label` (string, required), `action` (string, required), `style` (string, optional) |
+| `buttons` | array | No | `[]` | Objects with `label` (string, required), `action` (string, required), `style` (string, optional). Max 5. |
 | `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and ping budget when `true` |
 
 **Button actions** follow a `type:payload` format:

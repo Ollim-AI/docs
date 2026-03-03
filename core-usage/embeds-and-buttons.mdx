@@ -51,7 +51,7 @@ Each button has a `label`, an `action` string, and an optional `style` (defaults
 | `success` | Green |
 | `danger` | Red |
 
-<Note>Discord limits embeds to 25 buttons. Buttons beyond this limit are silently dropped.</Note>
+The schema enforces a maximum of **5 buttons** per embed. Use "Close" (not "Dismiss") as the label for buttons that delete the embed message — this is enforced in the tool's schema description to guide the agent toward user-friendly wording.
 
 ## Button actions
 

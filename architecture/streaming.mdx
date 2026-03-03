@@ -52,6 +52,11 @@ stream ends. `StreamParser._drain()` converts deferred labels into
 denied by the permission system. This shows the user what the agent is
 doing during pauses.
 
+MCP tool names are displayed without the `mcp__<server>__` prefix — the
+formatter strips the prefix generically for all MCP servers, so
+`mcp__discord__discord_embed` renders as `discord_embed` in the
+stream label.
+
 <Note>
 When an `enter_fork` tool fires during streaming, `stream_response()`
 interrupts the SDK client and suppresses remaining
@@ -75,7 +80,7 @@ labels, and compaction progress).
 | `FIRST_FLUSH_DELAY` | 0.2s | Initial delay so the first message accumulates a meaningful chunk |
 | `EDIT_INTERVAL` | 0.5s | Responsive feel while staying within Discord's rate limits |
 | `MAX_MSG_LEN` | 2000 | Discord's maximum message length |
-| `STATUS_TICK` | 1.0s | Interval between timer ticks on the status message (e.g., "Thinking... (3s)") |
+| `STATUS_TICK` | 1.0s | Interval between timer ticks on the status message (e.g., "Thinking... (1s)") |
 
 ### Flush cycle
 
@@ -102,9 +107,13 @@ even if edits occasionally bunch up, the library retries automatically.
 ## Overflow handling
 
 When the buffer exceeds 2000 characters, the streamer splits across
-multiple messages:
+multiple messages at natural boundaries — preferring the last newline,
+then the last space, then a hard cut at 2000 characters. A natural
+break is only accepted if it falls within the last 200 characters of
+the window, so messages use most of the available capacity rather than
+splitting too early.
 
-1. The current message is finalized at 2000 characters (via
+1. The current message is finalized at the chosen split point (via
    `msg.edit()` or initial `channel.send()`)
 2. A new message is sent with the overflow text
 3. If the overflow itself exceeds 2000 characters, the process repeats
@@ -166,7 +175,7 @@ requested, and no auto-compaction occurred — the streamer sends a
 fallback message:
 
 ```text
-error: empty response from agent.
+no response — try again.
 ```
 
 This covers edge cases where the agent's entire response was tool use
