@@ -8,7 +8,7 @@
 - **Format**: MDX files with YAML frontmatter, Mintlify components
 - **Config**: `docs.json` — theme, navigation (4 tabs: Guide, Customizing, Reference, Changelog), branding (Discord blurple `#4752C4`)
 - **Dev server**: `mint dev` → localhost:3000
-- **41 pages** across 9 sections: getting-started, core-usage, scheduling, integrations, extending, configuration, architecture, development, self-hosting
+- **44 pages** across 9 sections: getting-started, core-usage, scheduling, integrations, extending, configuration, architecture, development, self-hosting
 
 ## Working relationship
 
@@ -44,6 +44,7 @@ description: "Concise summary for SEO/navigation."
 - ADHD-aware vocabulary where relevant — proactivity, reducing cognitive load, context quality
 - Honest about tradeoffs, acknowledge design choices and their reasoning
 - Explicit over implicit — agents can't infer from context the way humans can. State constraints, defaults, and edge cases directly rather than implying them.
+- Behavioral details should have one authoritative page. Other pages can summarize but must link to the authority and not add claims the authority page doesn't make.
 - Prerequisites at start of procedural content
 - Match style and formatting of existing pages — read neighboring files before writing
 - Em dashes for inline clarifications — like this

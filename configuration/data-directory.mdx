@@ -79,13 +79,13 @@ Each line in `session_history.jsonl` contains:
  "parent_session_id": "sess_abc"}
 ```
 
-<Info>
+<Note>
 Compaction is detected two ways: the `/compact` command detects it
 via the `compact_boundary` SystemMessage from the SDK, while
 `save_session_id()` catches SDK auto-compaction by detecting session
 ID changes. A `_swap_in_progress` flag suppresses false `compacted`
 events during `swap_client()`.
-</Info>
+</Note>
 
 ## Fork and inquiry files
 

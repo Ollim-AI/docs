@@ -125,6 +125,9 @@ Sets the [permission mode](/core-usage/permissions) that controls how the agent 
 
 Permission mode is scoped per session. If you are in a fork, only the
 fork is affected. The main session retains its own permission mode.
+Exception: **dontAsk** uses a module-level flag — switching to or from
+`dontAsk` in a fork affects the main session. See
+[Permissions](/core-usage/permissions#fork-scoping) for details.
 
 ### /ping-budget
 
