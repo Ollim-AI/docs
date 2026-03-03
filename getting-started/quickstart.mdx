@@ -1,13 +1,29 @@
 ---
 title: "Quickstart"
-description: "Get ollim-bot running in under 5 minutes."
+description: "Install ollim-bot, create a Discord bot, and start chatting."
 ---
 
 Get ollim-bot running and send your first message in under 5 minutes.
 
 ## Prerequisites
 
-- [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh` (automatically installs the required Python version)
+- **OS** — Linux, macOS, or Windows (WSL works too)
+- [Git](https://git-scm.com/)
+- [uv](https://docs.astral.sh/uv/) (automatically installs the required Python version):
+
+<Tabs>
+  <Tab title="Linux / macOS">
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+  </Tab>
+  <Tab title="Windows">
+    ```powershell
+    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+    ```
+  </Tab>
+</Tabs>
+
 - A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI at startup
 - A Discord account
 
