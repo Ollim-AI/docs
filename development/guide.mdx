@@ -57,7 +57,10 @@ and conventions.
     ollim-bot
     ```
 
-    The bot checks for an existing instance via a PID file at
+    On first run, the bot checks Claude authentication — if not logged in,
+    it DMs you an OAuth link via Discord. See the
+    [quickstart](/getting-started/quickstart) for the full first-run flow.
+    The bot also checks for an existing instance via a PID file at
     `~/.ollim-bot/state/bot.pid` and exits if one is already running.
   </Step>
 </Steps>
@@ -198,6 +201,7 @@ Key runtime dependencies (from `pyproject.toml`):
 |---------|---------|
 | `discord.py` | Discord bot framework |
 | `claude-agent-sdk` | Claude Agent SDK for persistent AI sessions |
+| `claude-history` | Session transcript search — used by [subagents](/extending/subagents) to review past conversations |
 | `google-api-python-client` | Google API access (Tasks, Calendar, Gmail) |
 | `google-auth-oauthlib` | Google OAuth2 flow |
 | `apscheduler` | Cron-based scheduling for routines and reminders |
