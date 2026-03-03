@@ -59,12 +59,12 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `str` | auto-generated | 8-character hex UUID |
-| `run_at` | `str` | — | ISO 8601 datetime with timezone (e.g., `2026-02-24T15:30:00-08:00`) |
+| `run-at` | `str` | — | ISO 8601 datetime with timezone (e.g., `2026-02-24T15:30:00-08:00`) |
 | `description` | `str` | `""` | Human-readable description |
 | `background` | `bool` | `false` | Run as background fork |
-| `chain_depth` | `int` | `0` | Current position in a follow-up chain (0 = root) |
-| `max_chain` | `int` | `0` | Maximum chain depth (0 = no chaining) |
-| `chain_parent` | `str \| null` | `null` | ID of chain root (auto-set to own `id` when `max_chain > 0`) |
+| `chain-depth` | `int` | `0` | Current position in a follow-up chain (0 = root) |
+| `max-chain` | `int` | `0` | Maximum chain depth (0 = no chaining) |
+| `chain-parent` | `str \| null` | `null` | ID of chain root (auto-set to own `id` when `max-chain > 0`) |
 | `model` | `str \| null` | `null` | Model override |
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `isolated` | `bool` | `false` | Run in isolated session |
@@ -76,7 +76,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 ```yaml title="reminders/pick-up-groceries.md"
 ---
 id: "a1b2c3d4"
-run_at: "2026-02-24T18:30:00-08:00"
+run-at: "2026-02-24T18:30:00-08:00"
 ---
 Pick up groceries on the way home.
 ```
@@ -86,10 +86,10 @@ Chained reminder example:
 ```yaml title="reminders/follow-up-on-project.md"
 ---
 id: "f5e6d7c8"
-run_at: "2026-02-24T20:00:00-08:00"
+run-at: "2026-02-24T20:00:00-08:00"
 background: true
-max_chain: 2
-chain_parent: "f5e6d7c8"
+max-chain: 2
+chain-parent: "f5e6d7c8"
 description: "Project follow-up"
 ---
 Follow up on project timeline. Check if deadlines have been updated.

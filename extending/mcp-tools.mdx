@@ -112,7 +112,7 @@ Takes no parameters.
 
 ### `follow_up_chain`
 
-Schedule a follow-up reminder that continues the current chain. Used by [reminders](/scheduling/reminders) with `max_chain` to create self-continuing check-in sequences.
+Schedule a follow-up reminder that continues the current chain. Used by [reminders](/scheduling/reminders) with `max-chain` to create self-continuing check-in sequences.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -122,7 +122,7 @@ The tool creates a new reminder via `ollim-bot reminder add` with the chain dept
 
 Returns an error if:
 - No active reminder context exists (the tool was called outside a reminder-triggered session)
-- The chain depth has reached `max_chain` — the error includes recovery
+- The chain depth has reached `max-chain` — the error includes recovery
   guidance: "follow-up limit reached — this was the last check. If the
   task still needs attention, ping the user now."
 

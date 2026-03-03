@@ -68,7 +68,7 @@ You can override a built-in subagent's prompt without code changes — drop a `.
 
 Use **routines** when you want something to fire on a recurring schedule — every weekday at 9am, every Sunday evening. Routines persist until removed.
 
-Use **reminders** when you want a one-shot prompt at a specific time. For progressive workflows (e.g., "check if the user responded, then follow up"), set `max_chain` and let the agent call `follow_up_chain` to schedule continuations.
+Use **reminders** when you want a one-shot prompt at a specific time. For progressive workflows (e.g., "check if the user responded, then follow up"), set `max-chain` and let the agent call `follow_up_chain` to schedule continuations.
 
 ### Webhooks vs routines
 
@@ -88,11 +88,11 @@ Use **skills** when you want a reusable set of instructions that multiple routin
     |--------|----------|-----------|
     | **Trigger** | Cron expression (recurring) | Specific datetime (one-shot) |
     | **Persistence** | Fires forever until removed | Fires once, then done |
-    | **Follow-up** | Next occurrence is automatic | `max_chain` + `follow_up_chain` for progressive checks |
+    | **Follow-up** | Next occurrence is automatic | `max-chain` + `follow_up_chain` for progressive checks |
     | **Best for** | Daily rhythms, weekly reviews, periodic monitoring | "Remind me at 3pm", deadline nudges, progressive follow-up workflows |
     | **Storage** | `~/.ollim-bot/routines/<slug>.md` | `~/.ollim-bot/reminders/<slug>.md` |
 
-    Use **routines** for anything that repeats on a schedule. Use **reminders** for one-shot nudges — and set `max_chain` when the agent should follow up if the first nudge wasn't enough.
+    Use **routines** for anything that repeats on a schedule. Use **reminders** for one-shot nudges — and set `max-chain` when the agent should follow up if the first nudge wasn't enough.
   </Tab>
   <Tab title="Webhooks vs Routines">
     Both run as background forks with the same configuration options, but the trigger source differs.

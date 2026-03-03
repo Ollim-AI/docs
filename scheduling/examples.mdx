@@ -469,7 +469,7 @@ agent during conversation when the user mentioned a pickup.
 ```yaml title="reminders/cake-pickup-reminder.md"
 ---
 id: "85b192a2"
-run_at: "2026-02-25T14:49:07-08:00"
+run-at: "2026-02-25T14:49:07-08:00"
 background: true
 ---
 Cake pickup in 45 min! Main Street Bakery, 3:30 PM pickup.
@@ -480,7 +480,7 @@ Then head to pick up your friend (~4:30 PM).
 - **No description needed** — the message is self-explanatory
 - **Agent-created** — the user mentioned the pickup in conversation;
   the agent scheduled the reminder automatically
-- **Precise timing** — `run_at` is an exact ISO datetime computed
+- **Precise timing** — `run-at` is an exact ISO datetime computed
   from a delay
 
 ### Future-dated reminder — scheduled weeks out
@@ -492,7 +492,7 @@ The detailed message ensures a fresh agent fork has full context.
 ---
 id: "c1a05a18"
 description: "Remind to redeem token thaw on DeFi platform"
-run_at: "2026-04-06T16:00:55-07:00"
+run-at: "2026-04-06T16:00:55-07:00"
 ---
 ## Token Thaw
 

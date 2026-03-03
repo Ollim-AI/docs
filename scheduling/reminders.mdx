@@ -5,7 +5,7 @@ description: "Schedule one-shot time-based prompts with optional follow-up chain
 
 Reminders are one-shot time-based prompts that fire after a delay. Unlike
 routines, they execute once and are then removed. Reminders support
-**chaining** — a reminder with `max_chain` set can spawn follow-ups via
+**chaining** — a reminder with `max-chain` set can spawn follow-ups via
 the `follow_up_chain` MCP tool, letting the agent continue a task across
 multiple steps.
 
@@ -33,7 +33,7 @@ frontmatter.
 ```yaml title="reminders/check-on-deployment.md"
 ---
 id: "f4a9c1e2"
-run_at: "2026-02-24T15:30:00+01:00"
+run-at: "2026-02-24T15:30:00+01:00"
 description: "Check deployment status"
 background: true
 ---
@@ -51,12 +51,12 @@ If there were errors, send me an embed with the details.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `str` | — | Auto-generated 8-char hex ID |
-| `run_at` | `str` | — | ISO datetime (computed from delay) |
+| `run-at` | `str` | — | ISO datetime (computed from delay) |
 | `description` | `str` | `""` | Short summary for `reminder list` |
 | `background` | `bool` | `false` | Run in a background fork |
-| `chain_depth` | `int` | `0` | Current position in a chain |
-| `max_chain` | `int` | `0` | Max follow-up depth (0 = plain one-shot) |
-| `chain_parent` | `str \| null` | `null` | ID of the chain root |
+| `chain-depth` | `int` | `0` | Current position in a chain |
+| `max-chain` | `int` | `0` | Max follow-up depth (0 = plain one-shot) |
+| `chain-parent` | `str \| null` | `null` | ID of the chain root |
 | `model` | `str` | `null` | Model override (bg only) |
 | `thinking` | `bool` | `true` | Extended thinking (bg only) |
 | `isolated` | `bool` | `false` | Fresh context, not forked (bg only) |
@@ -146,14 +146,14 @@ Filenames are slugified from the message text (lowercase, hyphens, max
 
 ## Follow-up chains
 
-A plain reminder (`max_chain: 0`) fires once and is removed. A
-**chainable** reminder (`max_chain: N`) can spawn follow-ups: when the
+A plain reminder (`max-chain: 0`) fires once and is removed. A
+**chainable** reminder (`max-chain: N`) can spawn follow-ups: when the
 agent runs the reminder, it can call the `follow_up_chain` MCP tool to
-schedule a continuation at `chain_depth + 1`.
+schedule a continuation at `chain-depth + 1`.
 
 Chains end when:
 - The agent decides not to call `follow_up_chain` (task complete, nothing to report)
-- `chain_depth` reaches `max_chain` — the agent receives an error
+- `chain-depth` reaches `max-chain` — the agent receives an error
   prompting escalation via `ping_user`
   (see [`follow_up_chain`](/extending/mcp-tools#follow_up_chain))
 
@@ -164,19 +164,19 @@ question — without creating an open-ended loop.
 ```yaml title="reminders/check-email-response.md"
 ---
 id: "b7d3e8a1"
-run_at: "2026-02-24T16:00:00+01:00"
+run-at: "2026-02-24T16:00:00+01:00"
 description: "Check for email response"
 background: true
-max_chain: 3
-chain_depth: 0
-chain_parent: "b7d3e8a1"
+max-chain: 3
+chain-depth: 0
+chain-parent: "b7d3e8a1"
 ---
 Check if there's a response to the email I sent to the team.
 If no response yet, chain a follow-up. If they replied, send me an embed.
 ```
 
-When the agent chains, the next reminder inherits the `chain_parent` and
-increments `chain_depth`. Chain reminders also inherit tool restrictions and skills
+When the agent chains, the next reminder inherits the `chain-parent` and
+increments `chain-depth`. Chain reminders also inherit tool restrictions and skills
 from the parent via `ChainContext`.
 
 ## Background vs foreground
@@ -197,7 +197,7 @@ fork. Text output is discarded — the agent must use `ping_user` or
     ```yaml title="reminders/standup-prep.md"
     ---
     id: "a2b3c4d5"
-    run_at: "2026-02-24T09:45:00+01:00"
+    run-at: "2026-02-24T09:45:00+01:00"
     description: "Standup prep"
     ---
     What should I mention in standup? Check my recent tasks and calendar.
@@ -211,7 +211,7 @@ fork. Text output is discarded — the agent must use `ping_user` or
     ```yaml title="reminders/check-deployment.md"
     ---
     id: "f4a9c1e2"
-    run_at: "2026-02-24T15:30:00+01:00"
+    run-at: "2026-02-24T15:30:00+01:00"
     description: "Check deployment status"
     background: true
     isolated: true
@@ -224,7 +224,7 @@ fork. Text output is discarded — the agent must use `ping_user` or
 </Tabs>
 
 <Tip>
-  Combine `background: true` with `max_chain` for monitoring tasks.
+  Combine `background: true` with `max-chain` for monitoring tasks.
   The agent checks periodically in the background and only pings you
   when there is something to report.
 </Tip>
@@ -236,7 +236,7 @@ fork. Text output is discarded — the agent must use `ping_user` or
 ```yaml title="reminders/take-a-break.md"
 ---
 id: "e1f2a3b4"
-run_at: "2026-02-24T14:00:00+01:00"
+run-at: "2026-02-24T14:00:00+01:00"
 description: "Break reminder"
 ---
 Time for a break. What have I been working on for the last 2 hours?
@@ -247,13 +247,13 @@ Time for a break. What have I been working on for the last 2 hours?
 ```yaml title="reminders/wait-for-ci.md"
 ---
 id: "c5d6e7f8"
-run_at: "2026-02-24T13:00:00+01:00"
+run-at: "2026-02-24T13:00:00+01:00"
 description: "CI pipeline check"
 background: true
 isolated: true
-max_chain: 5
-chain_depth: 0
-chain_parent: "c5d6e7f8"
+max-chain: 5
+chain-depth: 0
+chain-parent: "c5d6e7f8"
 allowed-tools:
   - "mcp__discord__*"
 update-main-session: "on_ping"
@@ -268,7 +268,7 @@ If passed, send me an embed. If failed, ping me with the error.
 ```yaml title="reminders/inbox-scan.md"
 ---
 id: "a8b9c0d1"
-run_at: "2026-02-24T12:00:00+01:00"
+run-at: "2026-02-24T12:00:00+01:00"
 description: "Inbox scan"
 background: true
 isolated: true
