@@ -137,7 +137,7 @@ The main path from a Discord message to a streamed response.
 | `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
 | `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
 | `prompts.py` | System prompt for the main agent and fork prompt helpers |
-| `subagents.py` | Bundled agent installation (`install_agents`) and tool-set extraction for policy validation |
+| `subagents.py` | Bundled agent installation (`install_agents`) and tool-set extraction (`load_agent_tool_sets`) for policy validation |
 | `subagents/` | Subagent specs as markdown files (guide, gmail-reader, history-reviewer, responsiveness-reviewer, user-proxy) |
 | `channel.py` | DM channel reference — set once at startup, read everywhere |
 

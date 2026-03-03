@@ -19,7 +19,7 @@ ollim-bot has seven extensibility mechanisms. Most are **file-based** — markdo
 
 ### File-based mechanisms
 
-Routines, reminders, webhooks, skills, and subagents are all markdown files with YAML frontmatter. The scheduler picks up routine, reminder, and webhook changes every 10 seconds. Subagent specs are loaded at startup from `~/.ollim-bot/subagents/`. You can create any of these by talking to the bot, using the CLI, or writing files directly.
+Routines, reminders, webhooks, skills, and subagents are all markdown files with YAML frontmatter. The scheduler picks up routine, reminder, and webhook changes every 10 seconds. Subagent specs are installed to `~/.ollim-bot/.claude/agents/` at startup and discovered by the SDK via `setting_sources=["project"]`. You can create any of these by talking to the bot, using the CLI, or writing files directly.
 
 <Columns cols={3}>
   <Card title="Routines" icon="clock" href="/scheduling/routines">
