@@ -35,9 +35,11 @@ If no topic is given, the agent waits for you to lead. The agent can
 also start a fork on its own when it decides a tangent needs isolated
 context.
 
-Interactive forks always enable extended thinking, regardless of
-the main session's thinking setting. This gives the agent deeper
-reasoning for research and problem-solving in forks.
+By default, interactive forks enable extended thinking even when the
+main session has thinking off. You can change this with
+[`/config`](/core-usage/slash-commands#config) — set `thinking.fork`
+to `off` to disable it, or adjust `max_thinking_tokens` for a different
+token budget.
 
 When a fork starts, the bot sends a purple embed showing the topic
 (or "Open session") along with three buttons for exiting:
@@ -62,20 +64,12 @@ ends.
 
 ## Exit strategies
 
-Every interactive fork ends with one of three actions. You can trigger
-them via the buttons on the fork embed, or the agent can call the
-corresponding MCP tools directly.
+Every interactive fork ends with one of three actions — **report updates**
+is the default. You can trigger them via the buttons on the fork embed,
+or the agent can call the corresponding MCP tools directly.
 
 <AccordionGroup>
-  <Accordion title="Save context">
-    Promotes the fork to the main session. The forked client replaces
-    the main client, and the old main session is disconnected. All
-    conversation history from the fork becomes the new main session.
-
-    - **Button**: Save Context
-    - **MCP tool**: `save_context` (no parameters)
-  </Accordion>
-  <Accordion title="Report updates">
+  <Accordion title="Report updates (default)">
     Appends a short summary to `~/.ollim-bot/state/pending_updates.json`
     and discards the fork. The summary is injected into the next
     main-session message, so you get the findings without the full
@@ -93,25 +87,36 @@ corresponding MCP tools directly.
     - **Button**: Exit Fork
     - **MCP tool**: `exit_fork` (no parameters)
   </Accordion>
+  <Accordion title="Save context">
+    Promotes the fork to the main session. The forked client replaces
+    the main client, and the old main session is disconnected. All
+    conversation history from the fork becomes the new main session.
+    Reserved for forks with context needed going forward.
+
+    - **Button**: Save Context
+    - **MCP tool**: `save_context` (no parameters)
+  </Accordion>
 </AccordionGroup>
 
 <Tip>
-  Use **save** when the fork produced context worth keeping
-  (e.g., a plan, research results). Use **report** for lightweight
-  findings. Use **exit** for throwaway exploration.
+  Use **report** (the default) for lightweight findings. Use **exit**
+  for throwaway exploration. Use **save** only when the fork produced
+  context worth keeping going forward — plans, research results, or
+  configuration changes.
 </Tip>
 
 ## Idle timeout
 
 Interactive forks have an idle timeout to prevent abandoned forks
-from blocking normal conversation. The default is 10 minutes.
+from blocking normal conversation. The default is 10 minutes —
+configurable via [`/config fork_idle_timeout`](/core-usage/slash-commands#config).
 
 The timeout works in two stages:
 
-1. **First timeout** — after 10 minutes of inactivity,
+1. **First timeout** — after the configured idle period,
    the agent is prompted to decide on an exit strategy.
-   It may choose to save, report, or exit.
-2. **Second timeout** — if another 10 minutes pass
+   It may choose to report, exit, or save.
+2. **Second timeout** — if another idle period passes
    with no activity, the agent receives a stronger prompt to
    exit. The agent always decides the final exit strategy;
    there is no forced auto-exit.
@@ -126,7 +131,7 @@ several ways:
 |--------|-------------|------------|
 | Started by | You (`/fork`) or the agent | Scheduler (routines/reminders) or webhooks |
 | Output | Streamed to Discord | Discarded (agent notifies or reports) |
-| Timeout | Idle timeout (default 10 min) | Hard timeout (30 minutes) |
+| Timeout | Idle timeout (`fork_idle_timeout`, default 10 min) | Hard timeout (`bg_fork_timeout`, default 30 min) |
 | Save context | Available | Not available |
 | Report to main session | Available | Available |
 | Blocks conversation | Yes (one at a time) | No (multiple run concurrently) |

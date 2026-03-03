@@ -73,8 +73,9 @@ The change takes effect immediately — the next message uses the new model.
 ### /thinking
 
 Toggles extended thinking (chain-of-thought reasoning) for deeper
-analysis. When enabled, the agent gets 10,000 thinking tokens per
-response.
+analysis. The token budget is controlled by the `max_thinking_tokens`
+[runtime config](/core-usage/slash-commands#config) key (default:
+10,000).
 
 | Parameter | Type | Required | Choices |
 |-----------|------|----------|---------|

@@ -13,8 +13,9 @@ findings, and the fork is discarded.
 When a background routine or reminder fires, the bot creates
 a temporary session. The agent's text output is discarded — it
 communicates only through notifications, embeds, and reporting to
-the main session. After the task completes (or times out after 30
-minutes), the session is thrown away.
+the main session. After the task completes (or times out — default
+30 minutes, configurable via [`/config bg_fork_timeout`](/core-usage/slash-commands#config)),
+the session is thrown away.
 
 Background forks run concurrently with your main conversation and
 with other background forks — they never interrupt what you're doing.

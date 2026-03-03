@@ -63,7 +63,7 @@ Start an interactive fork branching from the main session.
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `topic` | string | No | — | Optional topic label for the fork |
-| `idle_timeout` | integer | No | `10` | Minutes before the idle timeout prompt fires |
+| `idle_timeout` | integer | No | [`fork_idle_timeout`](/configuration/reference#runtime-configuration) | Minutes before the idle timeout prompt fires |
 
 **Availability:** Main session only. Returns an error if already inside any fork (interactive or background). The fork interrupts the current agent turn immediately.
 
