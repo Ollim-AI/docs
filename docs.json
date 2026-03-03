@@ -3,7 +3,7 @@
   "theme": "mint",
   "name": "ollim-bot",
   "colors": {
-    "primary": "#5865F2",
+    "primary": "#4752C4",
     "light": "#7289DA",
     "dark": "#4752C4"
   },
@@ -29,8 +29,8 @@
   "seo": {
     "metatags": {
       "og:site_name": "ollim-bot",
-      "og:image": "https://docs.ollim.ai/images/logo.png",
-      "twitter:card": "summary"
+      "og:image": "https://docs.ollim.ai/images/og-image.png",
+      "twitter:card": "summary_large_image"
     }
   },
   "contextual": {
