@@ -21,7 +21,9 @@ scheduler polls this directory every 10 seconds. After a reminder fires,
 it is removed automatically (unless it chains into a follow-up).
 
 The agent has direct file access to create and manage reminders — you can
-ask it in conversation, or use the CLI.
+ask it in conversation, or use the CLI. After creating or modifying a
+reminder, the agent confirms the scheduled time in one line (e.g.
+"reminder set for 3:00 PM").
 
 ## File format
 
@@ -154,12 +156,27 @@ schedule a continuation at `chain-depth + 1`.
 Chains end when:
 - The agent decides not to call `follow_up_chain` (task complete, nothing to report)
 - `chain-depth` reaches `max-chain` — the agent receives an error
-  prompting escalation via `ping_user`
+  with recovery guidance: "follow-up limit reached — this was the last
+  check. If the task still needs attention, ping the user now."
   (see [`follow_up_chain`](/extending/mcp-tools#follow_up_chain))
 
 This lets the agent monitor something over time — check for an email
 reply, wait for a build to finish, or follow up on an unanswered
 question — without creating an open-ended loop.
+
+### Chain behavior
+
+When a chain reminder fires, the agent is instructed to briefly
+acknowledge the follow-up nature in any pings — phrasing like
+"checking in again" or "follow-up on earlier" — so you know the
+notification is an intentional continuation, not a duplicate.
+
+On the **final check** (last link in the chain), the agent applies a
+**regret heuristic**: it pings only if the task is still unresolved
+*and* you would regret missing it. Otherwise, it reports findings to
+the main session via `report_updates`. This prevents unnecessary
+notifications at the end of a chain while still escalating when it
+matters.
 
 ```yaml title="reminders/check-email-response.md"
 ---
@@ -228,6 +245,20 @@ fork. Text output is discarded — the agent must use `ping_user` or
   The agent checks periodically in the background and only pings you
   when there is something to report.
 </Tip>
+
+## Overdue reminders
+
+When a reminder's scheduled time has already passed by the time the
+scheduler processes it — for example, after a restart — the reminder
+fires immediately with an **overdue signal** injected into the prompt:
+
+```text
+[late: was scheduled for 3:00 PM, running now]
+```
+
+This tells the agent the reminder is stale, so it can adjust its
+behavior accordingly — a "take your medication" ping that fires two
+hours late may warrant different wording than one arriving on time.
 
 ## Examples
 

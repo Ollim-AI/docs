@@ -91,6 +91,12 @@ The agent follows these guidelines:
 - Save pings for time-sensitive actions, accountability nudges, and health routines
 - When budget is tight, prioritize tasks you would regret missing
 
+The preamble shows a compact budget summary — `budget: 3/5 (next
+refill in 42 min)` — alongside the forward schedule and refill
+estimates. This gives the agent enough information to decide whether
+spending a token now is worth it or whether a higher-priority task
+fires soon.
+
 See [Context flow](/architecture/context-flow) for details on the
 context background forks receive.
 
@@ -103,8 +109,18 @@ View or configure the ping budget from Discord.
     ```text
     /ping-budget
     ```
-    Returns the current budget status: available/capacity, refill
-    rate, daily usage, and critical count.
+    Returns the current budget status. Example output:
+
+    ```text
+    budget: 3/5 (next refill in 42 min). used today: 2. critical bypasses: 1 (urgent overrides, not deducted from budget).
+    ```
+
+    The output includes:
+    - Available and total capacity
+    - Time until next refill (when below capacity)
+    - Daily usage count (when non-zero)
+    - Critical bypass count with an explanation that these are urgent
+      overrides not deducted from the regular budget (when non-zero)
   </Tab>
   <Tab title="Configure">
     ```text

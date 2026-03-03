@@ -265,8 +265,13 @@ reminder has `max-chain > 0`, the preamble includes:
 
 - The current check number and total (e.g., "check 2/4")
 - Whether `follow_up_chain(minutes_from_now=N)` is available
+- Instruction to acknowledge the follow-up nature in pings (e.g.
+  "checking in again") so the user knows it is intentional
 - On the final check: the preamble warns that `follow_up_chain` is not
-  available. If called anyway, the tool returns an
+  available and applies a **regret heuristic** — the agent pings only
+  if the task is still unresolved and the user would regret missing it,
+  otherwise it calls `report_updates`. If `follow_up_chain` is called
+  anyway, the tool returns an
   [error with recovery guidance](/extending/mcp-tools#follow_up_chain)
   prompting escalation via `ping_user`.
 
