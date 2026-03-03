@@ -4,16 +4,22 @@ description: "How agent responses stream to Discord with throttled edits and ove
 ---
 
 Agent responses stream token-by-token from the Claude Agent SDK into
-Discord messages. The `streamer.py` module bridges these two systems,
-handling Discord's rate limits, the 2000-character message cap, and
-typing indicators during tool execution pauses.
+Discord messages. Two modules handle this: `agent_streaming.py` consumes
+the SDK response (parsing `StreamEvent` messages, handling
+auto-compaction retries, and detecting fork interrupts), while
+`streamer.py` bridges the resulting text deltas to Discord — handling
+rate limits, the 2000-character message cap, and typing indicators
+during tool execution pauses.
 
 ## Overview
 
 The streaming pipeline has three stages:
 
-1. `Agent.stream_chat()` yields text deltas and `StreamStatus` signals
-   from the SDK's `StreamEvent` messages
+1. `Agent.stream_chat()` yields text deltas and `StreamStatus` signals.
+   It delegates SDK response consumption to `stream_response()` in
+   `agent_streaming.py`, which handles the message loop, auto-compaction
+   retry, and fork interrupt detection. Raw SSE events are parsed by
+   `StreamParser` in `streamer.py`.
 2. `stream_to_channel()` buffers text and routes status signals to an
    ephemeral status message, progressively editing a Discord message
 3. A background editor task flushes the buffer on a fixed interval,
@@ -27,8 +33,7 @@ within this by editing at a fixed interval rather than on every delta.
 
 `Agent.stream_chat()` is an async generator that yields two types of
 output: text strings (for display) and `StreamStatus` signals (for
-phase transitions like thinking, tool use, and compaction). It delegates
-raw SDK event parsing to `StreamParser` in `streamer.py`.
+phase transitions like thinking, tool use, and compaction).
 
 `StreamParser.feed()` processes individual SSE event dicts from the SDK:
 
@@ -48,10 +53,11 @@ denied by the permission system. This shows the user what the agent is
 doing during pauses.
 
 <Note>
-When an `enter_fork` tool fires during streaming, `stream_chat()`
-interrupts the SDK client and suppresses remaining stream events. The
-loop continues to drain messages so the `ResultMessage` still saves the
-session ID, but no further text deltas are yielded.
+When an `enter_fork` tool fires during streaming, `stream_response()` in
+`agent_streaming.py` interrupts the SDK client and suppresses remaining
+stream events. The loop continues to drain messages so the
+`ResultMessage` still saves the session ID, but no further text deltas
+are yielded.
 </Note>
 
 ## Throttled editing
@@ -187,15 +193,15 @@ visible annotation in the DM so you know what happened.
 The flow:
 
 1. The SDK emits a `SystemMessage` with `subtype="compact_boundary"` and
-   ends the stream. The agent layer detects this, extracts the
-   pre-compaction token count from `compact_metadata`, and signals the
-   streamer with a `StreamStatus` event (`kind="compact_start"`) including
+   ends the stream. `stream_response()` in `agent_streaming.py` detects
+   this, extracts the pre-compaction token count from `compact_metadata`,
+   and yields a `StreamStatus` event (`kind="compact_start"`) including
    an optional `compact_tokens` count.
 2. The streamer flushes any pre-compaction text to its own message
 3. An ephemeral status message appears with a timer:
    `-# *Auto-compacting 5k tokens... (3s)*`
-4. The agent re-sends the original query against the freshly compacted
-   context (via `client.query()`), then streams the new response
+4. `stream_response()` re-sends the original query against the freshly
+   compacted context (via `client.query()`), then streams the new response
 5. When the post-compaction response arrives, the streamer edits the
    status to a permanent annotation: `-# *auto-compacted · 5k tokens · 8s*`
 6. Post-compaction content continues in a new message

@@ -6,6 +6,10 @@ description: "Explore the module map, key architectural patterns, and data flow 
 ollim-bot is a single-process Python application that bridges Discord with
 Claude via the Agent SDK. All modules live under `src/ollim_bot/`, with two
 sub-packages (`google/` and `scheduling/`) for domain-specific functionality.
+The core agent module delegates to three extracted helpers — `agent_context.py`
+(timestamps, pending updates, `ThinkingConfig`), `agent_streaming.py` (stream
+consumption and auto-compaction retry), and `fork_state.py` (contextvars,
+dataclasses, idle timeouts) — keeping each file under 400 lines.
 
 ## Data flow
 
@@ -19,9 +23,10 @@ A message from Discord travels through four stages before a response appears.
   </Step>
   <Step title="Agent processing">
     `agent.py` injects the message into the active `ClaudeSDKClient`
-    session. Pending updates from background forks are prepended. The
-    SDK streams text deltas and tool-use events back through an
-    `AsyncGenerator`.
+    session. `agent_context.py` prepends a timestamp and any pending
+    background updates. `agent_streaming.py` consumes the SDK response,
+    yielding text deltas and `StreamStatus` signals through an
+    `AsyncGenerator` — including transparent auto-compaction retry.
   </Step>
   <Step title="Streaming to Discord">
     `streamer.py` consumes the generator, buffering deltas and
@@ -85,12 +90,13 @@ swapped, cleared, interactive_fork, bg_fork, isolated_bg) are logged to `session
 ### Contextvar isolation
 
 Background forks use `ContextVar` instances to scope mutable state.
-Key variables include `_in_fork_var`, `_busy_var`,
+All fork-related contextvars and dataclasses live in `fork_state.py` —
+key variables include `_in_fork_var`, `_busy_var`,
 `_bg_tracking` (a `BgForkTracking` dataclass holding `output_sent`,
-`reported`, and `ping_count`), `_bg_fork_config_var`,
-`_chain_context_var`, and `_msg_collector`. This lets
-multiple forks run concurrently while the main session uses module-level
-globals for the same values.
+`reported`, and `ping_count`), and `_bg_fork_config_var`.
+`_chain_context_var` and `_msg_collector` in `agent_tools.py` follow the
+same pattern. This lets multiple forks run concurrently while the main
+session uses module-level globals for the same values.
 
 ### File-based storage
 
@@ -121,9 +127,9 @@ agent-generated button prompts to disk with a 7-day TTL.
 
 ## Module map
 
-The codebase has 36 modules organized into five layers.
+The codebase has 38 modules organized into five layers.
 
-<Accordion title="Full module map (36 modules)">
+<Accordion title="Full module map (38 modules)">
 
 ### Core loop
 
@@ -131,11 +137,12 @@ The main path from a Discord message to a streamed response.
 
 | Module | Role |
 |--------|------|
-| `main.py` | CLI entry point — dispatches to bot or subcommands |
+| `main.py` | CLI entry point — dispatches to bot or subcommands, sets up the [SDK layout](/configuration/data-directory#sdk-layout-directory) at startup |
 | `auth.py` | Claude Code auth — headless login via bundled CLI, startup auth check |
 | `bot.py` | Discord interface — DMs, slash commands, reaction acks |
-| `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
-| `agent_context.py` | Message context helpers — timestamps, duration formatting, pending update assembly, ThinkingConfig |
+| `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), slash routing; delegates context prep to `agent_context.py` and streaming to `agent_streaming.py` |
+| `agent_context.py` | Message context helpers — timestamps, duration formatting, pending update assembly, `ThinkingConfig` builder |
+| `agent_streaming.py` | Stream response consumer — SDK message loop, auto-compaction retry, fork interrupt, fallback tiers |
 | `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
 | `prompts.py` | System prompt for the main agent and fork prompt helpers |
 | `subagents.py` | Bundled agent installation (`install_agents`) and tool-set extraction (`load_agent_tool_sets`) for policy validation |

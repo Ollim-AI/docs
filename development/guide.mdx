@@ -111,10 +111,12 @@ there are no `utils`, `helpers`, or `common` modules.
 
 ```text
 src/ollim_bot/
-├── main.py              # CLI entry point and command router
+├── main.py              # CLI entry point, command router, SDK layout setup
 ├── bot.py               # Discord interface (DMs, slash commands)
 ├── channel.py           # DM channel reference, set once at startup
-├── agent.py             # Claude Agent SDK brain (sessions, MCP tools, subagents)
+├── agent.py             # Agent SDK wrapper (sessions, MCP servers, slash routing)
+├── agent_context.py     # Message context: timestamps, pending updates, ThinkingConfig
+├── agent_streaming.py   # Stream consumer: SDK message loop, auto-compaction retry
 ├── prompts.py           # System prompt for main agent and fork prompt helpers
 ├── subagents.py         # Bundled agent installation and tool-set extraction
 ├── subagents/           # Subagent specs (markdown files with YAML frontmatter)
@@ -123,7 +125,8 @@ src/ollim_bot/
 ├── auth.py              # Claude Code auth via bundled CLI (headless login flow)
 ├── config.py            # Env vars loaded from .env via dotenv
 ├── runtime_config.py    # Persistent runtime config (model, thinking, timeouts)
-├── forks.py             # Fork state (bg + interactive), pending updates I/O
+├── fork_state.py        # Fork state: contextvars, dataclasses, idle timeouts
+├── forks.py             # Pending updates I/O and background fork execution
 ├── sessions.py          # Session ID persistence and session history JSONL log
 ├── permissions.py       # Discord-based tool approval (canUseTool callback)
 ├── tool_policy.py       # Tool-pattern validation and SDK ceiling builder
