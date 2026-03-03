@@ -53,8 +53,8 @@ denied by the permission system. This shows the user what the agent is
 doing during pauses.
 
 <Note>
-When an `enter_fork` tool fires during streaming, `stream_response()` in
-`agent_streaming.py` interrupts the SDK client and suppresses remaining
+When an `enter_fork` tool fires during streaming, `stream_response()`
+interrupts the SDK client and suppresses remaining
 stream events. The loop continues to drain messages so the
 `ResultMessage` still saves the session ID, but no further text deltas
 are yielded.
@@ -193,9 +193,9 @@ visible annotation in the DM so you know what happened.
 The flow:
 
 1. The SDK emits a `SystemMessage` with `subtype="compact_boundary"` and
-   ends the stream. `stream_response()` in `agent_streaming.py` detects
-   this, extracts the pre-compaction token count from `compact_metadata`,
-   and yields a `StreamStatus` event (`kind="compact_start"`) including
+   ends the stream. `stream_response()` detects this, extracts the
+   pre-compaction token count from `compact_metadata`, and yields a
+   `StreamStatus` event (`kind="compact_start"`) including
    an optional `compact_tokens` count.
 2. The streamer flushes any pre-compaction text to its own message
 3. An ephemeral status message appears with a timer:

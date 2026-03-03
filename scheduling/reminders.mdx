@@ -153,9 +153,9 @@ schedule a continuation at `chain_depth + 1`.
 
 Chains end when:
 - The agent decides not to call `follow_up_chain` (task complete, nothing to report)
-- `chain_depth` reaches `max_chain` — the agent receives an error with
-  recovery guidance: "follow-up limit reached — this was the last check.
-  If the task still needs attention, ping the user now."
+- `chain_depth` reaches `max_chain` — the agent receives an error
+  prompting escalation via `ping_user`
+  (see [`follow_up_chain`](/extending/mcp-tools#follow_up_chain))
 
 This lets the agent monitor something over time — check for an email
 reply, wait for a build to finish, or follow up on an unanswered

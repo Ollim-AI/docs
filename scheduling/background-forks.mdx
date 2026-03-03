@@ -97,10 +97,10 @@ The agent's text output is discarded. To reach you, it must call
 are subject to the [ping budget](/scheduling/ping-budget) — each
 non-critical ping consumes one token from the budget.
 
-`ping_user` is **background-fork-only** — it sends a plain text alert
-and is not available in the main session or interactive forks.
-`discord_embed` is **available in all contexts** — main session,
-interactive forks, and background forks alike.
+`ping_user` is **background-fork-only**; `discord_embed` is
+**available in all contexts**. See
+[MCP tools](/extending/mcp-tools#output-tools) for full parameter
+reference.
 
 Set `allow_ping: false` to disable both tools entirely. Unlike the
 ping budget, this is absolute — `critical: true` does **not** bypass

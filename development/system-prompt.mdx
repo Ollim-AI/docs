@@ -162,9 +162,9 @@ and how long ago things happened.
 ### Pending background updates
 
 If background forks have called `report_updates`, those messages accumulate
-in a pending updates file (capped at **10 entries** — oldest dropped when
-exceeded). When the user next sends a message, they are injected with a
-context-specific header:
+in a pending updates file (capped at
+[10 entries](/architecture/context-flow#write-path)). When the user next
+sends a message, they are injected with a context-specific header:
 
 ```text
 [2026-02-24 Mon 02:30 PM PT] RECENT BACKGROUND UPDATES (mention key findings in your response):
@@ -174,10 +174,10 @@ context-specific header:
 How's it going?
 ```
 
-In the main session, pending updates are consumed (cleared after injection)
-and the header says "mention key findings in your response." In interactive
-forks, they are peeked (read without clearing) and the header says
-"read-only — main session will also see these."
+In the main session, pending updates are consumed (cleared after
+injection). In interactive forks, they are peeked (read without
+clearing). See [Context flow](/architecture/context-flow#read-path) for
+the full read path and header variants.
 
 ### Skills section
 
@@ -214,7 +214,7 @@ The preamble includes different instructions depending on the
 | `on_ping` (default) | Report if you pinged, otherwise call nothing |
 | `freely` | MAY optionally call `report_updates` |
 | `blocked` | No reporting to the main session |
-| `blocked` + `allow_ping` | No summary to the main session, but can still ping the user directly for time-sensitive items |
+| `blocked` + `allow_ping` | No reporting, but pinging allowed ([details](/scheduling/background-forks#reporting-to-the-main-session)) |
 
 ### Budget and schedule window
 

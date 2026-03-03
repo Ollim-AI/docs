@@ -85,30 +85,27 @@ depends on its `update_main_session` mode:
 | `freely` | Reporting is optional |
 | `blocked` | `report_updates` returns an error |
 
-When `blocked` is combined with `allow_ping: true`, the agent is told
-that no summary reaches the main session, but it can still ping the
-user directly on Discord for time-sensitive items.
+When `blocked` is combined with `allow_ping: true`, reporting is
+disabled but direct pings remain available — see
+[Background forks](/scheduling/background-forks#reporting-to-the-main-session)
+for when this combination is useful.
 
-A stop hook (`require_report_hook`) enforces these modes. In `always`
-mode, the hook prompts the agent to summarize what it found or did to
-update the main session. In `on_ping` mode, it blocks if the agent
-pinged but didn't report.
+A stop hook (`require_report_hook`) enforces these modes — see the
+[enforcement table](/extending/mcp-tools#background-fork-enforcement)
+for details. In `on_ping` mode, it blocks if the agent pinged but
+didn't report.
 
 ### Read path
 
 The main session and forks read pending updates differently. The
-injected header also varies by context — the main session sees
-"RECENT BACKGROUND UPDATES (mention key findings in your response)"
-while forks see "RECENT BACKGROUND UPDATES (read-only — main session
-will also see these)".
+injected header also varies by context — prompting the main session
+to surface key findings, while marking updates as read-only in forks.
 
 <Tabs>
   <Tab title="Main session">
     The main session **pops** pending updates — reads and clears the
     file atomically. The updates are prepended to the next message the
     agent sees, giving it context about what happened in the background.
-    The header instructs the agent to mention key findings in its
-    response.
 
     After the pop, the file is deleted. Each update is consumed exactly
     once.
@@ -117,8 +114,7 @@ will also see these)".
     Interactive forks **peek** at pending updates — read-only, no
     clearing. This preserves the updates for the main session to
     consume later. The fork still sees the context, but doesn't
-    consume it. The header marks these as read-only so the agent
-    knows the main session will also receive them.
+    consume it.
   </Tab>
   <Tab title="Isolated background fork">
     Isolated background forks (`isolated: true`) do **not** receive
@@ -270,9 +266,9 @@ reminder has `max_chain > 0`, the preamble includes:
 - The current check number and total (e.g., "check 2/4")
 - Whether `follow_up_chain(minutes_from_now=N)` is available
 - On the final check: the preamble warns that `follow_up_chain` is not
-  available and this is the last chance to act. If the agent calls
-  `follow_up_chain` anyway, the tool returns an error with recovery
-  guidance prompting the agent to escalate via `ping_user`.
+  available. If called anyway, the tool returns an
+  [error with recovery guidance](/extending/mcp-tools#follow_up_chain)
+  prompting escalation via `ping_user`.
 
 Chain reminders inherit tool restrictions and skills from the parent via
 `ChainContext`, so `allowed_tools` and `skills` propagate through the
