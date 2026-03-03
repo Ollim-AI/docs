@@ -20,7 +20,7 @@ updates, and background preambles — is injected dynamically at runtime.
 | Task capture | When and how to capture tasks |
 | Output guidance | One-thing-at-a-time vs full lists |
 | Configuration notes | CLI style, timestamps, prompt tags, tool whitelisting |
-| Skills | Skill index (dynamic — lists available skills with descriptions) |
+| Skills | Skill format, interactive use via SDK `Skill` tool, spec-file reference |
 | Google Tasks | Commands, conventions |
 | Google Calendar | Commands, timezone |
 | Routines and Reminders | Quick CLI commands, spec-file reference, chain follow-ups |
@@ -40,7 +40,6 @@ The entire prompt is a string literal — no template rendering or
 conditional logic. Two dynamic values are injected into `SYSTEM_PROMPT`
 via f-string substitution: `USER_NAME` (personality section, fork
 instructions) and `TZ` (Google Calendar section), both from `config.py`.
-`build_skill_index()` also injects a dynamic skill index at `Agent.__init__`.
 </Note>
 
 ## Personality section
@@ -178,12 +177,14 @@ In the main session, pending updates are consumed (cleared after injection).
 In interactive forks, they are peeked (read without clearing) so the main
 session still sees them.
 
-### Skill index
+### Skills section
 
-The agent needs to know what skills are available so it can reference
-them when creating routines. When skills exist in `~/.ollim-bot/skills/`,
-`build_skill_index()` appends a dynamic index to the system prompt at
-startup listing each skill's name and description.
+The system prompt's skills section tells the agent how skills work — the
+directory structure, the `skills:` field on routines and reminders, and
+how to invoke skills interactively using the SDK's built-in `Skill` tool.
+The SDK discovers available skills natively via the
+`.claude/skills/ -> ../skills/` symlink, so no custom index is appended
+to the system prompt.
 
 ## Background preamble
 

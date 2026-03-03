@@ -272,7 +272,7 @@ creating routines, reminders, webhooks, or skills. Because the agent's
 working directory is `~/.ollim-bot/`, it can read them by name without
 hardcoding paths to the source tree.
 
-On startup, `_ensure_spec_symlinks()` in `main.py` creates symlinks
+On startup, `_ensure_sdk_layout()` in `main.py` creates symlinks
 pointing to specification documents in the project's `docs/` directory:
 
 | File | Type | Referenced by |
@@ -283,9 +283,9 @@ pointing to specification documents in the project's `docs/` directory:
 Symlinks are only created if the target doesn't already exist — they
 survive bot restarts and are never overwritten.
 
-`skill-spec.md` is a regular file (not a symlink) referenced by the
+`skill-spec.md` is a symlink to `docs/skill-spec.md` referenced by the
 system prompt's skills section. It is not managed by
-`_ensure_spec_symlinks()`.
+`_ensure_sdk_layout()` — it must be created manually or by the agent.
 
 ## Git tracking
 

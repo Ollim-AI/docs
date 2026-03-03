@@ -161,7 +161,8 @@ sections.
   <Accordion title="Skill instructions">
     When a routine or reminder has a `skills` field referencing one or
     more [skills](/extending/skills), the scheduler loads the skill
-    instructions and prepends them to the job message at fire time.
+    instructions, expands any [dynamic context injection](/extending/skills#dynamic-context-injection)
+    markers (`` !`command` ``), and prepends them to the job message at fire time.
     `collect_skill_tools()` merges tool dependencies declared in the
     skills (`allowed-tools`) into the job's tool set. Skills propagate
     through [chain reminders](/architecture/context-flow#chain-reminder-context) via `ChainContext`.

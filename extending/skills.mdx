@@ -48,13 +48,13 @@ Summarize findings as a bulleted list, grouped by file.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `str` | — | Lowercase with hyphens — must match the directory name |
-| `description` | `str` | — | What the skill does and when to use it (shown in the system prompt index) |
+| `description` | `str` | — | What the skill does and when to use it (used by the SDK for skill discovery) |
 | `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
 
 The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
 
 <Tip>
-Keep `description` concise and action-oriented. It appears in the [system prompt's skill index](/development/system-prompt#skill-index), so the agent uses it to decide when a skill is relevant — even outside of scheduled jobs.
+Keep `description` concise and action-oriented. The SDK uses it to decide when a skill is relevant — it appears in the skill's discovery metadata, so the agent can invoke skills interactively outside of scheduled jobs.
 </Tip>
 
 ## Dynamic context injection
@@ -216,6 +216,6 @@ The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When
     Full YAML frontmatter reference for all markdown data files.
   </Card>
   <Card title="System prompt" icon="terminal" href="/development/system-prompt">
-    How the system prompt is structured and what gets injected — including the skill index.
+    How the system prompt is structured and what gets injected.
   </Card>
 </Columns>
