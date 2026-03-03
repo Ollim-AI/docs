@@ -274,6 +274,25 @@ its commit. Use `git log` inside the directory to review the change history.
     the next scheduled fire usually succeeds. If it persists, check your
     network connection and the Claude API status.
   </Accordion>
+
+  <Accordion title="Background fork failure or timeout notification">
+    When a background fork crashes or exceeds its timeout (`bg_fork_timeout`,
+    default 30 minutes), the bot sends a best-effort DM notification:
+
+    ```text
+    Background task timed out after 30 minutes: `[routine:daily-email-check]`
+    ```
+
+    Or for crashes:
+
+    ```text
+    Background task failed: `[reminder:workout-nudge]` -- check logs for details.
+    ```
+
+    These messages are informational — the fork has already been cleaned up.
+    If the task was a routine, the next scheduled fire will try again
+    automatically. If it was a one-shot reminder, you may need to reschedule it.
+  </Accordion>
 </AccordionGroup>
 
 ## Fork issues

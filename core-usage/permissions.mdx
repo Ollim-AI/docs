@@ -12,18 +12,23 @@ silent denial of unapproved tools all the way to full bypass.
 Switch modes with the `/permissions` slash command or persistently
 with [`/config permission_mode`](/core-usage/slash-commands#config).
 
+**ollim-bot's own mode:**
+
 | Mode | Behavior |
 |------|----------|
 | `dontAsk` | Silent denial of tools not in the session-allowed set. No prompt. **Default.** |
-| `default` | Discord message with reaction buttons for each tool use. |
-| `acceptEdits` | SDK built-in — file-edit tools auto-approved, others prompt. |
-| `bypassPermissions` | SDK built-in — all tools auto-approved, no prompts. |
 
-<Note>
-`dontAsk` is ollim-bot's own layer on top of the default SDK
-permission system. It silently blocks unapproved tools before
-the agent sees them.
-</Note>
+`dontAsk` is ollim-bot's own layer — it intercepts tool requests in `handle_tool_permission()` before the SDK's permission callback fires. This is a module-level flag, not a SDK setting, which affects [fork scoping](#fork-scoping).
+
+**SDK-native modes:**
+
+| Mode | Behavior |
+|------|----------|
+| `default` | Discord message with reaction buttons for each tool use. |
+| `acceptEdits` | File-edit tools auto-approved, others prompt. |
+| `bypassPermissions` | All tools auto-approved, no prompts. |
+
+These three modes are passed directly to the SDK via `set_permission_mode()` and operate at the SDK level.
 
 ### Persistence
 

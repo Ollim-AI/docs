@@ -19,7 +19,7 @@ Send a rich embed message with optional action buttons.
 |-----------|------|----------|---------|-------------|
 | `title` | string | Yes | — | Embed title |
 | `description` | string | No | — | Embed body text |
-| `color` | string | No | `"blue"` | `blue` (info), `green` (success), `red` (urgent), `yellow` (warning) |
+| `color` | string | No | `"blue"` | `blue` (info), `green` (success), `red` (urgent), `yellow` (warning), `purple` (fork) |
 | `fields` | array | No | `[]` | Objects with `name` (string, required), `value` (string, required), `inline` (boolean, optional) |
 | `buttons` | array | No | `[]` | Objects with `label` (string, required), `action` (string, required), `style` (string, optional) |
 | `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and ping budget when `true` |
@@ -31,6 +31,7 @@ Send a rich embed message with optional action buttons.
 | `task_done:<task_id>` | Mark a Google Task as complete |
 | `task_del:<task_id>` | Delete a Google Task |
 | `event_del:<event_id>` | Delete a Google Calendar event |
+| `dismiss:` | Delete the embed message |
 | `agent:<prompt>` | Send a prompt back to the agent |
 
 **Button styles:** `success`, `danger`, `primary`, `secondary`.
