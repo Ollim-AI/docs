@@ -3,6 +3,7 @@
 ## Project context
 
 - **Product**: ollim-bot — ADHD-friendly Discord bot powered by the Claude Agent SDK. Single-user by design, proactive over reactive, file-based storage, no database.
+- **Audience**: Dual-purpose — these docs serve both human users and AI agents (including ollim-bot itself). Content must be easily navigable and unambiguous for both.
 - **Source repo**: `~/ollim-bot/` (Python 3.11+, uv, discord.py, Claude Agent SDK). The source `docs/CLAUDE.md` is the authoritative architecture reference.
 - **Format**: MDX files with YAML frontmatter, Mintlify components
 - **Config**: `docs.json` — theme, navigation (4 tabs: Guide, Customizing, Reference, Changelog), branding (Discord blurple `#4752C4`)
@@ -37,10 +38,12 @@ description: "Concise summary for SEO/navigation."
 
 ## Writing standards
 
+- **Accuracy is the #1 priority** — wrong information is far worse than missing information. It cascades into bad decisions for both human readers and agents acting on the docs. When uncertain, leave it out or flag it.
 - Second-person voice ("you")
 - Direct, conversational tone — punchy opening sentences that explain "why" not "what"
 - ADHD-aware vocabulary where relevant — proactivity, reducing cognitive load, context quality
 - Honest about tradeoffs, acknowledge design choices and their reasoning
+- Explicit over implicit — agents can't infer from context the way humans can. State constraints, defaults, and edge cases directly rather than implying them.
 - Prerequisites at start of procedural content
 - Match style and formatting of existing pages — read neighboring files before writing
 - Em dashes for inline clarifications — like this
@@ -70,7 +73,8 @@ Follow existing patterns — read a similar page before adding components:
 - Every page ends with a "Next steps" section using `<Card>` components
 - Overview pages use task-routing tables: "I want to... → Go to"
 - Cross-link extensively with descriptive anchor text
-- Prioritize accuracy — verify against source code when documenting behavior
+- Verify against source code when documenting behavior — never document assumed behavior
+- Structure for both audiences: humans scan headings and cards, agents parse structured content (tables, code blocks, explicit parameter lists). Both benefit from consistent patterns.
 
 ## Terminology (use consistently)
 
