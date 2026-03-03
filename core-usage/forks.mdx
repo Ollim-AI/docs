@@ -54,7 +54,8 @@ to `off` to disable it, or adjust `max_thinking_tokens` for a different
 token budget.
 
 When a fork starts, the bot sends a purple embed showing the topic
-(or "Open session") along with three buttons for exiting:
+(or a short description like "branched conversation — changes stay
+separate from main.") along with three buttons for exiting:
 
 | Button | Style | Action |
 |--------|-------|--------|
@@ -72,13 +73,27 @@ ends.
   interactive fork that resumes from that background fork's session.
   This lets you pick up where a background task left off and continue
   the conversation interactively.
+
+  If the fork session has expired (past the 7-day TTL), the bot tells
+  you with a small note — "this session has expired — starting fresh
+  with quoted context" — and falls back to quoting the message content
+  instead. If you reply to a fork message while already inside an
+  interactive fork, the reply is added as context to the current fork
+  rather than opening a new one, and you see a note confirming this.
 </Note>
 
 ## Exit strategies
 
 Every interactive fork ends with one of three actions — **report updates**
 is the default. You can trigger them via the buttons on the fork embed,
-or the agent can call the corresponding MCP tools directly.
+or the agent can call the corresponding MCP tools directly. When the fork
+ends, the exit embed title reflects what happened:
+
+| Exit action | Embed title |
+|-------------|-------------|
+| Save | Fork Ended — saved to main |
+| Report | Fork Ended — summary queued |
+| Exit / Discard | Fork Ended — discarded |
 
 <AccordionGroup>
   <Accordion title="Report updates (default)">
@@ -104,6 +119,10 @@ or the agent can call the corresponding MCP tools directly.
     the main client, and the old main session is disconnected. All
     conversation history from the fork becomes the new main session.
 
+    If the save fails (e.g., the fork session was already disconnected),
+    the exit embed reflects the actual outcome — "fork discarded (no
+    session to save)" — rather than falsely reporting success.
+
     Use only when the main session needs the decisions going forward.
     Most forks don't qualify — wrong saves permanently bloat context.
 
@@ -127,9 +146,10 @@ configurable via [`/config fork_idle_timeout`](/core-usage/slash-commands#config
 
 The timeout works in two stages:
 
-1. **First timeout** — after the configured idle period,
-   the agent is prompted to decide on an exit strategy.
-   It may choose to report, exit, or save.
+1. **First timeout** — after the configured idle period, the bot
+   sends a visible note ("fork idle — checking in...") and then
+   prompts the agent to decide on an exit strategy. It may choose
+   to report, exit, or save.
 2. **Second timeout** — if another idle period passes
    with no activity, the agent receives a stronger prompt to
    exit. The agent always decides the final exit strategy;
@@ -163,10 +183,18 @@ overrides, tool restrictions, reporting modes), see
 Pending updates are the bridge between forks and the main session —
 when a fork calls `report_updates(message)`, the summary gets
 prepended to the next main session interaction. Updates are capped at
-**10 entries** to prevent context bloat, and the injected header varies
-by context (main session vs. forks). See
+**10 entries** to prevent context bloat. When the cap is exceeded, the
+oldest entries are dropped and a sentinel is prepended so the agent
+knows omission occurred (e.g., "(3 earlier update(s) omitted — cap
+reached)"). The injected header also varies by context — prompting the
+main session to mention key findings, while marking updates as
+read-only in forks. See
 [Context flow](/architecture/context-flow#pending-updates) for the full
 pending updates cycle and `update-main-session` modes.
+
+When pending updates are injected into the main session, the bot sends
+a visible note — "catching up on background activity..." — so you know
+context from background tasks is being included.
 
 ## Next steps
 

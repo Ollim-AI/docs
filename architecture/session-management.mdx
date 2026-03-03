@@ -83,9 +83,14 @@ Compaction is detected through two paths:
   `pre_tokens` from the compact metadata, logs a `compacted` event, and
   returns productivity stats (turns, session age, tokens compacted).
 - **Automatic**: The SDK may auto-compact during normal conversation.
-  `save_session_id()` detects this by comparing the new session ID against
-  the one on disk — if they differ, it logs a `compacted` event with the
-  old ID as `parent_session_id`.
+  When this happens, the CLI sends a `compact_boundary` message and then
+  waits for a new query — it does not auto-continue. ollim-bot detects
+  this and re-sends the user's original message against the freshly
+  compacted context, so the agent produces a response without the user
+  needing to repeat themselves. `save_session_id()` detects the session
+  change by comparing the new session ID against the one on disk — if
+  they differ, it logs a `compacted` event with the old ID as
+  `parent_session_id`.
 
 ## The `/clear` lifecycle
 
@@ -125,7 +130,15 @@ Tracking uses a contextvar-based collector pattern:
 | `track_message(message_id)` | Appends a Discord message ID to the active collector (no-op if no collector) |
 | `flush_message_collector(fork_id, parent_id)` | Writes collected IDs to `fork_messages.json`, clears collector |
 | `cancel_message_collector()` | Discards collected IDs without writing |
-| `lookup_fork_session(message_id)` | Returns the fork session ID for a Discord message, or `None` |
+| `lookup_fork_session(message_id)` | Returns a `ForkLookup(session_id, expired)` named tuple |
+
+`lookup_fork_session` returns one of three results for a given message ID:
+
+| `session_id` | `expired` | Meaning |
+|---|---|---|
+| `str` | `False` | Live fork session — can resume as interactive fork |
+| `None` | `True` | Record exists but past the 7-day TTL — bot signals expiry to the user |
+| `None` | `False` | Unknown message ID — not a fork message |
 
 The mapping is stored in `~/.ollim-bot/state/fork_messages.json` as a JSON array of records:
 

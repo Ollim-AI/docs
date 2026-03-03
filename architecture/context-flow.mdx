@@ -71,9 +71,11 @@ Each entry is a `PendingUpdate` with two fields:
 Any fork can write a pending update by calling the `report_updates` MCP
 tool. The write is protected by an async lock for concurrent background
 fork safety — multiple forks can safely append updates without
-corruption. Updates are capped at **10 entries** (`MAX_PENDING_UPDATES`)
-— when a new update would exceed this limit, the oldest entry is dropped
-to prevent unbounded context bloat.
+corruption. Updates are capped at **10 entries** (`MAX_PENDING_UPDATES`).
+When a new update would exceed this limit, the oldest entries are dropped
+and a sentinel is prepended so the agent knows omission occurred — for
+example, "(3 earlier update(s) omitted — cap reached)". The sentinel
+occupies one slot, leaving 9 slots for real entries.
 
 Whether a background fork is allowed or required to call `report_updates`
 depends on its `update-main-session` mode:
@@ -98,8 +100,16 @@ didn't report.
 ### Read path
 
 The main session and forks read pending updates differently. The
-injected header also varies by context — prompting the main session
-to surface key findings, while marking updates as read-only in forks.
+injected header varies by context to guide the agent's behavior:
+
+| Context | Header | Purpose |
+|---------|--------|---------|
+| Main session | `RECENT BACKGROUND UPDATES (mention key findings in your response)` | Prompts the agent to surface findings |
+| Fork (interactive or forked bg) | `RECENT BACKGROUND UPDATES (read-only — main session will also see these)` | Prevents the fork from acting on updates meant for the main session |
+
+When pending updates are injected into the main session, the bot also
+sends a user-visible note — "catching up on background activity..." —
+so you know background context is being included.
 
 <Tabs>
   <Tab title="Main session">
@@ -245,11 +255,17 @@ The mechanism relies on fork session tracking in `sessions.py`:
    `flush_message_collector(fork_id, parent_id)` writes the mapping
    to `~/.ollim-bot/state/fork_messages.json`
 4. When a user replies to one of those messages,
-   `lookup_fork_session(message_id)` returns the fork session ID
+   `lookup_fork_session(message_id)` returns a `ForkLookup` with the
+   session ID (or `None` if expired/unknown) and an `expired` flag
 5. The bot creates an interactive fork that resumes from that session
 
 Records in `fork_messages.json` have a 7-day TTL and are pruned on
-read.
+read. When a reply targets an expired record, the bot signals this to
+the user ("this session has expired — starting fresh with quoted
+context") and falls back to quoting the message content instead. If
+the user replies to a fork message while already in an interactive
+fork, the reply is added as context to the current fork rather than
+opening a new one.
 
 <Note>
 Replying to a non-fork message works differently — the replied-to
