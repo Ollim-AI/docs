@@ -95,6 +95,29 @@ controlled separately through `allowed_tools` in the fork's YAML
 configuration — see [Background forks](/scheduling/background-forks)
 for details.
 
+## State directory write-protection
+
+The `state/` directory under `~/.ollim-bot/` contains infrastructure
+files — session IDs, credentials, ping budget, and runtime config. These
+files are managed by application code, not by the agent.
+
+The permission system blocks all Write and Edit tool calls that target
+paths inside `state/`, regardless of permission mode or fork type. This
+is enforced at the `canUseTool` callback level — the agent receives a
+denial before the SDK attempts the write.
+
+Additionally, `tool_policy.py` validates tool patterns at startup and
+strips any Write/Edit patterns that could match the `state/` directory
+from the SDK tool ceiling. This means even if a routine or skill
+declares a broad pattern like `Edit(**)`, writes to `state/` are
+blocked both by pattern stripping and by the runtime permission check.
+
+<Note>
+This protection applies to all contexts — main session, interactive
+forks, and background forks. The agent can still read files in `state/`
+but cannot modify them through its tools.
+</Note>
+
 ## Visual feedback
 
 Inline labels during streaming show what the agent is doing — and what got blocked.

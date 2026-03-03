@@ -137,7 +137,7 @@ The main path from a Discord message to a streamed response.
 | `agent.py` | Agent SDK wrapper — sessions, MCP servers (`discord` + `docs`), subagents, slash routing |
 | `streamer.py` | Streams text deltas to Discord — throttled edits, 2000-char overflow |
 | `prompts.py` | System prompt for the main agent and fork prompt helpers |
-| `subagents.py` | Loads subagent specs from `subagents/` with data-dir overrides |
+| `subagents.py` | Bundled agent installation (`install_agents`) and tool-set extraction for policy validation |
 | `subagents/` | Subagent specs as markdown files (guide, gmail-reader, history-reviewer, responsiveness-reviewer, user-proxy) |
 | `channel.py` | DM channel reference — set once at startup, read everywhere |
 
@@ -151,7 +151,7 @@ Discord and the outside world.
 | `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
 | `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
 | `forks.py` | Fork state (bg + interactive), pending updates, `run_agent_background` |
-| `tool_policy.py` | Tool restriction enforcement for background forks, subagents, and skills |
+| `tool_policy.py` | Tool pattern validation, SDK ceiling builder, and `state/` write-protection |
 | `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks, and streamer |
 
 ### Storage and state

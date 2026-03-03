@@ -134,7 +134,14 @@ never sees restricted tools — they're removed at the SDK level.
 | `allowed_tools` | Minimal defaults | Allowlist — overrides defaults when set. |
 
 <Note>
-When `allowed_tools` is not set, background forks receive a minimal default tool set (principle of least privilege).
+When `allowed_tools` is not set, background forks receive the `MINIMAL_BG_TOOLS`
+default — just enough for reporting and notification:
+
+- `mcp__discord__report_updates`
+- `mcp__discord__ping_user`
+- `mcp__discord__discord_embed`
+- `mcp__discord__follow_up_chain`
+- `Bash(ollim-bot help)`
 </Note>
 
 Tool names use the SDK format:
@@ -159,6 +166,20 @@ Send an embed summary if anything needs attention.
 
 Tool restrictions are inherited by chain reminders — `follow_up_chain`
 propagates `allowed_tools` and `skills` to child reminders automatically.
+
+### Tool pattern validation
+
+`tool_policy.py` validates all `allowed_tools` patterns at startup.
+Dangerous patterns are rejected:
+
+| Pattern | Result |
+|---------|--------|
+| `Bash(*)` | Error — too broad, specify a command prefix |
+| `Bash(ollim-bot gmail * ; rm -rf /)` | Error — chaining operators (`;`, `&`, `\|`) blocked |
+| `Edit(**)` | Stripped — matches paths inside the protected `state/` directory |
+
+If a pattern fails validation, the bot logs an error at startup. This
+catches misconfigurations before they reach the agent.
 
 ## Configuration
 
