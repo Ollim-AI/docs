@@ -9,6 +9,29 @@ the main session. Background forks receive additional context through a
 preamble that includes ping budgets, forward schedules, and tool
 restrictions.
 
+## Context by execution mode
+
+What the agent sees depends on which mode it's running in. This matters for both understanding agent behavior and configuring background tasks effectively.
+
+| | Main session | Interactive fork | Background fork (forked) | Background fork (isolated) |
+|---|---|---|---|---|
+| **System prompt** | Full `SYSTEM_PROMPT` | Same as main | Assembled preamble | Assembled preamble |
+| **Conversation history** | Full (persistent, resumed across restarts) | Forked from main at branch point | Forked from main | None (clean slate) |
+| **Pending updates** | Popped (consumed) | Peeked (read-only) | Prepended to prompt | None |
+| **MCP tools** | All 7 discord tools + docs server | Same as main | 5 minimal tools by default | 5 minimal tools by default |
+| **File tools** | Read, Write, Edit, Glob, Grep (`*.md`) | Same as main | None by default | None by default |
+| **Other tools** | WebFetch, WebSearch, Task, Skill, CLI | Same as main | `ollim-bot help` only | `ollim-bot help` only |
+| **Skills** | Not loaded | Not loaded | Loaded if declared in YAML `skills` field | Loaded if declared in YAML `skills` field |
+| **Thinking** | User-controlled (`/thinking`) | Enabled by default | Configurable per job (`thinking` field) | Configurable per job |
+| **Permissions** | User-controlled (`dontAsk` default) | Inherits from main | Always deny | Always deny |
+| **Preamble sections** | None | None | Ping, update, busy, budget/schedule, tool restrictions, skills | Same |
+
+The minimal background fork tool set (`MINIMAL_BG_TOOLS`) includes only the four discord MCP tools (`report_updates`, `ping_user`, `discord_embed`, `follow_up_chain`) and the `ollim-bot help` CLI command. Jobs can expand this via the `allowed_tools` YAML field — see [Background forks](/scheduling/background-forks#tool-restrictions).
+
+<Tip>
+The isolated mode tradeoff: no conversation history means less context to reason over, but also no risk of acting on stale context from hours ago. Use `isolated: true` for tasks that should evaluate the current state fresh — like checking if a deadline passed.
+</Tip>
+
 ## Overview
 
 Every interaction starts in the main session. When a fork branches off,

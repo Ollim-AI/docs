@@ -78,6 +78,52 @@ Both run as background forks. Use **webhooks** when the trigger comes from an ex
 
 Use **skills** when you want a reusable set of instructions that multiple routines or reminders can reference — skills are loaded on demand, so they don't bloat the system prompt. Use [system prompt customization](/development/system-prompt) when the instructions should apply to every interaction, not just specific routines.
 
+### Head-to-head comparisons
+
+<Tabs>
+  <Tab title="Routines vs Reminders">
+    Both run as background forks, but they serve different timing needs.
+
+    | Aspect | Routines | Reminders |
+    |--------|----------|-----------|
+    | **Trigger** | Cron expression (recurring) | Specific datetime (one-shot) |
+    | **Persistence** | Fires forever until removed | Fires once, then done |
+    | **Follow-up** | Next occurrence is automatic | `max_chain` + `follow_up_chain` for progressive checks |
+    | **Best for** | Daily rhythms, weekly reviews, periodic monitoring | "Remind me at 3pm", deadline nudges, progressive follow-up workflows |
+    | **Storage** | `~/.ollim-bot/routines/<slug>.md` | `~/.ollim-bot/reminders/<slug>.md` |
+
+    Use **routines** for anything that repeats on a schedule. Use **reminders** for one-shot nudges — and set `max_chain` when the agent should follow up if the first nudge wasn't enough.
+  </Tab>
+  <Tab title="Webhooks vs Routines">
+    Both run as background forks with the same configuration options, but the trigger source differs.
+
+    | Aspect | Webhooks | Routines |
+    |--------|----------|----------|
+    | **Trigger** | HTTP POST from external system | Cron schedule (time-based) |
+    | **Input data** | JSON payload injected into prompt | No external input |
+    | **Security** | 4-layer: JSON Schema, content fencing, Haiku screening, operational limits | None needed (internal trigger) |
+    | **Auth** | Bearer token (constant-time comparison) | None |
+    | **Best for** | GitHub events, monitoring alerts, form submissions | Daily check-ins, periodic reviews |
+    | **Storage** | `~/.ollim-bot/webhooks/<slug>.md` | `~/.ollim-bot/routines/<slug>.md` |
+
+    Use **webhooks** when an external system should trigger the bot. Use **routines** when the trigger is purely time-based.
+  </Tab>
+  <Tab title="Skills vs System prompt">
+    Both inject instructions into the agent's context, but at different times and scopes.
+
+    | Aspect | Skills | System prompt |
+    |--------|--------|---------------|
+    | **Loaded when** | At fire time, only for jobs that reference them | Every interaction |
+    | **Scope** | Per-routine/reminder (via `skills` YAML field) | Global — all sessions |
+    | **Dynamic context** | `` !`command` `` markers expand at fire time | Static text |
+    | **Tool dependencies** | `allowed-tools` in SKILL.md merged into job's tool set | N/A |
+    | **Context cost** | Only when loaded — zero cost for jobs that don't use them | Always present |
+    | **Best for** | Reusable instruction sets shared across multiple jobs | Instructions that apply to every interaction |
+
+    Use **skills** when instructions are specific to certain routines or reminders — they keep the system prompt lean. Use **system prompt customization** when the instructions should apply universally.
+  </Tab>
+</Tabs>
+
 <Tip>
 Not sure which mechanism fits? Describe what you want to the bot — it can look up its
 own docs and recommend the right approach:
