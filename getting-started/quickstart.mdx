@@ -52,9 +52,18 @@ in Discord DMs. No server is required.
     3. Enable **Message Content Intent** under Privileged Gateway Intents
     4. Copy the example environment file and fill in your values:
 
-    ```bash
-    cp .env.example .env
-    ```
+    <Tabs>
+      <Tab title="Linux / macOS">
+        ```bash
+        cp .env.example .env
+        ```
+      </Tab>
+      <Tab title="Windows (cmd)">
+        ```cmd
+        copy .env.example .env
+        ```
+      </Tab>
+    </Tabs>
 
     Open `.env` and set `DISCORD_TOKEN` to your bot token, `OLLIM_USER_NAME`
     to your name, and `OLLIM_BOT_NAME` to whatever you want to call the bot.
