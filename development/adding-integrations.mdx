@@ -251,8 +251,8 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
     | `isolated` | boolean | `false` | Run in an isolated background fork (no main session context) |
     | `model` | string | `null` | Override the Claude model for this webhook |
     | `thinking` | boolean | `true` | Enable extended thinking |
-    | `allow_ping` | boolean | `true` | Allow the agent to ping the user |
-    | `update_main_session` | string | `"on_ping"` | `freely`, `blocked`, `always`, or `on_ping` |
+    | `allow-ping` | boolean | `true` | Allow the agent to ping the user |
+    | `update-main-session` | string | `"on_ping"` | `freely`, `blocked`, `always`, or `on_ping` |
   </Step>
   <Step title="Set the webhook secret">
     The `WEBHOOK_SECRET` environment variable must be set. Incoming requests are authenticated via the `Authorization` header:
@@ -270,7 +270,7 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
     1. **Validation** — the payload is checked against the `fields` JSON Schema. Invalid payloads return `400`.
     2. **Haiku screening** — string fields are screened by a fast Claude Haiku call for prompt injection. If any fields are flagged, the webhook is not dispatched.
     3. **Prompt construction** — `build_webhook_prompt` combines the scheduling preamble (active routines and reminders) with the webhook's `message` and fenced payload data.
-    4. **Background fork** — the prompt is dispatched as a background fork with the spec's configured behavior (isolated, model, allow_ping, etc.).
+    4. **Background fork** — the prompt is dispatched as a background fork with the spec's configured behavior (isolated, model, allow-ping, etc.).
   </Step>
 </Steps>
 

@@ -36,7 +36,7 @@ Available in all contexts. Send a rich embed message with optional action button
 
 **Button styles:** `success`, `danger`, `primary`, `secondary`.
 
-**Availability:** Main session, interactive forks, and background forks. In background forks, the embed is blocked if `allow_ping` is `false`, the user is mid-conversation (unless `critical` is `true`), or the [ping budget](/scheduling/ping-budget) is exhausted. A source tag (`bg` or `fork`) is added to the embed footer when not in the main session.
+**Availability:** Main session, interactive forks, and background forks. In background forks, the embed is blocked if `allow-ping` is `false`, the user is mid-conversation (unless `critical` is `true`), or the [ping budget](/scheduling/ping-budget) is exhausted. A source tag (`bg` or `fork`) is added to the embed footer when not in the main session.
 
 ### `ping_user`
 
@@ -47,7 +47,7 @@ Background-fork-only. Send a plain text alert prefixed with `[bg]`.
 | `message` | string | Yes | — | The message to send |
 | `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and ping budget when `true` |
 
-**Availability:** Background forks only. Not available in the main session or interactive forks. Subject to the same `allow_ping`, busy check, and ping budget gates as `discord_embed`.
+**Availability:** Background forks only. Not available in the main session or interactive forks. Subject to the same `allow-ping`, busy check, and ping budget gates as `discord_embed`.
 
 <Note>
 Both output tools call `track_message` so that replies to bot messages in the channel are correctly routed back to the fork that sent them.
@@ -94,7 +94,7 @@ Report a summary from the current fork to the main session. The summary is injec
     Sets the exit action to `REPORT`. The fork is discarded after the agent finishes responding — further tool calls delay the exit.
   </Tab>
   <Tab title="Background fork">
-    Appends the update and marks the fork as reported. The fork continues running. Blocked if `update_main_session` is set to `blocked` in the background fork config.
+    Appends the update and marks the fork as reported. The fork continues running. Blocked if `update-main-session` is set to `blocked` in the background fork config.
   </Tab>
 </Tabs>
 
@@ -118,7 +118,7 @@ Schedule a follow-up reminder that continues the current chain. Used by [reminde
 |-----------|------|----------|---------|-------------|
 | `minutes_from_now` | integer | Yes | — | Minutes until the next check fires |
 
-The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. The tool forwards all configuration from the current `ChainContext`: `background`, `model`, `thinking`, `isolated`, `update_main_session`, `allow_ping`, `allowed_tools`, and `skills`.
+The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. The tool forwards all configuration from the current `ChainContext`: `background`, `model`, `thinking`, `isolated`, `update-main-session`, `allow-ping`, `allowed-tools`, and `skills`.
 
 Returns an error if:
 - No active reminder context exists (the tool was called outside a reminder-triggered session)
@@ -132,7 +132,7 @@ If the task is done or no follow-up is needed, don't call `follow_up_chain`. The
 
 ## Background fork enforcement
 
-Background forks use a stop hook (`require_report_hook`) that enforces the `update_main_session` policy before the agent can finish:
+Background forks use a stop hook (`require_report_hook`) that enforces the `update-main-session` policy before the agent can finish:
 
 | Mode | Behavior |
 |------|----------|

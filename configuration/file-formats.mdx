@@ -30,9 +30,9 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `model` | `str \| null` | `null` | Model override (`"opus"`, `"sonnet"`, `"haiku"`) |
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `isolated` | `bool` | `false` | Run in isolated session (no conversation history) |
-| `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
-| `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed_tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
+| `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+| `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
@@ -49,7 +49,7 @@ Check the sleep tracker for any anomalies.
 ```
 
 <Note>
-When `allowed_tools` is not set, background forks receive `MINIMAL_BG_TOOLS` — report, ping, embed, follow-up chain, and help. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for the full list.
+When `allowed-tools` is not set, background forks receive `MINIMAL_BG_TOOLS` — report, ping, embed, follow-up chain, and help. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for the full list.
 </Note>
 
 ### Reminders
@@ -68,9 +68,9 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `model` | `str \| null` | `null` | Model override |
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `isolated` | `bool` | `false` | Run in isolated session |
-| `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
-| `allow_ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed_tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
+| `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+| `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 ```yaml title="reminders/pick-up-groceries.md"
@@ -106,9 +106,9 @@ Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
 | `isolated` | `bool` | `false` | Run in isolated session |
 | `model` | `str \| null` | `null` | Model override |
 | `thinking` | `bool` | `true` | Enable extended thinking |
-| `allow_ping` | `bool` | `true` | Allow notification tools |
-| `update_main_session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
-| `allowed_tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
+| `allow-ping` | `bool` | `true` | Allow notification tools |
+| `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
+| `allowed-tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
 
 The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
 
@@ -148,7 +148,7 @@ Stored in `~/.ollim-bot/skills/<name>/SKILL.md`. Each skill is a directory conta
 |-------|------|---------|-------------|
 | `name` | `str` | — | Skill name (lowercase with hyphens, matches directory name) |
 | `description` | `str` | — | What the skill does and when to use it |
-| `allowed_tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
 
 The markdown body contains the skill's instructions. It can include dynamic context markers using the `` !`command` `` syntax — shell commands the scheduler expands to their stdout at fire time.
 

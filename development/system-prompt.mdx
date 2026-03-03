@@ -117,7 +117,7 @@ Notion, Slack, or Trello.
     | `ollim-bot reminder cancel <id>` | Cancel |
 
     For complex reminder options (model overrides, isolated mode,
-    `update_main_session`, `allow_ping`), the agent enters a fork
+    `update-main-session`, `allow-ping`), the agent enters a fork
     and reads `routine-reminder-spec.md`.
   </Tab>
 </Tabs>
@@ -138,7 +138,7 @@ present an embed with all three exit strategies (`save_context`,
 
 The background fork section documents the ping budget system,
 `report_updates` for bridging information back to the main session, and the
-four `update_main_session` modes (`always`, `on_ping`, `freely`, `blocked`).
+four `update-main-session` modes (`always`, `on_ping`, `freely`, `blocked`).
 See [Background forks](/scheduling/background-forks) for the full reference.
 
 ## Context injection
@@ -198,15 +198,15 @@ is prepended to the prompt. This is built by `build_bg_preamble` in
 |---------|-----------|---------|
 | Ping instructions | Always | `ping_user`/`discord_embed` status |
 | Update instructions | Always | Mode-specific `report_updates` rules |
-| Busy state | User mid-conversation AND `allow_ping=True` | "Do NOT ping unless `critical=True`" |
-| Budget status | `allow_ping=True` | Ping budget and upcoming schedule |
+| Busy state | User mid-conversation AND `allow-ping=True` | "Do NOT ping unless `critical=True`" |
+| Budget status | `allow-ping=True` | Ping budget and upcoming schedule |
 | Tool restrictions | Tools restricted | Available/unavailable tool list |
 | User-proxy hint | `Task` tool available | "For preference decisions, spawn the user-proxy subagent" |
 
 ### Update instruction variants
 
 The preamble includes different instructions depending on the
-`update_main_session` mode:
+`update-main-session` mode:
 
 | Mode | Instruction |
 |------|-------------|
@@ -214,7 +214,7 @@ The preamble includes different instructions depending on the
 | `on_ping` (default) | Report if you pinged, otherwise call nothing |
 | `freely` | MAY optionally call `report_updates` |
 | `blocked` | No reporting to the main session |
-| `blocked` + `allow_ping` | No reporting, but pinging allowed ([details](/scheduling/background-forks#reporting-to-the-main-session)) |
+| `blocked` + `allow-ping` | No reporting, but pinging allowed ([details](/scheduling/background-forks#reporting-to-the-main-session)) |
 
 ### Budget and schedule window
 

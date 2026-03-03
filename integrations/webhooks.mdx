@@ -53,8 +53,8 @@ The agent can create and manage them conversationally through file access.
     id: github-ci
     isolated: true
     model: haiku
-    allow_ping: true
-    update_main_session: on_ping
+    allow-ping: true
+    update-main-session: on_ping
     fields:
       type: object
       required: [repo, status]
@@ -121,12 +121,12 @@ YAML frontmatter and a markdown body.
 | `isolated` | `bool` | `false` | Run the fork in isolated mode |
 | `model` | `string` | `null` | Override the model (e.g. `haiku`) |
 | `thinking` | `bool` | `true` | Enable extended thinking |
-| `allow_ping` | `bool` | `true` | Allow the fork to ping the user |
-| `update_main_session` | `string` | `on_ping` | When to write back to main session |
+| `allow-ping` | `bool` | `true` | Allow the fork to ping the user |
+| `update-main-session` | `string` | `on_ping` | When to write back to main session |
 
 <Tip>
-  The `isolated`, `model`, `thinking`, `allow_ping`, and
-  `update_main_session` fields have the same semantics as
+  The `isolated`, `model`, `thinking`, `allow-ping`, and
+  `update-main-session` fields have the same semantics as
   [background fork configuration](/scheduling/background-forks).
 </Tip>
 

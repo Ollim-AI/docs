@@ -55,7 +55,7 @@ chronological order.
 - DM-only operation enforced in `bot.py`
 - Bot presence set to "Watching your DMs" (online status)
 - 1-ping-per-session limit enforced for background forks via contextvar
-- `allow_ping: false` now hides ping tools from the SDK tool list entirely
+- `allow-ping: false` now hides ping tools from the SDK tool list entirely
 - Google API errors surfaced in button handlers instead of silently failing
 
 ## Feb 24, 2026
@@ -84,10 +84,10 @@ chronological order.
 
 **Background fork configuration and quiet-when-busy**
 
-- **BgForkConfig** — new `update_main_session` (modes: `always`,
-  `on_ping`, `freely`, `blocked`) and `allow_ping` fields for routines
+- **BgForkConfig** — new `update-main-session` (modes: `always`,
+  `on_ping`, `freely`, `blocked`) and `allow-ping` fields for routines
   and reminders
-- Stop hook respects `update_main_session` mode, controlling whether background forks can write pending updates
+- Stop hook respects `update-main-session` mode, controlling whether background forks can write pending updates
 - **Quiet-when-busy** — background forks soft-block non-critical pings when the user is in an active conversation
 - 30-minute timeout for background forks to prevent runaway sessions
 - Relative timestamps added to background update context

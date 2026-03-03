@@ -49,7 +49,7 @@ Both `ping_user` and `discord_embed` accept a `critical` parameter.
 When `critical=True`:
 
 - The ping **bypasses all three checks** — per-session limit, busy
-  state, and ping budget. It is never blocked (unless `allow_ping`
+  state, and ping budget. It is never blocked (unless `allow-ping`
   is `false`).
 - The `critical_used` daily counter is incremented for tracking, but
   no budget token is consumed.
@@ -59,7 +59,7 @@ would be devastated to miss — time-sensitive deadlines, health
 routines, urgent accountability nudges.
 
 <Warning>
-  The `allow_ping: false` setting on a background fork overrides
+  The `allow-ping: false` setting on a background fork overrides
   everything, including `critical=True`. When a fork author disables
   pings, that intent is respected unconditionally.
 </Warning>

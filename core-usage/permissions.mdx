@@ -96,7 +96,7 @@ Background forks always deny tool permission requests, regardless of the
 current mode — `handle_tool_permission()` returns a denial before
 checking the session-allowed set. The agent in a background fork cannot
 trigger approval prompts. Tools available to background forks are
-controlled separately through `allowed_tools` in the fork's YAML
+controlled separately through `allowed-tools` in the fork's YAML
 configuration — see [Background forks](/scheduling/background-forks)
 for details.
 

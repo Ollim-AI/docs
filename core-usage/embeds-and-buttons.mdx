@@ -131,7 +131,7 @@ Embeds sent from the main session or interactive forks are always delivered. In 
 
 - **Ping budget** — each embed consumes one ping from the [ping budget](/scheduling/ping-budget). When the budget is exhausted, the embed is blocked and the agent is told to use reporting instead.
 - **`critical: true`** — bypasses budget limits and busy checks. Use for things you'd be devastated to miss.
-- **`allow_ping: false`** — when set in the background fork config, embeds are disabled entirely. `critical: true` does not override this.
+- **`allow-ping: false`** — when set in the background fork config, embeds are disabled entirely. `critical: true` does not override this.
 - **Busy state** — when you're mid-conversation, non-critical embeds from background forks are blocked. The agent reports findings to the main session instead.
 
 <Warning>Background fork embeds include a "bg" footer to distinguish them from main session messages. Interactive fork embeds show "fork".</Warning>

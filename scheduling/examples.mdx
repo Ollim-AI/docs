@@ -420,8 +420,8 @@ description: "Every 4 hrs — stabilize core identity file. Ping blocked."
 cron: "0 2,6,10,14,18,22 * * *"
 background: true
 model: "haiku"
-allow_ping: false
-update_main_session: "freely"
+allow-ping: false
+update-main-session: "freely"
 ---
 ## Goal
 
@@ -449,8 +449,8 @@ read for core context. Keep it accurate, current, and under 100 lines.
 **Key patterns:**
 - **`model: "haiku"`** — uses the cheapest model since this is simple
   file maintenance
-- **`allow_ping: false`** — can never notify the user; purely background
-- **`update_main_session: "freely"`** — reports updates only when
+- **`allow-ping: false`** — can never notify the user; purely background
+- **`update-main-session: "freely"`** — reports updates only when
   changes are made, so the main session stays informed without noise
 - **Freshness protocol** — date-tagged facts with automatic staleness
   pruning
@@ -556,7 +556,7 @@ criteria are met:
 - **Email checks**: ping only for urgent, human-sent, actionable mail
 - **End-of-day**: silent if nothing is overdue or due
 - **Responsiveness review**: silent if all reminders are working well
-- **Identity stabilize**: `allow_ping: false` — can never notify
+- **Identity stabilize**: `allow-ping: false` — can never notify
 
 This is the opposite of a notification-heavy system. The ping budget
 provides a hard cap, but well-designed routines rarely hit it.

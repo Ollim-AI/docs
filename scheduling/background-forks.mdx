@@ -102,7 +102,7 @@ non-critical ping consumes one token from the budget.
 [MCP tools](/extending/mcp-tools#output-tools) for full parameter
 reference.
 
-Set `allow_ping: false` to disable both tools entirely. Unlike the
+Set `allow-ping: false` to disable both tools entirely. Unlike the
 ping budget, this is absolute — `critical: true` does **not** bypass
 it. Use this for tasks that should never produce visible output.
 
@@ -113,7 +113,7 @@ The `report_updates` tool queues a short summary to
 next main session interaction, giving the agent context about what
 happened in the background.
 
-The `update_main_session` field controls when and whether the agent
+The `update-main-session` field controls when and whether the agent
 must report:
 
 | Mode | Behavior | Enforcement |
@@ -124,12 +124,12 @@ must report:
 | `blocked` | Reporting disabled | None |
 
 <Tip>
-Use `update_main_session: always` for tasks where the main session needs
+Use `update-main-session: always` for tasks where the main session needs
 the outcome regardless of whether a ping was sent — like checking if a
 deadline passed.
 </Tip>
 
-When `update_main_session` is `blocked` and `allow_ping` is `true`, the
+When `update-main-session` is `blocked` and `allow-ping` is `true`, the
 agent is told: no summary is passed to the main session (the main
 conversation won't know this task ran), but you can still ping the user
 directly on Discord for time-sensitive items. This combination is useful
@@ -143,10 +143,10 @@ never sees restricted tools — they're removed at the SDK level.
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `allowed_tools` | Minimal defaults | Allowlist — overrides defaults when set. |
+| `allowed-tools` | Minimal defaults | Allowlist — overrides defaults when set. |
 
 <Note>
-When `allowed_tools` is not set, background forks receive the `MINIMAL_BG_TOOLS`
+When `allowed-tools` is not set, background forks receive the `MINIMAL_BG_TOOLS`
 default — just enough for reporting and notification:
 
 - `mcp__discord__report_updates`
@@ -165,7 +165,7 @@ cron: "0 8,12 * * 1-5"
 background: true
 isolated: true
 model: haiku
-allowed_tools:
+allowed-tools:
   - "Bash(ollim-bot gmail *)"
   - "mcp__discord__discord_embed"
   - "mcp__discord__ping_user"
@@ -177,11 +177,11 @@ Send an embed summary if anything needs attention.
 ```
 
 Tool restrictions are inherited by chain reminders — `follow_up_chain`
-propagates `allowed_tools` and `skills` to child reminders automatically.
+propagates `allowed-tools` and `skills` to child reminders automatically.
 
 ### Tool pattern validation
 
-`tool_policy.py` validates all `allowed_tools` patterns at startup.
+`tool_policy.py` validates all `allowed-tools` patterns at startup.
 Dangerous patterns are rejected:
 
 | Pattern | Result |
@@ -204,9 +204,9 @@ frontmatter:
 | `isolated` | `bool` | `false` | Fresh session, no history |
 | `model` | `string` | — | Model override (isolated only) |
 | `thinking` | `bool` | `true` | Extended thinking override |
-| `update_main_session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
-| `allow_ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
-| `allowed_tools` | `list[string]` | — | Tool allowlist (SDK format) |
+| `update-main-session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
+| `allow-ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
+| `allowed-tools` | `list[string]` | — | Tool allowlist (SDK format) |
 | `skills` | `list[string]` | — | [Skills](/extending/skills) to load at fire time |
 
 ## Examples
@@ -221,8 +221,8 @@ background: true
 isolated: true
 model: haiku
 thinking: false
-update_main_session: always
-allow_ping: true
+update-main-session: always
+allow-ping: true
 description: Afternoon accountability check-in
 ---
 Check my Google Tasks for items due today.
@@ -237,8 +237,8 @@ A silent background routine that only reports to the main session:
 id: quiet-sync
 cron: "0 7 * * *"
 background: true
-allow_ping: false
-update_main_session: always
+allow-ping: false
+update-main-session: always
 description: Silent morning context sync
 ---
 Check my calendar and tasks for today.
@@ -253,8 +253,8 @@ id: take-medication
 run_at: "2026-02-24T09:00:00-08:00"
 background: true
 max_chain: 3
-update_main_session: freely
-allowed_tools:
+update-main-session: freely
+allowed-tools:
   - "mcp__discord__ping_user"
   - "mcp__discord__discord_embed"
   - "mcp__discord__report_updates"

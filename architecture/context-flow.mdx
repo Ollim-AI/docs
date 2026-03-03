@@ -26,7 +26,7 @@ What the agent sees depends on which mode it's running in. This matters for both
 | **Permissions** | User-controlled (`dontAsk` default) | Inherits from main | Always deny | Always deny |
 | **Preamble sections** | None | None | Ping, update, busy, budget/schedule, tool restrictions, skills | Same |
 
-The minimal background fork tool set (`MINIMAL_BG_TOOLS`) includes only the four discord MCP tools (`report_updates`, `ping_user`, `discord_embed`, `follow_up_chain`) and the `ollim-bot help` CLI command. Jobs can expand this via the `allowed_tools` YAML field — see [Background forks](/scheduling/background-forks#tool-restrictions).
+The minimal background fork tool set (`MINIMAL_BG_TOOLS`) includes only the four discord MCP tools (`report_updates`, `ping_user`, `discord_embed`, `follow_up_chain`) and the `ollim-bot help` CLI command. Jobs can expand this via the `allowed-tools` YAML field — see [Background forks](/scheduling/background-forks#tool-restrictions).
 
 <Tip>
 The isolated mode tradeoff: no conversation history means less context to reason over, but also no risk of acting on stale context from hours ago. Use `isolated: true` for tasks that should evaluate the current state fresh — like checking if a deadline passed.
@@ -76,7 +76,7 @@ corruption. Updates are capped at **10 entries** (`MAX_PENDING_UPDATES`)
 to prevent unbounded context bloat.
 
 Whether a background fork is allowed or required to call `report_updates`
-depends on its `update_main_session` mode:
+depends on its `update-main-session` mode:
 
 | Mode | Behavior |
 |------|----------|
@@ -85,7 +85,7 @@ depends on its `update_main_session` mode:
 | `freely` | Reporting is optional |
 | `blocked` | `report_updates` returns an error |
 
-When `blocked` is combined with `allow_ping: true`, reporting is
+When `blocked` is combined with `allow-ping: true`, reporting is
 disabled but direct pings remain available — see
 [Background forks](/scheduling/background-forks#reporting-to-the-main-session)
 for when this combination is useful.
@@ -162,11 +162,11 @@ sections.
 <AccordionGroup>
   <Accordion title="Ping instructions">
     Tells the agent whether `ping_user` and `discord_embed` are
-    available. When `allow_ping` is `false`, the agent is told these
+    available. When `allow-ping` is `false`, the agent is told these
     tools are disabled.
   </Accordion>
   <Accordion title="Update instructions">
-    Based on the `update_main_session` mode, tells the agent when and
+    Based on the `update-main-session` mode, tells the agent when and
     whether to call `report_updates`. Each mode has specific
     instructions (must report, report if pinged, optional, or blocked).
   </Accordion>
@@ -177,7 +177,7 @@ sections.
     during active conversations.
   </Accordion>
   <Accordion title="Budget and schedule">
-    Included only when `allow_ping` is `true`. Contains:
+    Included only when `allow-ping` is `true`. Contains:
 
     - Current ping budget status (available tokens, capacity)
     - Upcoming schedule: a list of tasks within the schedule window,
@@ -187,7 +187,7 @@ sections.
     - Note about `critical=True` bypass
   </Accordion>
   <Accordion title="Tool restrictions">
-    Listed only when `allowed_tools` is configured. Shows which tools
+    Listed only when `allowed-tools` is configured. Shows which tools
     are available.
   </Accordion>
   <Accordion title="Skill instructions">
@@ -225,7 +225,7 @@ Each entry in the schedule includes:
 | `label` | Display name (e.g., "Chain reminder (2/4)") |
 | `description` | From YAML or truncated message (60 char limit) |
 | `file_path` | Relative path (e.g., `routines/daily-review.md`) |
-| `silent` | Whether `allow_ping=False` for this task |
+| `silent` | Whether `allow-ping=False` for this task |
 | `tag` | `"this task"`, `"just fired"`, or `None` |
 
 ## Reply-to-fork context
@@ -271,7 +271,7 @@ reminder has `max_chain > 0`, the preamble includes:
   prompting escalation via `ping_user`.
 
 Chain reminders inherit tool restrictions and skills from the parent via
-`ChainContext`, so `allowed_tools` and `skills` propagate through the
+`ChainContext`, so `allowed-tools` and `skills` propagate through the
 entire chain.
 
 ## Next steps

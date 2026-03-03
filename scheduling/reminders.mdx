@@ -60,9 +60,9 @@ If there were errors, send me an embed with the details.
 | `model` | `str` | `null` | Model override (bg only) |
 | `thinking` | `bool` | `true` | Extended thinking (bg only) |
 | `isolated` | `bool` | `false` | Fresh context, not forked (bg only) |
-| `update_main_session` | `str` | `"on_ping"` | Sync mode: `always` / `on_ping` / `freely` / `blocked` |
-| `allow_ping` | `bool` | `true` | Allow pings and embeds (bg only) |
-| `allowed_tools` | `list[str]` | `null` | MCP tool allowlist (bg only) |
+| `update-main-session` | `str` | `"on_ping"` | Sync mode: `always` / `on_ping` / `freely` / `blocked` |
+| `allow-ping` | `bool` | `true` | Allow pings and embeds (bg only) |
+| `allowed-tools` | `list[str]` | `null` | MCP tool allowlist (bg only) |
 | `skills` | `list[str]` | `null` | [Skills](/extending/skills) to load at fire time |
 
 ### File naming
@@ -254,9 +254,9 @@ isolated: true
 max_chain: 5
 chain_depth: 0
 chain_parent: "c5d6e7f8"
-allowed_tools:
+allowed-tools:
   - "mcp__discord__*"
-update_main_session: "on_ping"
+update-main-session: "on_ping"
 ---
 Check the CI pipeline status.
 If still running, chain a follow-up in 15 minutes.
@@ -272,10 +272,10 @@ run_at: "2026-02-24T12:00:00+01:00"
 description: "Inbox scan"
 background: true
 isolated: true
-allow_ping: false
-allowed_tools:
+allow-ping: false
+allowed-tools:
   - "Bash(ollim-bot gmail *)"
-update_main_session: "always"
+update-main-session: "always"
 ---
 Scan my inbox for anything urgent.
 Save a summary to pending updates.
