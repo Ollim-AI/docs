@@ -10,7 +10,7 @@ yourself, and run it. This guide covers the full process.
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh` (automatically installs the required Python version)
-- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI on first run
+- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI at startup
 - A Discord account (the bot runs entirely in DMs — no server required)
 - Git installed (the data directory is a git repo)
 
@@ -61,9 +61,12 @@ The steps below cover self-hosting-specific setup.
     ```
 
     On startup, ollim-bot validates environment variables and checks Claude
-    authentication. If not logged in, the bot DMs you an OAuth link — click
-    it to sign in with your Anthropic account. This headless flow means you
-    never need a browser on the host machine.
+    authentication via `is_authenticated()`. If not logged in, the bot
+    extracts an OAuth URL from the bundled CLI and DMs it to you using the
+    Discord REST API — this happens before the bot fully connects, so
+    you receive the link even on a headless server with no browser.
+    Click the link to sign in with your Anthropic account. The bot
+    blocks until authentication completes, then continues startup.
 
     Once authenticated, the bot checks for duplicate instances, connects to
     Discord, starts the scheduler, and sends you a startup DM.
@@ -182,7 +185,7 @@ systemctl --user enable --now ollim-bot
   If Claude Code is not authenticated when the service starts, the bot
   DMs you an OAuth link and blocks until you complete sign-in. The
   systemd service may time out waiting — run `ollim-bot auth login`
-  once before enabling the service to avoid this.
+  once manually before enabling the service.
 </Warning>
 
 ## Session persistence

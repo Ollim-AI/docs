@@ -57,9 +57,9 @@ and conventions.
     ollim-bot
     ```
 
-    On first run, the bot checks Claude authentication — if not logged in,
-    it DMs you an OAuth link via Discord. See the
-    [quickstart](/getting-started/quickstart) for the full first-run flow.
+    On startup, the bot checks Claude authentication — if not logged in,
+    it DMs you an OAuth link via the Discord REST API. See the
+    [quickstart](/getting-started/quickstart) for the full startup flow.
     The bot also checks for an existing instance via a PID file at
     `~/.ollim-bot/state/bot.pid` and exits if one is already running.
   </Step>
@@ -211,6 +211,7 @@ Key runtime dependencies (from `pyproject.toml`):
 | `pyyaml` | YAML frontmatter parsing |
 | `aiohttp` | Webhook HTTP server |
 | `jsonschema` | Webhook payload validation |
+| `claude-history` | Session transcript search — bundled as a dependency, exposes the `claude-history` CLI |
 
 Key dev dependencies:
 

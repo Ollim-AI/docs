@@ -8,7 +8,7 @@ Get ollim-bot running and send your first message in under 5 minutes.
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh` (automatically installs the required Python version)
-- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI on first run
+- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI at startup
 - A Discord account
 
 <Note>
@@ -57,9 +57,10 @@ in Discord DMs. No server is required.
     ollim-bot
     ```
 
-    On first run, the bot checks whether Claude is authenticated. If not,
-    it DMs you an OAuth link — click the link to sign in with your
-    Anthropic account. Once authenticated, the bot creates its data
+    On startup, the bot checks whether Claude is authenticated. If not,
+    it DMs you an OAuth link via the Discord REST API — click the link
+    to sign in with your Anthropic account. The bot blocks until you
+    complete sign-in. Once authenticated, the bot creates its data
     directory at `~/.ollim-bot/`, connects to Discord, and sends you a
     startup DM.
   </Step>
