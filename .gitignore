@@ -1,6 +1,5 @@
 node_modules/
 .mintlify/
-.claude/
 .playwright-mcp/
 .vscode/
 backlog.md
