@@ -97,6 +97,11 @@ The agent's text output is discarded. To reach you, it must call
 are subject to the [ping budget](/scheduling/ping-budget) — each
 non-critical ping consumes one token from the budget.
 
+`ping_user` is **background-fork-only** — it sends a plain text alert
+and is not available in the main session or interactive forks.
+`discord_embed` is **available in all contexts** — main session,
+interactive forks, and background forks alike.
+
 Set `allow_ping: false` to disable both tools entirely. Unlike the
 ping budget, this is absolute — `critical: true` does **not** bypass
 it. Use this for tasks that should never produce visible output.
@@ -123,6 +128,13 @@ Use `update_main_session: always` for tasks where the main session needs
 the outcome regardless of whether a ping was sent — like checking if a
 deadline passed.
 </Tip>
+
+When `update_main_session` is `blocked` and `allow_ping` is `true`, the
+agent is told: no summary is passed to the main session (the main
+conversation won't know this task ran), but you can still ping the user
+directly on Discord for time-sensitive items. This combination is useful
+for tasks that should notify the user when needed but don't need to feed
+context back to the main session.
 
 ## Tool restrictions
 

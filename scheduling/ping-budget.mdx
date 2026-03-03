@@ -39,7 +39,9 @@ whenever the budget is checked.
 
 With the defaults, up to 5 pings can fire in quick succession, then
 one more becomes available every 90 minutes, capped at the capacity.
-Daily usage counters (normal and critical) reset at midnight.
+Daily usage counters (normal and critical) reset at midnight in your
+**configured timezone** (`OLLIM_TIMEZONE`). If no timezone is set, the
+system's local timezone is used.
 
 ## Critical bypass
 

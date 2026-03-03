@@ -13,7 +13,7 @@ These tools send visible messages to the Discord channel.
 
 ### `discord_embed`
 
-Send a rich embed message with optional action buttons.
+Available in all contexts. Send a rich embed message with optional action buttons.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -40,14 +40,14 @@ Send a rich embed message with optional action buttons.
 
 ### `ping_user`
 
-Send a plain text message prefixed with `[bg]`.
+Background-fork-only. Send a plain text alert prefixed with `[bg]`.
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `message` | string | Yes | — | The message to send |
 | `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and ping budget when `true` |
 
-**Availability:** Background forks only. Subject to the same `allow_ping`, busy check, and ping budget gates as `discord_embed`.
+**Availability:** Background forks only. Not available in the main session or interactive forks. Subject to the same `allow_ping`, busy check, and ping budget gates as `discord_embed`.
 
 <Note>
 Both output tools call `track_message` so that replies to bot messages in the channel are correctly routed back to the fork that sent them.
@@ -75,6 +75,11 @@ Promote the current interactive fork to the main session. The fork's conversatio
 Takes no parameters.
 
 **Availability:** Interactive forks only. Returns an error in background forks or the main session.
+
+<Warning>
+Use only when the main session needs the decisions going forward. Most
+forks don't qualify — wrong saves permanently bloat context.
+</Warning>
 
 ### `report_updates`
 
@@ -117,7 +122,9 @@ The tool creates a new reminder via `ollim-bot reminder add` with the chain dept
 
 Returns an error if:
 - No active reminder context exists (the tool was called outside a reminder-triggered session)
-- The chain depth has reached `max_chain`
+- The chain depth has reached `max_chain` — the error includes recovery
+  guidance: "follow-up limit reached -- this was the last check. If the
+  task still needs attention, ping the user now."
 
 <Tip>
 If the task is done or no follow-up is needed, don't call `follow_up_chain`. The chain ends naturally.
@@ -131,7 +138,7 @@ Background forks use a stop hook (`require_report_hook`) that enforces the `upda
 |------|----------|
 | `freely` | No enforcement — reporting is optional |
 | `blocked` | No enforcement — `report_updates` is blocked |
-| `always` | Agent must call `report_updates` before stopping |
+| `always` | Agent prompted to "summarize what you found or did to update the main session" |
 | `on_ping` | Agent must call `report_updates` if it sent any visible output (ping or embed) |
 
 See [background forks](/scheduling/background-forks) for how these modes are configured in routine and reminder YAML frontmatter.

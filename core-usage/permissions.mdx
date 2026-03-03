@@ -100,6 +100,17 @@ controlled separately through `allowed_tools` in the fork's YAML
 configuration — see [Background forks](/scheduling/background-forks)
 for details.
 
+### Deny messages
+
+The deny message varies by context so the agent understands why a tool
+was blocked:
+
+| Context | Deny message |
+|---------|-------------|
+| Background fork | `"{tool} is not available in background forks"` |
+| `dontAsk` mode (not session-allowed) | `"{tool} requires permission — denied silently in current mode"` |
+| State directory write | `"{tool} to state/ is blocked — system files are write-protected"` |
+
 ## State directory write-protection
 
 The `state/` directory under `~/.ollim-bot/` contains infrastructure

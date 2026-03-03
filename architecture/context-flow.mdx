@@ -71,7 +71,9 @@ Each entry is a `PendingUpdate` with two fields:
 Any fork can write a pending update by calling the `report_updates` MCP
 tool. The write is protected by an async lock for concurrent background
 fork safety — multiple forks can safely append updates without
-corruption.
+corruption. Updates are capped at **10 entries** (`MAX_PENDING_UPDATES`)
+— when a new update would exceed this limit, the oldest entry is dropped
+to prevent unbounded context bloat.
 
 Whether a background fork is allowed or required to call `report_updates`
 depends on its `update_main_session` mode:
@@ -83,20 +85,30 @@ depends on its `update_main_session` mode:
 | `freely` | Reporting is optional |
 | `blocked` | `report_updates` returns an error |
 
+When `blocked` is combined with `allow_ping: true`, the agent is told
+that no summary reaches the main session, but it can still ping the
+user directly on Discord for time-sensitive items.
+
 A stop hook (`require_report_hook`) enforces these modes. In `always`
-mode, the hook blocks the fork from terminating if `report_updates`
-wasn't called. In `on_ping` mode, it blocks if the agent pinged but
-didn't report.
+mode, the hook prompts the agent to summarize what it found or did to
+update the main session. In `on_ping` mode, it blocks if the agent
+pinged but didn't report.
 
 ### Read path
 
-The main session and forks read pending updates differently:
+The main session and forks read pending updates differently. The
+injected header also varies by context — the main session sees
+"RECENT BACKGROUND UPDATES (mention key findings in your response)"
+while forks see "RECENT BACKGROUND UPDATES (read-only -- main session
+will also see these)".
 
 <Tabs>
   <Tab title="Main session">
     The main session **pops** pending updates — reads and clears the
     file atomically. The updates are prepended to the next message the
     agent sees, giving it context about what happened in the background.
+    The header instructs the agent to mention key findings in its
+    response.
 
     After the pop, the file is deleted. Each update is consumed exactly
     once.
@@ -105,7 +117,8 @@ The main session and forks read pending updates differently:
     Interactive forks **peek** at pending updates — read-only, no
     clearing. This preserves the updates for the main session to
     consume later. The fork still sees the context, but doesn't
-    consume it.
+    consume it. The header marks these as read-only so the agent
+    knows the main session will also receive them.
   </Tab>
   <Tab title="Isolated background fork">
     Isolated background forks (`isolated: true`) do **not** receive
@@ -256,8 +269,10 @@ reminder has `max_chain > 0`, the preamble includes:
 
 - The current check number and total (e.g., "check 2/4")
 - Whether `follow_up_chain(minutes_from_now=N)` is available
-- On the final check: a warning that this is the last chance and no
-  follow-up can be scheduled
+- On the final check: `follow_up_chain` returns an error with recovery
+  guidance — "follow-up limit reached -- this was the last check. If the
+  task still needs attention, ping the user now." This prompts the agent
+  to escalate via `ping_user` rather than silently dropping the task.
 
 Chain reminders inherit tool restrictions and skills from the parent via
 `ChainContext`, so `allowed_tools` and `skills` propagate through the

@@ -103,7 +103,9 @@ or the agent can call the corresponding MCP tools directly.
     Promotes the fork to the main session. The forked client replaces
     the main client, and the old main session is disconnected. All
     conversation history from the fork becomes the new main session.
-    Reserved for forks with context needed going forward.
+
+    Use only when the main session needs the decisions going forward.
+    Most forks don't qualify — wrong saves permanently bloat context.
 
     - **Button**: Save Context
     - **MCP tool**: `save_context` (no parameters)
@@ -160,8 +162,19 @@ overrides, tool restrictions, reporting modes), see
 
 Pending updates are the bridge between forks and the main session —
 when a fork calls `report_updates(message)`, the summary gets
-prepended to the next main session interaction. See
-[Context flow](/architecture/context-flow) for the full pending
+prepended to the next main session interaction. Updates are capped at
+**10 entries** — when a new update would exceed this limit, the oldest
+entry is dropped. This prevents unbounded context bloat from busy
+background forks.
+
+The header injected with pending updates differs by context:
+
+| Context | Header |
+|---------|--------|
+| Main session | "RECENT BACKGROUND UPDATES (mention key findings in your response)" |
+| Forks | "RECENT BACKGROUND UPDATES (read-only -- main session will also see these)" |
+
+See [Context flow](/architecture/context-flow) for the full pending
 updates cycle and `update_main_session` modes.
 
 ## Next steps
