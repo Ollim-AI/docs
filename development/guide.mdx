@@ -110,14 +110,20 @@ there are no `utils`, `helpers`, or `common` modules.
 src/ollim_bot/
 ├── main.py              # CLI entry point and command router
 ├── bot.py               # Discord interface (DMs, slash commands)
+├── channel.py           # DM channel reference, set once at startup
 ├── agent.py             # Claude Agent SDK brain (sessions, MCP tools, subagents)
 ├── prompts.py           # System prompt for main agent and fork prompt helpers
+├── subagents.py         # Bundled agent installation and tool-set extraction
 ├── subagents/           # Subagent specs (markdown files with YAML frontmatter)
+├── skills.py            # Skill data model and directory-based persistence
 ├── agent_tools.py       # MCP tools (discord_embed, ping_user, enter_fork, etc.)
+├── auth.py              # Claude Code auth via bundled CLI (headless login flow)
 ├── config.py            # Env vars loaded from .env via dotenv
+├── runtime_config.py    # Persistent runtime config (model, thinking, timeouts)
 ├── forks.py             # Fork state (bg + interactive), pending updates I/O
 ├── sessions.py          # Session ID persistence and session history JSONL log
 ├── permissions.py       # Discord-based tool approval (canUseTool callback)
+├── tool_policy.py       # Tool-pattern validation and SDK ceiling builder
 ├── streamer.py          # Streams agent responses to Discord (throttled edits)
 ├── storage.py           # JSONL/markdown I/O and git auto-commit
 ├── embeds.py            # Embed/button types, builders, and build_embed/build_view
@@ -154,6 +160,7 @@ arguments starts the Discord bot. Subcommands route to their respective modules:
 | `ollim-bot tasks list\|add\|done\|update\|delete` | Google Tasks operations |
 | `ollim-bot cal today\|upcoming\|show\|add\|update\|delete` | Google Calendar operations |
 | `ollim-bot gmail unread\|read\|search\|labels` | Gmail (read-only) |
+| `ollim-bot auth login\|status\|logout` | Manage Claude Code authentication |
 | `ollim-bot help` | Show help text |
 
 See the [CLI reference](/development/cli-reference) for full flag documentation.
