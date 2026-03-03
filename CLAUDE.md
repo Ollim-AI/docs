@@ -5,7 +5,7 @@
 - **Product**: ollim-bot — ADHD-friendly Discord bot powered by the Claude Agent SDK. Single-user by design, proactive over reactive, file-based storage, no database.
 - **Source repo**: `~/ollim-bot/` (Python 3.11+, uv, discord.py, Claude Agent SDK). The source `docs/CLAUDE.md` is the authoritative architecture reference.
 - **Format**: MDX files with YAML frontmatter, Mintlify components
-- **Config**: `docs.json` — theme, navigation (4 tabs: Guide, Customizing, Reference, Changelog), branding (Discord blurple `#5865F2`)
+- **Config**: `docs.json` — theme, navigation (4 tabs: Guide, Customizing, Reference, Changelog), branding (Discord blurple `#4752C4`)
 - **Dev server**: `mint dev` → localhost:3000
 - **41 pages** across 9 sections: getting-started, core-usage, scheduling, integrations, extending, configuration, architecture, development, self-hosting
 
