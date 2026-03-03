@@ -12,10 +12,10 @@ typing indicators during tool execution pauses.
 
 The streaming pipeline has three stages:
 
-1. `Agent.stream_chat()` yields text deltas from the SDK's
-   `StreamEvent` messages
-2. `stream_to_channel()` buffers those deltas and progressively edits a
-   Discord message
+1. `Agent.stream_chat()` yields text deltas and `StreamStatus` signals
+   from the SDK's `StreamEvent` messages
+2. `stream_to_channel()` buffers text and routes status signals to an
+   ephemeral status message, progressively editing a Discord message
 3. A background editor task flushes the buffer on a fixed interval,
    keeping edits throttled and showing typing indicators during pauses
 
@@ -23,22 +23,29 @@ The key design constraint is Discord's rate limit on message edits
 (roughly 5 edits per 5 seconds per channel). The streamer stays well
 within this by editing at a fixed interval rather than on every delta.
 
-## Text deltas
+## Text deltas and status signals
 
-`Agent.stream_chat()` is an async generator that consumes the SDK
-response stream and yields only the text portions. It handles several
-event types internally:
+`Agent.stream_chat()` is an async generator that yields two types of
+output: text strings (for display) and `StreamStatus` signals (for
+phase transitions like thinking, tool use, and compaction). It delegates
+raw SDK event parsing to `StreamParser` in `streamer.py`.
+
+`StreamParser.feed()` processes individual SSE event dicts from the SDK:
 
 | Event type | Handling |
 |------------|----------|
-| `content_block_delta` with `text` | Yielded as a text delta |
-| `content_block_delta` with `input_json_delta` | Accumulated for tool-use markers (not yielded as text) |
-| `content_block_start` with `tool_use` | Captures tool name for marker emission |
-| `content_block_stop` for tool use | Emits a `-# *ToolName(args)*` marker as a yielded delta |
+| `content_block_delta` with `text` | Yielded as a text string |
+| `content_block_delta` with `input_json_delta` | Accumulated for tool label formatting (not yielded as text) |
+| `content_block_start` with `tool_use` | Captures tool name for label emission |
+| `content_block_stop` for tool use | Emits a `StreamStatus(kind="tool_start")` signal with a formatted label |
+| `content_block_start` with `thinking` | Emits a `StreamStatus(kind="thinking_start")` signal |
 
-Tool-use markers appear as subdued text in Discord (using the `-# `
-markdown small-text prefix), showing the user what the agent is doing
-during pauses.
+Tool labels are rendered as subdued text in Discord (using the `-# `
+markdown small-text prefix) when the next text block arrives or the
+stream ends. `StreamParser._drain()` converts deferred labels into
+`-# *{label}*` text — or `-# *~~{label}~~ — denied*` if the tool was
+denied by the permission system. This shows the user what the agent is
+doing during pauses.
 
 <Note>
 When an `enter_fork` tool fires during streaming, `stream_chat()`
@@ -49,9 +56,11 @@ session ID, but no further text deltas are yielded.
 
 ## Throttled editing
 
-`stream_to_channel()` consumes the text deltas and maintains a buffer.
-A background `editor` coroutine flushes the buffer to Discord on a
-fixed schedule.
+`stream_to_channel()` consumes text deltas and `StreamStatus` signals,
+maintaining a text buffer. A background `editor` coroutine flushes the
+buffer to Discord on a fixed schedule, while `StreamStatus` signals
+control an ephemeral status message (for thinking indicators, tool
+labels, and compaction progress).
 
 ### Timing constants
 
@@ -68,10 +77,11 @@ The editor runs this loop:
 1. Wait `FIRST_FLUSH_DELAY` before the first flush
 2. Flush the buffer — send a new message or edit the existing one
 3. Wait `EDIT_INTERVAL`
-4. If new content arrived (`stale` flag is set), flush again
-5. If no new content but the response isn't done, send a typing
-   indicator
-6. Repeat from step 3 until the delta stream ends
+4. If a status message is active (thinking or tool use), update its
+   timer display
+5. Else if new content arrived (`stale` flag is set), flush again
+6. Else if the response isn't done, send a typing indicator
+7. Repeat from step 3 until the delta stream ends
 
 The `stale` flag is set whenever new text arrives from the generator
 and cleared after each successful flush. This avoids unnecessary edits
@@ -103,11 +113,12 @@ overflow messages to resume that fork.
 ## Typing indicators
 
 The streamer shows Discord typing indicators (`channel.typing()`) when
-the agent is working but not producing text — typically during tool
-execution. This happens in the editor loop: when the interval fires
-and the `stale` flag is `false` (no new text), but the stream hasn't
-ended yet, the editor sends a typing indicator instead of editing the
-message.
+the agent is working but not producing text — typically between tool
+executions. This happens in the editor loop: when the interval fires,
+no status message is active, and the `stale` flag is `false` (no new
+text), the editor sends a typing indicator instead of editing the
+message. During active tool use or thinking, the ephemeral status
+message handles visibility instead.
 
 Before each `stream_to_channel()` call, the bot also sends an initial
 `channel.typing()` to show activity while the first tokens arrive.
