@@ -587,6 +587,74 @@ Not everything needs a chain. The nightly sleep routine schedules a
 single bedtime ping — no follow-up, no chain. A one-line `ping_user`
 at the right moment is less annoying than a sequence of embeds.
 
+## Bot-authored logic
+
+The routines on this page weren't hand-written — the bot created them
+from natural language requests. When you describe what you want, the
+bot engineers the entire solution: YAML configuration, prompt logic,
+button interactions, follow-up chains, and cross-routine coordination.
+
+### How the workout routine was created
+
+The user said:
+
+```text
+"Create a daily workout nudge routine."
+```
+
+From that single sentence, the bot:
+
+1. **Gathered context** — read existing routines to understand the
+   scheduling pattern, checked what profile data existed
+2. **Created a fitness profile** — wrote `~/.ollim-bot/fitness-profile.md`
+   with stats, goals, and available equipment (sourced from
+   conversation history)
+3. **Designed the interaction** — chose Discord embeds with buttons
+   over plain messages for richer feedback loops
+4. **Encoded a complete program** in the routine prompt:
+   - A 7-day workout rotation with muscle group balancing rules
+   - Weather-aware indoor/outdoor logic
+   - Exercise progressions (harder/easier variants)
+   - A condensed 15-minute version for busy days
+   - A multi-step "choose exercises" flow with muscle group picker
+   - A 2-hour follow-up chain that stays silent if already completed
+5. **Wired up `report_updates`** so button clicks in the main session
+   have full context about which workout was suggested
+
+The result is the [workout nudge routine](#workout-nudge--embeds-with-buttons-and-follow-up-chains)
+shown above — a routine that runs daily and adapts to weather,
+calendar, recent workout history, and real-time user feedback through
+buttons.
+
+### What this means
+
+Every routine prompt is executable logic. When a background fork fires,
+the agent reads the prompt and executes it as a program — gathering
+data, making decisions, building UI, and scheduling follow-ups. The
+bot is effectively programming itself: compiling your requirements
+into natural language instructions that its future instances interpret
+and run.
+
+This works because of three properties of the system:
+
+- **[Skills](/extending/skills)** let the bot write shared function
+  libraries — a SKILL.md file read by multiple routines acts like
+  an imported module
+- **[Background forks](/scheduling/background-forks)** run prompts
+  in isolated sessions, so each execution is a fresh "function call"
+  with defined inputs (the preamble) and outputs (`report_updates`,
+  `discord_embed`, `follow_up_chain`)
+- **[Chain reminders](/scheduling/reminders#follow-up-chains)** let
+  the bot schedule its own continuations — recursive self-invocation
+  with context passing
+
+<Tip>
+You don't need to understand how to write routines. Describe what you
+want — "remind me to stretch every 2 hours but not during meetings" —
+and the bot handles the implementation. The examples on this page show
+what the bot produces, not what you need to write.
+</Tip>
+
 ## Next steps
 
 <Columns cols={2}>
