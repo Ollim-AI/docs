@@ -311,6 +311,12 @@ ollim-bot gmail labels
 Manage Claude Code authentication. ollim-bot uses the Claude CLI bundled with
 the Agent SDK for OAuth — you don't need to install Claude Code separately.
 
+At startup, the bot checks auth status automatically. If not logged in, it
+extracts an OAuth URL from the bundled CLI and DMs it to you via Discord.
+Click the link to sign in — the bot waits until authentication completes,
+then continues startup. The `auth` subcommands below are for manual use
+(pre-authenticating before enabling a service, checking status, or logging out).
+
 ### `auth login`
 
 Start the login flow. Suppresses the browser and prints an auth URL for you

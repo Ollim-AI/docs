@@ -86,6 +86,28 @@ The notification is best-effort — if the Discord connection is already down,
 the DM is silently skipped. If you're running as a systemd service with
 `Restart=on-failure`, the bot comes back automatically after unexpected exits.
 
+### Claude auth not completing
+
+On startup, the bot checks Claude authentication via the bundled CLI. If not
+logged in, it DMs you an OAuth link and waits for you to complete sign-in.
+
+If you don't receive the DM, verify your `DISCORD_TOKEN` is correct — the
+bot uses the Discord REST API directly (not discord.py) to send the auth DM
+before fully connecting. If the DM arrives but login fails after clicking the
+link, run `ollim-bot auth login` manually to see the CLI output.
+
+```bash
+# Check current auth status
+ollim-bot auth status
+
+# Manually trigger the login flow
+ollim-bot auth login
+```
+
+If authentication fails repeatedly, verify your Claude subscription is active
+and that the bundled CLI at `claude-agent-sdk._bundled` is intact — reinstalling
+with `uv tool install --editable .` rebuilds it.
+
 ## Session issues
 
 <AccordionGroup>

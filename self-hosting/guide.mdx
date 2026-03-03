@@ -60,8 +60,13 @@ The steps below cover self-hosting-specific setup.
     ollim-bot
     ```
 
-    On startup, ollim-bot validates environment variables, checks for duplicate
-    instances, connects to Discord, starts the scheduler, and sends you a startup DM.
+    On startup, ollim-bot validates environment variables and checks Claude
+    authentication. If not logged in, the bot DMs you an OAuth link — click
+    it to sign in with your Anthropic account. This headless flow means you
+    never need a browser on the host machine.
+
+    Once authenticated, the bot checks for duplicate instances, connects to
+    Discord, starts the scheduler, and sends you a startup DM.
 
     <Note>
       ollim-bot enforces single-instance via a PID file. On startup, it checks whether
@@ -174,9 +179,10 @@ systemctl --user enable --now ollim-bot
 </Tip>
 
 <Warning>
-  Claude Code must be authenticated before starting the service. Run
-  `ollim-bot` interactively first to complete any auth flows, then
-  enable the systemd service.
+  If Claude Code is not authenticated when the service starts, the bot
+  DMs you an OAuth link and blocks until you complete sign-in. The
+  systemd service may time out waiting — run `ollim-bot auth login`
+  once before enabling the service to avoid this.
 </Warning>
 
 ## Session persistence

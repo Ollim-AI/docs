@@ -57,8 +57,11 @@ in Discord DMs. No server is required.
     ollim-bot
     ```
 
-    The bot creates its data directory at `~/.ollim-bot/` on first run,
-    connects to Discord, and sends you a startup DM.
+    On first run, the bot checks whether Claude is authenticated. If not,
+    it DMs you an OAuth link — click the link to sign in with your
+    Anthropic account. Once authenticated, the bot creates its data
+    directory at `~/.ollim-bot/`, connects to Discord, and sends you a
+    startup DM.
   </Step>
 
   <Step title="Send your first message">
