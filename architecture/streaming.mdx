@@ -69,6 +69,7 @@ labels, and compaction progress).
 | `FIRST_FLUSH_DELAY` | 0.2s | Initial delay so the first message accumulates a meaningful chunk |
 | `EDIT_INTERVAL` | 0.5s | Responsive feel while staying within Discord's rate limits |
 | `MAX_MSG_LEN` | 2000 | Discord's maximum message length |
+| `STATUS_TICK` | 1.0s | Interval between timer ticks on the status message (e.g., "Thinking... (3s)") |
 
 ### Flush cycle
 
@@ -120,8 +121,15 @@ text), the editor sends a typing indicator instead of editing the
 message. During active tool use or thinking, the ephemeral status
 message handles visibility instead.
 
-Before each `stream_to_channel()` call, the bot also sends an initial
-`channel.typing()` to show activity while the first tokens arrive.
+Before each `stream_to_channel()` call, the bot sends an initial
+`channel.typing()`. Then, immediately after starting the editor task,
+the streamer shows a "Thinking..." status message — before the API
+sends its first SSE event. This eliminates the dead zone between
+`client.query()` and the first event where only the typing indicator
+was visible. When the real `thinking_start` event arrives, `_set_status`
+sees the same label and keeps the timer running without resetting it.
+If text arrives first (no thinking phase), the text handler clears the
+status automatically.
 
 ## Interrupt on new message
 
@@ -130,27 +138,35 @@ bot interrupts the current response:
 
 1. `on_message` checks if the agent lock is held (meaning a response is
    in progress)
-2. If locked, it calls `agent.interrupt()`, which cancels pending
-   permission requests and interrupts the SDK client
+2. If locked **and not compacting**, it calls `agent.interrupt()`, which
+   cancels pending permission requests and interrupts the SDK client
 3. The interrupted `stream_chat()` generator stops yielding deltas
 4. `stream_to_channel()` finishes its final flush with whatever text
    accumulated
 5. The new message is processed with a fresh `stream_to_channel()` call
+
+Interrupts are skipped while the agent is auto-compacting
+(`agent.is_compacting`). An interrupt during compaction would kill the
+post-compaction response, and the new message would trigger a redundant
+compaction cycle. The new message still queues behind the lock and runs
+after compaction finishes.
 
 The `/interrupt` slash command provides the same behavior on demand.
 
 ## Empty responses
 
 If the delta stream produces no text at all — and no fork entry was
-requested — the streamer sends a fallback message:
+requested, and no auto-compaction occurred — the streamer sends a
+fallback message:
 
 ```text
 error: empty response from agent.
 ```
 
 This covers edge cases where the agent's entire response was tool use
-with no text output. If a fork entry was requested (the agent called
-`enter_fork`), the empty text is expected and no fallback is sent.
+with no text output. The fallback is suppressed when a fork entry was
+requested (the agent called `enter_fork`) or when auto-compaction
+occurred — both are legitimate reasons for an empty buffer.
 
 ## Message tracking
 
@@ -170,15 +186,19 @@ visible annotation in the DM so you know what happened.
 
 The flow:
 
-1. The SDK emits a `SystemMessage` with `subtype="compact_boundary"`. The
-   agent layer detects this and signals the streamer with a `StreamStatus`
-   event (`kind="compact_start"`) including an optional `compact_tokens` count.
+1. The SDK emits a `SystemMessage` with `subtype="compact_boundary"` and
+   ends the stream. The agent layer detects this, extracts the
+   pre-compaction token count from `compact_metadata`, and signals the
+   streamer with a `StreamStatus` event (`kind="compact_start"`) including
+   an optional `compact_tokens` count.
 2. The streamer flushes any pre-compaction text to its own message
 3. An ephemeral status message appears with a timer:
    `-# *Auto-compacting 5k tokens... (3s)*`
-4. When compaction completes, the streamer edits the status to a permanent
-   annotation: `-# *auto-compacted · 5k tokens · 8s*`
-5. Post-compaction content continues in a new message
+4. The agent re-sends the original query against the freshly compacted
+   context (via `client.query()`), then streams the new response
+5. When the post-compaction response arrives, the streamer edits the
+   status to a permanent annotation: `-# *auto-compacted · 5k tokens · 8s*`
+6. Post-compaction content continues in a new message
 
 <Note>
 The annotation stays visible in chat history — the streamer does not

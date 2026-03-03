@@ -13,7 +13,9 @@ The bot adds an eyes reaction to your message to confirm it received it, then st
 
 ## Interrupting
 
-You can always course-correct mid-response. Send a follow-up message and the bot drops what it was doing to address your latest input. You can also interrupt manually with the `/interrupt` [slash command](/core-usage/slash-commands).
+You can course-correct mid-response. Send a follow-up message and the bot drops what it was doing to address your latest input. You can also interrupt manually with the `/interrupt` [slash command](/core-usage/slash-commands).
+
+The one exception is during [auto-compaction](/architecture/streaming#auto-compaction-annotation) — interrupts are deferred until compaction finishes to avoid killing the post-compaction response.
 
 ## Replying to messages
 
