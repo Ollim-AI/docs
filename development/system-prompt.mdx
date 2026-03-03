@@ -143,9 +143,9 @@ See [Background forks](/scheduling/background-forks) for the full reference.
 
 ## Context injection
 
-User messages are not passed to the agent verbatim. The `_prepend_context`
-function in `agent.py` prepends two pieces of dynamic context before every
-message:
+User messages are not passed to the agent verbatim. The `prepend_context`
+function in `agent_context.py` prepends two pieces of dynamic context before
+every message:
 
 ### Timestamp
 
