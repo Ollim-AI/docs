@@ -9,7 +9,7 @@ sub-packages (`google/` and `scheduling/`) for domain-specific functionality.
 The core agent module delegates to three extracted helpers — `agent_context.py`
 (timestamps, pending updates, `ThinkingConfig`), `agent_streaming.py` (stream
 consumption and auto-compaction retry), and `fork_state.py` (contextvars,
-dataclasses, idle timeouts) — keeping each file under 400 lines.
+dataclasses, idle timeouts).
 
 ## Data flow
 
@@ -94,9 +94,10 @@ All fork-related contextvars and dataclasses live in `fork_state.py` —
 key variables include `_in_fork_var`, `_busy_var`,
 `_bg_tracking` (a `BgForkTracking` dataclass holding `output_sent`,
 `reported`, and `ping_count`), and `_bg_fork_config_var`.
-`_chain_context_var` and `_msg_collector` in `agent_tools.py` follow the
-same pattern. This lets multiple forks run concurrently while the main
-session uses module-level globals for the same values.
+`_chain_context_var` in `agent_tools.py` and `_msg_collector` in
+`sessions.py` follow the same pattern. This lets multiple forks run
+concurrently while the main session uses module-level globals for the
+same values.
 
 ### File-based storage
 
@@ -127,9 +128,9 @@ agent-generated button prompts to disk with a 7-day TTL.
 
 ## Module map
 
-The codebase has 38 modules organized into five layers.
+The codebase has 37 modules organized into five layers.
 
-<Accordion title="Full module map (38 modules)">
+<Accordion title="Full module map (37 modules)">
 
 ### Core loop
 
