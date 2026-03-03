@@ -257,30 +257,30 @@ ollim-bot setup, configuration, and usage by surfacing relevant documentation
 verbatim...
 ```
 
-At startup, `subagents.py` parses these files with `parse_md()` into `SubagentSpec` dataclass instances, then `build_agent_definitions()` converts them to SDK `AgentDefinition` objects:
+At startup, `install_agents()` copies bundled specs from `src/ollim_bot/subagents/` to `~/.ollim-bot/.claude/agents/` with template expansion. The SDK then discovers them via `setting_sources=["project"]` and makes them available to the main agent through the `Task` tool.
 
 ```python
-from ollim_bot.subagents import load_subagent_specs, build_agent_definitions
+from ollim_bot.subagents import install_agents, load_agent_tool_sets
 
-specs = load_subagent_specs()        # dict[str, SubagentSpec]
-agents = build_agent_definitions(specs)  # dict[str, AgentDefinition]
+install_agents()                    # copy bundled specs to .claude/agents/
+tool_sets = load_agent_tool_sets()  # dict[str, list[str]]
 ```
 
-**`SubagentSpec` fields:**
+- `install_agents()` expands `{USER_NAME}` and `{BOT_NAME}` template variables (from `config.py`) and writes each spec to `~/.ollim-bot/.claude/agents/`. It skips files that already exist, so user customizations persist across bot updates.
+- `load_agent_tool_sets()` reads YAML frontmatter from installed agents to extract tool declarations for [tool policy](/architecture/tool-policy) validation. Returns a mapping of `"subagent:name"` to tool list.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | `str` | Subagent identifier (matches the filename without `.md`) |
-| `description` | `str` | Used by the SDK to determine when/how to invoke the subagent |
-| `message` | `str` | Prompt body — the markdown content below the frontmatter |
-| `model` | `str \| None` | Model to use (`sonnet`, `haiku`, `opus`, or `inherit`) |
-| `tools` | `list[str] \| None` | Restricted tool access (principle of least privilege) |
+**Spec file format:** Each `.md` file is a raw markdown file with YAML frontmatter — no Python dataclass involved. The SDK reads these files directly.
 
-**Template variables:** `subagents.py` substitutes `{USER_NAME}` and `{BOT_NAME}` in the prompt and description at load time from `config.py`.
+| Frontmatter field | Description |
+|-------------------|-------------|
+| `name` | Subagent identifier (matches the filename without `.md`) |
+| `description` | Used by the SDK to determine when/how to invoke the subagent |
+| `model` | Model to use (`sonnet`, `haiku`, `opus`) |
+| `tools` | Restricted tool access — YAML list or comma-separated string |
 
-**Runtime overrides and additions:** Drop a `.md` file into `~/.ollim-bot/subagents/` to override a built-in subagent (same `name` field) or add an entirely new one. Override files must be complete specs — there is no partial merge.
+The markdown body below the frontmatter is the subagent's system prompt.
 
-The main agent must have `Task` in its `allowed_tools` list to invoke subagents.
+**Overrides:** Drop a `.md` file into `~/.ollim-bot/.claude/agents/` to override a built-in subagent (same filename) or add a new one. Since `install_agents()` skips existing files, your overrides persist across bot updates. The override file must be a complete spec — there is no partial merge.
 </Accordion>
 
 <Accordion title="Delegation in the system prompt">
