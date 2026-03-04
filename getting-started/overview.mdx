@@ -8,12 +8,9 @@ there. You meant to check your calendar before the meeting but got pulled into
 something else. Sound familiar?
 
 Ollim Bot lives in your Discord DMs and handles the stuff that falls through
-the cracks. It checks in on you, reminds you about things before they're
-overdue, reads your email so you don't have to, and keeps track of what you
-were working on — even across conversations.
-
-It's not a chatbot you summon when you need help. It's an assistant that
-reaches out to you.
+the cracks — checking in on you, reminding you before things are overdue,
+reading your email, and keeping track of what you were working on. It's not a
+chatbot you summon when you need help. It's an assistant that reaches out to you.
 
 ## What it actually does
 
@@ -34,8 +31,9 @@ reaches out to you.
 ## Who it's for
 
 Ollim Bot is built for one person — you. There are no user accounts, no
-servers, no shared hosting. You clone the repo, configure it for yourself, and
-run it. If someone else wants one, they fork it and make it their own.
+servers, no shared hosting. You'll need to run a few terminal commands to set
+it up, but no coding experience is needed to use it day-to-day. If someone
+else wants one, they fork it and make it their own.
 
 It's designed for people with ADHD, but useful for anyone who struggles with
 staying on top of things when life gets noisy.
@@ -48,14 +46,9 @@ desktop, wherever you are.
 
 ## Built on Claude
 
-Ollim Bot is powered by the [Claude Agent SDK](https://docs.anthropic.com/en/docs/agent-sdk/overview)
-with Claude Code handling authentication — no API key needed. A Claude
-subscription (Pro or Max) is recommended for access to the latest models.
+Powered by Claude (Pro or Max subscription required). You sign in with your
+Anthropic account during first startup — no API keys or developer setup needed.
 You can also use [alternative models or self-host your own](/self-hosting/model-providers).
-
-The bot isn't a wrapper around a prompt. It runs persistent agent sessions with
-tools, memory, and the ability to branch conversations when it needs to work on
-something without interrupting your main thread.
 
 ## Find what you need
 
@@ -70,12 +63,13 @@ something without interrupting your main thread.
 | Customize the bot's personality | [System prompt](/development/system-prompt) |
 | Run my own instance | [Self-host ollim-bot](/self-hosting/guide) |
 | Understand the architecture | [Architecture overview](/architecture/overview) |
+| Compare ollim-bot to other tools | [Coming from other assistants](/getting-started/coming-from-other-assistants) |
 
 ## Next steps
 
 <Columns cols={2}>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Get the bot running in under 5 minutes.
+    Get the bot running in 4 steps.
   </Card>
   <Card title="How it works" icon="gears" href="/architecture/how-it-works">
     The agent loop, sessions, forks, and context flow under the hood.
