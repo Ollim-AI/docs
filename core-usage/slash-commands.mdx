@@ -1,9 +1,9 @@
 ---
 title: "Slash commands"
-description: "Use slash commands to manage sessions, models, forks, permissions, and runtime configuration."
+description: "Use slash commands to manage sessions, models, forks, lifecycle, permissions, and runtime configuration."
 ---
 
-Ten slash commands for session management, model control, forks, and configuration — all restricted to the **bot owner** via DMs.
+Twelve slash commands for session management, model control, forks, lifecycle, and configuration — all restricted to the **bot owner** via DMs.
 
 ## Quick reference
 
@@ -16,6 +16,8 @@ Ten slash commands for session management, model control, forks, and configurati
 | `/model` | Switch the AI model | `name` (required) |
 | `/thinking` | Toggle extended thinking | `enabled` (required) |
 | `/interrupt` | Stop the current response | None |
+| `/update` | Check for updates and apply immediately | None |
+| `/restart` | Restart the bot process | None |
 | `/permissions` | Set permission mode | `mode` (required) |
 | `/ping-budget` | View or set ping budget | `capacity`, `refill_rate` (both optional) |
 | `/config` | View or set runtime configuration | `key` (optional), `value` (optional) |
@@ -114,6 +116,16 @@ deferred response.
 
 <Note>If the bot is not actively generating a response, `/interrupt` does nothing.</Note>
 
+## Lifecycle commands
+
+### /update
+
+Checks for upstream updates and applies them immediately — bypasses the `auto_update_hour` window. If updates are found, the bot pulls the latest code, logs a "restarting" event to session history, and restarts the process. If already up to date, confirms with a message.
+
+### /restart
+
+Restarts the bot process without checking for updates. Useful when you've made local changes or need a clean restart. Logs a "restarting" event to session history before restarting.
+
 ## Configuration commands
 
 ### /permissions
@@ -192,6 +204,9 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 | `bg_fork_timeout` | integer | `1800` | Max background fork runtime in seconds |
 | `fork_idle_timeout` | integer | `10` | Interactive fork idle timeout in minutes |
 | `permission_mode` | permission mode | `dontAsk` | Default [permission mode](/core-usage/permissions) |
+| `auto_update` | boolean | `off` | Auto-pull and restart on new commits |
+| `auto_update_interval` | integer | `60` | Update check interval (minutes) |
+| `auto_update_hour` | hour (0-23) | `6` | Hour of day to apply updates |
 
 Model values: `opus`, `sonnet`, `haiku`, or empty to reset to default.
 Boolean values: `on`/`off`, `yes`/`no`, `true`/`false`.
