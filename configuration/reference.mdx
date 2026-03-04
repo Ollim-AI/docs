@@ -25,9 +25,10 @@ each write.
 If `WEBHOOK_PORT` is set without `WEBHOOK_SECRET`, the webhook server will not start. Both must be set together.
 </Warning>
 
-`OLLIM_USER_NAME` and `OLLIM_BOT_NAME` are validated at import time — the
-process exits immediately if either is missing. `DISCORD_TOKEN` is checked
-when the bot subcommand runs.
+All three required variables are validated together on startup. If any are
+missing, the bot lists all missing vars with hints and exits. See
+[troubleshooting](/development/troubleshooting#missing-environment-variables)
+for the exact output.
 
 ## `.env` file
 
