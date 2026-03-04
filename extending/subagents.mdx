@@ -271,18 +271,29 @@ tool_sets = load_agent_tool_sets()  # dict[str, list[str]]
 - `install_agents()` expands `{USER_NAME}` and `{BOT_NAME}` template variables (from `config.py`) and writes each spec to `~/.ollim-bot/.claude/agents/`. It skips files that already exist, so user customizations persist across bot updates.
 - `load_agent_tool_sets()` reads YAML frontmatter from installed agents to extract tool declarations for tool policy validation. Returns a mapping of `"subagent:name"` to tool list.
 
-**Spec file format:** Each `.md` file is a raw markdown file with YAML frontmatter — no Python dataclass involved. The SDK reads these files directly.
+**Spec file format:** Each `.md` file is a raw markdown file with YAML frontmatter — no Python dataclass involved. The SDK reads these files directly. For full field semantics and examples, see the [Claude Code subagents docs](https://code.claude.com/docs/en/sub-agents).
 
-| Frontmatter field | Description |
-|-------------------|-------------|
-| `name` | Subagent identifier (matches the filename without `.md`) |
-| `description` | Used by the SDK to determine when/how to invoke the subagent |
-| `model` | Model to use (`sonnet`, `haiku`, `opus`) |
-| `tools` | Restricted tool access — YAML list or comma-separated string |
+| Frontmatter field | Required | Description |
+|-------------------|----------|-------------|
+| `name` | Yes | Unique identifier — lowercase letters and hyphens, matches the filename without `.md` |
+| `description` | Yes | When the main agent should delegate to this subagent |
+| `tools` | No | Allowed tools — YAML list or comma-separated string. Inherits all tools if omitted |
+| `disallowedTools` | No | Tools to deny from the inherited or specified set |
+| `model` | No | Model alias: `sonnet`, `haiku`, `opus`, or `inherit` (use parent model). Defaults to `inherit` |
+| `permissionMode` | No | Permission handling: `default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, or `plan` |
+| `maxTurns` | No | Maximum agentic turns before the subagent stops |
+| `skills` | No | Skills to inject into this subagent's context at startup — full content is loaded, not just made available |
+| `mcpServers` | No | MCP servers available to this subagent |
+| `hooks` | No | Lifecycle hooks scoped to this subagent — only active while this subagent runs |
+| `memory` | No | Persistent memory scope across sessions: `user`, `project`, or `local` |
+| `background` | No | Set to `true` to always run as a background task. Default: `false` |
+| `isolation` | No | Set to `worktree` to run in an isolated git worktree |
 
 The markdown body below the frontmatter is the subagent's system prompt.
 
 **Overrides:** Drop a `.md` file into `~/.ollim-bot/.claude/agents/` to override a built-in subagent (same filename) or add a new one. Since `install_agents()` skips existing files, your overrides persist across bot updates. The override file must be a complete spec — there is no partial merge.
+
+**Hooks:** Because `setting_sources=["project"]` is enabled, hooks configured in `~/.ollim-bot/.claude/settings.json` apply to the main agent session. Subagent-level hooks can also be defined in the `hooks` frontmatter field — they are scoped to that subagent's lifecycle. See the [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide) for events, input schemas, and exit codes.
 </Accordion>
 
 <Accordion title="Delegation in the system prompt">

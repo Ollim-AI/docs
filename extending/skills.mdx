@@ -45,13 +45,24 @@ Summarize findings as a bulleted list, grouped by file.
 
 ### Frontmatter fields
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `str` | — | Lowercase with hyphens — must match the directory name |
-| `description` | `str` | — | What the skill does and when to use it (used by the SDK for skill discovery) |
-| `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
+Skills follow the [Claude Code skills spec](https://code.claude.com/docs/en/skills) — see that page for full semantics and examples. ollim-bot-specific behavior is noted below.
 
-The markdown body after the closing `---` becomes the skill's `message` — the actual instructions the agent receives.
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | No | Slash command name (`/<name>`). Defaults to the directory name |
+| `description` | Recommended | When the agent should use this skill — used for auto-discovery |
+| `argument-hint` | No | Autocomplete hint for expected arguments, e.g. `[issue-number]` |
+| `allowed-tools` | No | Tools allowed without prompts when this skill runs. In the **scheduler context**, also merged into the routine or reminder's tool set via `collect_skill_tools()` |
+| `model` | No | Model to use when this skill runs |
+| `disable-model-invocation` | No | `true` to prevent auto-loading — only invocable with `/<name>` |
+| `user-invocable` | No | `false` to hide from the `/` menu. Default: `true` |
+| `context` | No | `fork` to run in an isolated subagent context (SDK invocation only, not scheduler) |
+| `agent` | No | Subagent type when `context: fork` — e.g. `Explore`, `general-purpose` |
+| `hooks` | No | Hooks scoped to this skill's lifecycle — see the [hooks guide](https://code.claude.com/docs/en/hooks-guide) |
+
+The markdown body after the closing `---` becomes the skill's instructions — the actual prompt the agent receives.
+
+**String substitutions** (SDK invocation only, not scheduler): `$ARGUMENTS` — all arguments passed with `/<name> <args>`; `$ARGUMENTS[N]` or `$N` — argument by 0-based index.
 
 <Tip>
 Keep `description` concise and action-oriented. The SDK uses it to decide when a skill is relevant — it appears in the skill's discovery metadata, so the agent can invoke skills interactively outside of scheduled jobs.
