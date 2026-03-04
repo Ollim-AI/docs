@@ -14,37 +14,78 @@ These are the most common blockers when launching `ollim-bot`.
 
 ### Missing environment variables
 
-`config.py` validates required variables on import. If any are missing, the
-bot prints a message to stderr and exits immediately.
+`main()` validates all three required variables on startup. If any are missing,
+the bot shows all missing vars at once with hints and exits:
 
 ```text
-Missing required env vars: OLLIM_USER_NAME, OLLIM_BOT_NAME
-Set them in .env or your environment.
+Missing required env vars in .env:
+  DISCORD_TOKEN    (bot token from Discord Developer Portal)
+  OLLIM_USER_NAME  (your first name — the bot will call you this)
+  OLLIM_BOT_NAME   (your bot's name, e.g. Ollim)
 ```
 
-`DISCORD_TOKEN` is checked separately in `main.py`:
+Set the missing variables in your `.env` file (at the project root) and restart.
+
+### Invalid Discord token
+
+When `bot.start()` receives a `LoginFailure` exception from discord.py, the
+bot prints an actionable error and exits with code 1:
 
 ```text
-Set DISCORD_TOKEN in .env
+Invalid Discord token. Check DISCORD_TOKEN in .env
+Get a new token: Discord Developer Portal > Bot > Reset Token
 ```
 
-Both exit with code 1. Set the missing variables in your `.env` file (at the
-project root) and restart.
+Regenerate your token in the Discord Developer Portal and update `DISCORD_TOKEN`
+in `.env`.
 
-| Variable | Required | Where checked |
-|----------|----------|---------------|
-| `DISCORD_TOKEN` | Yes | `main.py` |
-| `OLLIM_USER_NAME` | Yes | `config.py` |
-| `OLLIM_BOT_NAME` | Yes | `config.py` |
+### Message Content Intent not enabled
+
+When `bot.start()` raises `PrivilegedIntentsRequired`, the bot exits with
+code 1:
+
+```text
+Message Content Intent is not enabled.
+Enable it: Discord Developer Portal > Bot > Privileged Gateway Intents
+```
+
+The bot requires the **Message Content Intent** to read message text. See the
+[Discord bot setup guide](/self-hosting/discord-bot-setup#enable-the-message-content-intent)
+for where to find this toggle.
+
+### Discord API 401 during authentication
+
+This is caught before `bot.start()` — during the Claude auth DM flow, when
+the bot uses the Discord REST API directly. If the API returns a 401:
+
+```text
+Discord API returned 401 — DISCORD_TOKEN appears invalid.
+Check that DISCORD_TOKEN in .env matches the token from
+Discord Developer Portal > Bot > Reset Token.
+```
+
+Exits with code 1. This catches the same underlying issue as
+[Invalid Discord token](#invalid-discord-token) (a bad token) but earlier in
+the startup sequence, before the bot fully connects.
 
 ### Bot already running
 
 The bot writes its PID to `~/.ollim-bot/state/bot.pid` on startup and checks
-`/proc/<pid>/cmdline` for the string `ollim-bot`. If a match is found:
+whether that process is still alive:
+
+- **Primary check**: `os.kill(pid, 0)` — works on all platforms
+- **Linux enhancement**: additionally reads `/proc/<pid>/cmdline` to verify
+  the process is actually `ollim-bot`, preventing false positives from recycled
+  PIDs
+
+If a running instance is detected:
 
 ```text
 ollim-bot is already running (pid 12345)
 ```
+
+Corrupted PID files — non-numeric content or the file disappearing mid-read —
+are handled gracefully and overwritten on the next startup.
 
 If the previous process crashed without cleaning up the PID file, delete it
 manually:
