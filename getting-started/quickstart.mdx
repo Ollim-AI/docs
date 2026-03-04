@@ -1,9 +1,9 @@
 ---
 title: "Quickstart"
-description: "Install ollim-bot, create a Discord bot, and start chatting."
+description: "Install ollim-bot, create a Discord bot, and start chatting — 6 steps."
 ---
 
-Get ollim-bot running and send your first message in under 5 minutes.
+Get ollim-bot running and send your first message in 6 steps.
 
 ## Prerequisites
 
@@ -46,13 +46,26 @@ in Discord DMs. No server is required.
     [`claude-history`](https://github.com/Ollim-AI/claude-history) as
     global commands. `claude-history` is a CLI tool that lets the bot
     search past conversations so it can remember things.
+
+    <Tip>
+    Command not found? Restart your terminal so the new commands are on your PATH. See [troubleshooting](/development/troubleshooting) for more.
+    </Tip>
   </Step>
 
   <Step title="Create a Discord bot">
+    <Tip>
+    First time creating a Discord bot? See [Discord bot setup](/self-hosting/discord-bot-setup) for a step-by-step walkthrough with screenshots.
+    </Tip>
+
     1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**
-    2. Go to **Bot** in the sidebar, uncheck **Public Bot**, click **Reset Token**, and copy the token
-    3. Enable **Message Content Intent** under Privileged Gateway Intents
-    4. Copy the example environment file and fill in your values:
+    2. Go to **Bot** in the sidebar, uncheck **Public Bot** (the bot is single-user — only you should install it), click **Reset Token**, and copy the token
+    3. Enable **Message Content Intent** under Privileged Gateway Intents (required for the bot to read your messages)
+
+    <Warning>The bot token is shown only once. If you lose it, you must reset it.</Warning>
+  </Step>
+
+  <Step title="Configure the bot">
+    Copy the example environment file:
 
     <Tabs>
       <Tab title="Linux / macOS">
@@ -67,16 +80,17 @@ in Discord DMs. No server is required.
       </Tab>
     </Tabs>
 
-    Open `.env` and set `DISCORD_TOKEN` to your bot token, `OLLIM_USER_NAME`
-    to your name, and `OLLIM_BOT_NAME` to whatever you want to call the bot.
+    Open `.env` and set the three variables:
 
-    5. Go to **Installation** in the sidebar — check **User Install**, uncheck **Guild Install**
-    6. Set the install link to **Discord Provided Link** and add the `applications.commands` scope
-    7. Copy the **Install Link** and open it in your browser — select **Add to my apps**
+    - `DISCORD_TOKEN` — the bot token you just copied
+    - `OLLIM_USER_NAME` — your first name (the bot will call you this)
+    - `OLLIM_BOT_NAME` — whatever you want to call the bot (e.g., "Ollim")
+  </Step>
 
-    <Warning>The bot token is shown only once. If you lose it, you must reset it.</Warning>
-
-    See [Discord bot setup](/self-hosting/discord-bot-setup) for the full walkthrough with screenshots.
+  <Step title="Install to your Discord account">
+    1. Go to **Installation** in the sidebar — check **User Install**, uncheck **Guild Install** (the bot runs in DMs, not server channels)
+    2. Set the install link to **Discord Provided Link** and add the `applications.commands` scope
+    3. Copy the **Install Link** and open it in your browser — select **Add to my apps**
   </Step>
 
   <Step title="Start the bot">
@@ -90,12 +104,32 @@ in Discord DMs. No server is required.
     complete sign-in. Once authenticated, the bot creates its data
     directory at `~/.ollim-bot/`, connects to Discord, and sends you a
     startup DM.
+
+    <Tip>
+    Bot not starting? See [common startup issues](/development/troubleshooting#startup-failures).
+    </Tip>
   </Step>
 
   <Step title="Send your first message">
     Reply to the startup DM to start a conversation — responses stream
-    in real time. Try `/cost` to see token usage or `/model sonnet` to
+    in real time. Try one of these to see the bot in action:
+
+    > Remind me to take out the trash tomorrow at 10am, and follow up if I haven't done it by noon
+
+    This demonstrates smart follow-ups — the bot will check back if you
+    haven't confirmed the task.
+
+    > Set up a morning routine that gives me a summary of my day every weekday at 9am
+
+    This sets up a proactive check-in — the feature that makes ollim-bot
+    different from a regular chatbot.
+
+    You can also try `/cost` to see token usage or `/model sonnet` to
     switch models.
+
+    <Note>
+    After [setting up Google integration](/getting-started/setup), try: "What's on my calendar today?"
+    </Note>
   </Step>
 </Steps>
 
@@ -130,7 +164,7 @@ ollim-bot help             # Show all available commands
   <Card title="Conversations" icon="comments" href="/core-usage/conversations">
     Learn how DM conversations, context, and streaming work.
   </Card>
-  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
-    Reference for all Discord slash commands.
+  <Card title="Set up your first routine" icon="clock" href="/scheduling/routines">
+    Morning briefings, task reviews, and proactive check-ins — the feature that makes the difference.
   </Card>
 </Columns>
