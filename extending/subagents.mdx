@@ -293,7 +293,7 @@ The markdown body below the frontmatter is the subagent's system prompt.
 
 **Overrides:** Drop a `.md` file into `~/.ollim-bot/.claude/agents/` to override a built-in subagent (same filename) or add a new one. Since `install_agents()` skips existing files, your overrides persist across bot updates. The override file must be a complete spec — there is no partial merge.
 
-**Hooks:** Because `setting_sources=["project"]` is enabled, hooks configured in `~/.ollim-bot/.claude/settings.json` apply to the main agent session. Subagent-level hooks can also be defined in the `hooks` frontmatter field — they are scoped to that subagent's lifecycle. See the [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide) for events, input schemas, and exit codes.
+**Hooks:** Because `setting_sources=["project"]` is enabled, hooks configured in `~/.ollim-bot/.claude/settings.json` apply to the main agent session. Subagent-level hooks can also be defined in the `hooks` frontmatter field — they are scoped to that subagent's lifecycle. See the [Claude Code hooks guide](/extending/hooks) for events, input schemas, and exit codes.
 </Accordion>
 
 <Accordion title="Delegation in the system prompt">

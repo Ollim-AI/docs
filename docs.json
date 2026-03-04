@@ -115,7 +115,8 @@
             "pages": [
               "extending/mcp-tools",
               "extending/subagents",
-              "extending/skills"
+              "extending/skills",
+              "extending/hooks"
             ]
           },
           {

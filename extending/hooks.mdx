@@ -1,0 +1,56 @@
+---
+title: "Hooks"
+description: "Run shell commands at key points in the agent lifecycle — format files, validate commands, or enforce project rules."
+---
+
+Hooks are shell commands that run automatically at specific points in the agent's lifecycle — before or after tool calls, at session start, when a subagent finishes, and more. They provide deterministic control that doesn't rely on the agent choosing to do something.
+
+<Note>
+  This page covers the ollim-bot-specific config location and a practical example. For the complete event list, input schemas, exit codes, and advanced patterns, see the **[Claude Code hooks reference](https://code.claude.com/docs/en/hooks-guide)**.
+</Note>
+
+## Configuration location
+
+Because ollim-bot uses `setting_sources=["project"]`, hooks defined in `~/.ollim-bot/.claude/settings.json` apply to the main agent session:
+
+```json title="~/.ollim-bot/.claude/settings.json"
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | xargs -I{} sh -c 'cd $(dirname {}) && ruff format {} 2>/dev/null || true'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This hook runs `ruff format` on any file the agent edits, so formatting stays consistent without the agent having to remember.
+
+Hooks can also be scoped narrower:
+
+- **Per-subagent** — define a `hooks` field in a subagent's `.md` frontmatter. The hooks activate when that subagent starts and are cleaned up when it finishes.
+- **Per-skill** — define a `hooks` field in a skill's `SKILL.md` frontmatter. Active only while that skill runs.
+
+## Full reference
+
+<Card title="Claude Code hooks reference" icon="book" href="https://code.claude.com/docs/en/hooks-guide">
+  Complete event list, input JSON schemas, exit codes, matcher syntax, and advanced hook types (prompt-based, agent-based, HTTP).
+</Card>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Subagents" icon="robot" href="/extending/subagents">
+    Per-subagent hooks in frontmatter — scoped to a single subagent's lifecycle.
+  </Card>
+  <Card title="Skills" icon="graduation-cap" href="/extending/skills">
+    Per-skill hooks in frontmatter — active only while a skill runs.
+  </Card>
+</Columns>
