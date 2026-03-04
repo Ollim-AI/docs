@@ -31,9 +31,18 @@ apply /mintlify on relevant pages.
 3.b. they then read the docs codebase to determine which files to modify
 3.c. they update the docs to ensure no stale documentation
 3.d. verify their updates match the goal of the git changes
-3.e. re-read their updated files and
-3.f. invoke /simplify, then commit
-4. you spawn the reviewer after the worker finishes. subagents cant spawn their own subagents. spawn agents in non-blocking mode in the background. chain reviewer subagents to verify their work using /mintlify.
+3.e. re-read their updated files, invoke /simplify, then commit
+3.f. write `REPORT.md` (git-untracked) in the worktree root — this is the handoff artifact the reviewer audits against:
+  - **Assignment**: original task description and source commits
+  - **Changes**: files modified and what changed
+  - **Rationale**: why each change was made
+  - **Evidence**: source-repo references (files, lines, commits) backing each change
+4. when a worker finishes, you spawn a reviewer with the report file path and the worktree branch
+4.a. reviewer loads /mintlify and reads `REPORT.md`
+4.b. audits the diff against the report — do changes match rationale and evidence?
+4.c. verifies completeness against the **Assignment** section — no assigned changes missed or partially applied
+4.d. fixes issues directly, amend onto the worker's commit
+4.e. escalate to you only if a fix requires judgment or clarification
 5. use a subagent to merge their branch onto main branch with linear history, it uses /mintlify to resolve any conflicts.
 6. verify work is completed, clean up the worktrees, and report back to me.
 
