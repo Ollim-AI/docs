@@ -11,7 +11,7 @@ Get ollim-bot running and send your first message in 6 steps.
 - **A terminal** — Terminal on macOS, PowerShell on Windows, `Ctrl + Alt + T` on Linux
 - [Git](https://git-scm.com/) — for cloning the source code
 - [uv](https://docs.astral.sh/uv/) — automatically installs the required Python version
-- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI at startup
+- A model provider — a [Claude](https://claude.ai) subscription (Pro or Max) is the default; see [Choose a model provider](/self-hosting/model-providers) for alternatives
 - A Discord account
 
 Install uv if you don't have it:
@@ -98,12 +98,13 @@ in Discord DMs. No server is required.
     ollim-bot
     ```
 
-    On startup, the bot checks whether Claude is authenticated. If not,
-    it DMs you an OAuth link via the Discord REST API — click the link
-    to sign in with your Anthropic account. The bot blocks until you
-    complete sign-in. Once authenticated, the bot creates its data
-    directory at `~/.ollim-bot/`, connects to Discord, and sends you a
-    startup DM.
+    On startup, the bot connects to your configured model provider. If
+    you're using the default Claude subscription and Claude Code isn't
+    authenticated, the bot DMs you an OAuth link via the Discord REST
+    API — click the link to sign in with your Anthropic account. The
+    bot blocks until you complete sign-in. Once ready, it creates its
+    data directory at `~/.ollim-bot/`, connects to Discord, and sends
+    you a startup DM.
 
     <Tip>
     Bot not starting? See [common startup issues](/development/troubleshooting#startup-failures).
