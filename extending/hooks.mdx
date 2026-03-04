@@ -33,6 +33,10 @@ Because ollim-bot uses `setting_sources=["project"]`, hooks defined in `~/.ollim
 
 This hook runs `ruff format` on any file the agent edits, so formatting stays consistent without the agent having to remember.
 
+<Warning>
+  Changes to `settings.json` require `/restart` to take effect.
+</Warning>
+
 Hooks can also be scoped narrower:
 
 - **Per-subagent** — define a `hooks` field in a subagent's `.md` frontmatter. The hooks activate when that subagent starts and are cleaned up when it finishes.

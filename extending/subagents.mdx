@@ -291,7 +291,7 @@ tool_sets = load_agent_tool_sets()  # dict[str, list[str]]
 
 The markdown body below the frontmatter is the subagent's system prompt.
 
-**Overrides:** Drop a `.md` file into `~/.ollim-bot/.claude/agents/` to override a built-in subagent (same filename) or add a new one. Since `install_agents()` skips existing files, your overrides persist across bot updates. The override file must be a complete spec — there is no partial merge.
+**Overrides:** Drop a `.md` file into `~/.ollim-bot/.claude/agents/` to override a built-in subagent (same filename) or add a new one. Since `install_agents()` skips existing files, your overrides persist across bot updates. The override file must be a complete spec — there is no partial merge. New or modified subagent specs take effect after `/clear`, `/compact`, or `/restart`.
 
 **Hooks:** Because `setting_sources=["project"]` is enabled, hooks configured in `~/.ollim-bot/.claude/settings.json` apply to the main agent session. Subagent-level hooks can also be defined in the `hooks` frontmatter field — they are scoped to that subagent's lifecycle. See the [Claude Code hooks guide](/extending/hooks) for events, input schemas, and exit codes.
 </Accordion>
