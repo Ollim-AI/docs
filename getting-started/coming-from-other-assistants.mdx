@@ -68,10 +68,9 @@ frontmatter — open one in any editor and see exactly what it does. Session log
 append-only JSONL. Everything lives in `~/.ollim-bot/` and can be git-tracked for full
 version history. No database indexes to rebuild, no migrations to run.
 
-**Smaller attack surface.** OpenClaw has faced multiple critical vulnerabilities — including
-remote code execution via WebSocket hijacking and supply-chain attacks in its skill
-marketplace. ollim-bot's tools are permission-gated, actions are visible in your Discord
-DMs, and there's no plugin marketplace where unreviewed code can run.
+**Smaller attack surface.** Tools with large plugin marketplaces and permissive defaults
+have a larger attack surface. ollim-bot's tools are permission-gated, actions are visible
+in your Discord DMs, and there's no plugin marketplace where unreviewed code can run.
 
 ## What you give up
 
@@ -93,7 +92,8 @@ Be clear-eyed about what ollim-bot doesn't do:
 
 There's no automated migration path — memory formats, session stores, and configuration
 systems are too different across tools. But you can get up to speed faster than starting
-from scratch.
+from scratch. You can import context from your previous assistant, recreate your
+automations, or set up new integrations.
 
 <AccordionGroup>
   <Accordion title="Import your context">
@@ -151,7 +151,7 @@ MCP tool configurations. If you build something that follows the
 
 <Columns cols={2}>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Get ollim-bot running in under 5 minutes.
+    Get the bot running in 4 steps.
   </Card>
   <Card title="Design philosophy" icon="lightbulb" href="/architecture/design-philosophy">
     The full reasoning behind these tradeoffs.
