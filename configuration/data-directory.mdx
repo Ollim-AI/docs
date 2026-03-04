@@ -261,9 +261,11 @@ when you first authenticate.
 ## Process lock
 
 `bot.pid` contains the PID of the running bot process. On startup,
-`_check_already_running()` reads this file and checks
-`/proc/<pid>/cmdline` to prevent duplicate instances. The file is
-deleted on exit via `atexit`.
+`_check_already_running()` reads this file and uses `os.kill(pid, 0)` to
+check if the process is alive. On Linux, it additionally verifies
+`/proc/<pid>/cmdline` contains `ollim-bot` to avoid false positives from
+recycled PIDs. Corrupted PID files (non-numeric content or read errors) are
+silently overwritten. The file is deleted on exit via `atexit`.
 
 ## Spec files
 
