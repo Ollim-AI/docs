@@ -11,7 +11,7 @@ one-click completion or deletion.
 ## Prerequisites
 
 - Google OAuth credentials configured (see [Google OAuth setup](/self-hosting/google-oauth-setup))
-- Completed the initial OAuth consent flow — the `tasks` scope is included by default
+- Google account connected via [`/google-auth`](/core-usage/slash-commands#google-auth) — the `tasks` scope is included by default
 
 ## Setup
 
@@ -127,9 +127,9 @@ blocking the Discord event loop.
 
 <AccordionGroup>
   <Accordion title="Tasks commands return an auth error">
-    Your OAuth token may have expired or been revoked. Delete
-    `~/.ollim-bot/state/token.json` and run any tasks command to trigger
-    re-authentication.
+    Your OAuth token may have expired or been revoked. The bot
+    [detects revocations automatically](/self-hosting/google-oauth-setup#auto-recovery)
+    and prompts you to reconnect — run `/google-auth` to re-authenticate.
   </Accordion>
   <Accordion title="How do I find a task ID?">
     Task IDs are displayed as the first column in `ollim-bot tasks list`

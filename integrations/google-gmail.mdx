@@ -11,7 +11,7 @@ You can also query Gmail directly from the CLI.
 ## Prerequisites
 
 - Google OAuth credentials configured (see [Google OAuth setup](/self-hosting/google-oauth-setup))
-- Completed the initial OAuth consent flow — the `gmail.readonly` scope is included by default
+- Google account connected via [`/google-auth`](/core-usage/slash-commands#google-auth) — the `gmail.readonly` scope is included by default
 
 ## Setup
 
@@ -149,7 +149,8 @@ Gmail access is strictly read-only. ollim-bot cannot send, delete, or modify ema
   <Accordion title="Gmail commands return no messages">
     Verify that your OAuth token includes the `gmail.readonly` scope.
     If you added Gmail after the initial OAuth flow, delete
-    `~/.ollim-bot/state/token.json` and re-authenticate to pick up the new scope.
+    `~/.ollim-bot/state/token.json` and run `/google-auth` to re-consent
+    with the updated scopes.
   </Accordion>
   <Accordion title="Body shows '(no text body)'">
     Some emails use only HTML with embedded images and no text content.

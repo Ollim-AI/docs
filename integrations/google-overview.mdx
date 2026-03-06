@@ -37,13 +37,18 @@ flow grants access to all three services:
 | Google Calendar | Read/write |
 | Gmail | Read-only |
 
-On first run, the OAuth flow opens a browser window for consent.
-After granting access, the token is cached and refreshed
-automatically — you only need to consent once.
+Run [`/google-auth`](/core-usage/slash-commands#google-auth) to connect
+your Google account. The command supports both a browser-based flow and a
+paste-based flow for headless servers. After granting access, the token is
+cached and refreshed automatically — you only need to consent once.
+
+If your token is revoked (password change, manual revocation), the bot
+detects it automatically and prompts you to reconnect. See
+[auto-recovery](/self-hosting/google-oauth-setup#auto-recovery) for details.
 
 <Note>
 If a code update adds new scopes, delete
-`~/.ollim-bot/state/token.json` to trigger re-consent.
+`~/.ollim-bot/state/token.json` and run `/google-auth` to re-consent.
 </Note>
 
 ## Credential files
@@ -51,7 +56,7 @@ If a code update adds new scopes, delete
 | File | Path | Purpose |
 |------|------|---------|
 | OAuth client credentials | `~/.ollim-bot/state/credentials.json` | Downloaded from Google Cloud Console |
-| Cached token | `~/.ollim-bot/state/token.json` | Auto-generated after first OAuth consent |
+| Cached token | `~/.ollim-bot/state/token.json` | Auto-generated after `/google-auth` |
 
 ## Next steps
 

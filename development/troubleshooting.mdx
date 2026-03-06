@@ -253,17 +253,20 @@ its commit. Use `git log` inside the directory to review the change history.
   </Accordion>
 
   <Accordion title="Expired or invalid token">
-    `~/.ollim-bot/state/token.json` is auto-generated on first authentication and
-    refreshed automatically. If the token becomes invalid (revoked scopes,
-    credential rotation), delete it and re-authenticate:
+    `~/.ollim-bot/state/token.json` is auto-generated after `/google-auth` and
+    refreshed automatically. If the token is revoked (password change, manual
+    revocation), the bot
+    [detects it automatically](/self-hosting/google-oauth-setup#auto-recovery)
+    and sends you a message to reconnect. Run `/google-auth` to re-authenticate.
+
+    If the automatic detection does not trigger (e.g., the bot was offline when
+    the revocation happened), you can delete the token manually and reconnect:
 
     ```bash
     rm ~/.ollim-bot/state/token.json
-    ollim-bot tasks list
     ```
 
-    The next Google API call triggers a browser-based OAuth flow to generate
-    a new token.
+    Then run `/google-auth` in Discord.
   </Accordion>
 </AccordionGroup>
 

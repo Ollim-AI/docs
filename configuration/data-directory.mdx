@@ -253,10 +253,10 @@ the working directory.
 | File | Source | Description |
 |------|--------|-------------|
 | `credentials.json` | Manual — [Google Cloud Console](/self-hosting/google-oauth-setup) | OAuth 2.0 client creds |
-| `token.json` | Auto-generated on first auth flow | OAuth refresh and access tokens |
+| `token.json` | Auto-generated after [`/google-auth`](/core-usage/slash-commands#google-auth) | OAuth refresh and access tokens |
 
 Neither file is git-committed. `token.json` is auto-generated
-when you first authenticate.
+when you run `/google-auth`.
 
 ## Process lock
 

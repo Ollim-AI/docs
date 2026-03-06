@@ -33,17 +33,23 @@ Google Cloud Console.
     ```bash
     mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
     ```
+  </Step>
 
-    On first use of any Google service, ollim-bot opens a browser window for
-    consent. The authorized token is saved to `~/.ollim-bot/state/token.json`
-    and reused automatically. Expired tokens are refreshed without interaction.
+  <Step title="Connect with /google-auth">
+    Run `/google-auth` in your Discord DM with the bot. Click the auth URL
+    to complete the consent flow in your browser, or paste the redirect URL
+    back if you are on a different device. The token is saved to
+    `~/.ollim-bot/state/token.json` and refreshed automatically from then on.
+
+    If your token is ever revoked, the bot detects it automatically and
+    prompts you to run `/google-auth` again.
   </Step>
 </Steps>
 
 <Note>
 ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and
 `gmail.readonly`. If scopes change after a code update, delete
-`~/.ollim-bot/state/token.json` to re-consent.
+`~/.ollim-bot/state/token.json` and run `/google-auth` to re-consent.
 </Note>
 
 See [Google OAuth setup](/self-hosting/google-oauth-setup) for a detailed

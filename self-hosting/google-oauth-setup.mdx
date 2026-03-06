@@ -1,12 +1,12 @@
 ---
 title: "Set up Google OAuth"
-description: "Set up Google Cloud OAuth credentials and complete the first authentication flow."
+description: "Set up Google Cloud OAuth credentials and connect your Google account with /google-auth."
 ---
 
 Google Tasks, Calendar, and Gmail integration requires OAuth 2.0 credentials
 from Google Cloud Console. This tutorial walks through creating a project,
-enabling APIs, downloading credentials, and completing the first
-authentication flow.
+enabling APIs, downloading credentials, and connecting your account with the
+`/google-auth` slash command.
 
 ### What you'll have after this
 
@@ -16,15 +16,13 @@ authentication flow.
 | **OAuth scopes** | `tasks` (read/write), `calendar.events` (read/write), `gmail.readonly` |
 | **Application type** | Desktop application (must be `"installed"` key, not `"web"`) |
 | **Credentials file** | `~/.ollim-bot/state/credentials.json` |
-| **Token file** | `~/.ollim-bot/state/token.json` (auto-created on first OAuth flow) |
+| **Token file** | `~/.ollim-bot/state/token.json` (auto-created after `/google-auth`) |
 | **Consent screen** | External, Testing mode (only listed test users can authenticate) |
 
 ## Prerequisites
 
 - A Google account
 - ollim-bot [installed and running](/getting-started/quickstart)
-- A web browser accessible from the machine running ollim-bot
-  (the OAuth flow opens a browser window)
 
 <Steps>
   <Step title="Create a Google Cloud project">
@@ -103,42 +101,30 @@ authentication flow.
     mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
     ```
 
-    ollim-bot looks for credentials at this exact path:
-
-    ```text
-    ~/.ollim-bot/state/credentials.json
-    ```
-
-    If the file is missing when a Google API call is made, the bot exits with:
-    ```text
-    Missing ~/.ollim-bot/state/credentials.json -- download OAuth client credentials
-    from Google Cloud Console and save at that path
-    ```
+    ollim-bot looks for credentials at this exact path. If the file is missing
+    when you run `/google-auth`, the command tells you to set up credentials first.
   </Step>
 
-  <Step title="Complete the first authentication flow">
-    Start the bot (or trigger any Google integration feature):
+  <Step title="Connect with /google-auth">
+    Run the `/google-auth` slash command in your Discord DM with the bot.
 
-    ```bash
-    ollim-bot
-    ```
+    The command starts an OAuth flow with a **5-minute timeout** and two
+    completion paths:
 
-    On the first Google API call, ollim-bot:
+    - **Browser path** — click the auth URL in the response. Your browser
+      opens the Google consent page. After you grant access, the browser
+      redirects to a local server and authentication completes automatically.
+    - **Paste path** — for cross-device scenarios (e.g., the bot runs on a
+      headless server with no browser), open the auth URL on another device,
+      complete the consent flow, and paste the redirect URL back into the
+      Discord DM.
 
-    1. Reads `~/.ollim-bot/state/credentials.json`
-    2. Starts a local HTTP server on `127.0.0.1` (random port)
-    3. Opens your browser to Google's OAuth consent page
-    4. After you grant access, captures the authorization code
-    5. Exchanges the code for access and refresh tokens
-    6. Saves the tokens to `~/.ollim-bot/state/token.json`
-
-    On subsequent runs, the saved token is reused automatically.
-    Expired tokens are refreshed in the background without
-    opening a browser.
+    On success, the bot sends "google connected." to the channel and saves
+    tokens to `~/.ollim-bot/state/token.json`.
 
     <Tip>
-      Ask the bot to list your tasks or calendar events to
-      trigger the OAuth flow and verify everything works.
+      Ask the bot to list your tasks or calendar events to verify Google
+      integration is working.
     </Tip>
   </Step>
 </Steps>
@@ -152,11 +138,25 @@ in `google/auth.py`:
 |----------|----------|
 | `token.json` exists, token valid | Used immediately — no network call |
 | `token.json` exists, token expired | Refreshed via the refresh token, `token.json` updated |
-| `token.json` missing | Full OAuth flow — opens browser for consent |
-| `credentials.json` missing | Exits with an error message |
+| `token.json` missing | Run `/google-auth` to start a new OAuth flow |
+| `credentials.json` missing | `/google-auth` shows setup instructions |
 
 The token file at `~/.ollim-bot/state/token.json` stores the access token,
 refresh token, and granted scopes. Do not edit it manually.
+
+## Auto-recovery
+
+When a Google token is revoked — by a password change, manual revocation in
+Google account settings, or other means — the bot detects it automatically:
+
+1. On the next Google API call, `get_credentials()` encounters a
+   `RefreshError` with `invalid_grant`
+2. The bot deletes the stale `token.json` and creates a marker file
+3. The scheduler checks the marker on its 10-second polling loop and
+   sends: "-# google auth revoked -- use /google-auth to reconnect."
+
+You do not need to manually delete `token.json` or diagnose the issue. Run
+`/google-auth` to reconnect.
 
 ## Adding or changing scopes
 
@@ -174,8 +174,8 @@ If you add a new Google service and need additional scopes:
 
 1. Add the scope string to the `SCOPES` list
 2. Delete `~/.ollim-bot/state/token.json`
-3. Restart the bot — the OAuth consent flow runs again with
-   the updated scopes
+3. Run `/google-auth` — the OAuth consent flow runs again with the
+   updated scopes
 
 <Note>
   Existing tokens do not automatically gain new scopes.

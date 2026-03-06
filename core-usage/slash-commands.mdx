@@ -3,7 +3,7 @@ title: "Slash commands"
 description: "Use slash commands to manage sessions, models, forks, lifecycle, permissions, and runtime configuration."
 ---
 
-Twelve slash commands for session management, model control, forks, lifecycle, and configuration — all restricted to the **bot owner** via DMs.
+Thirteen slash commands for session management, model control, forks, lifecycle, integrations, and configuration — all restricted to the **bot owner** via DMs.
 
 ## Quick reference
 
@@ -16,6 +16,7 @@ Twelve slash commands for session management, model control, forks, lifecycle, a
 | `/model` | Switch the AI model | `name` (required) |
 | `/thinking` | Set thinking mode | `mode` (required) |
 | `/interrupt` | Stop the current response | None |
+| `/google-auth` | Connect Google account via OAuth | None |
 | `/update` | Check for updates and apply immediately | None |
 | `/restart` | Restart the bot process | None |
 | `/permissions` | Set permission mode | `mode` (required) |
@@ -125,6 +126,25 @@ the interaction, interrupts any in-progress generation, then deletes the
 deferred response.
 
 <Note>If the bot is not actively generating a response, `/interrupt` does nothing.</Note>
+
+## Integration commands
+
+### /google-auth
+
+Connects your Google account via OAuth for Tasks, Calendar, and Gmail access.
+
+The command checks for `credentials.json` in the state directory first — if missing, it tells you to set up OAuth credentials. If Google is already connected, it confirms that.
+
+Otherwise, it starts an OAuth flow with a 5-minute timeout and two completion paths:
+
+- **Browser path** — click the auth URL; the browser redirects to a local server and authentication completes automatically
+- **Paste path** — for cross-device scenarios (e.g., the bot runs on a headless server), complete auth on another device and paste the redirect URL back into the Discord DM
+
+On success, the bot sends "google connected." to the channel.
+
+<Tip>
+If your Google token is revoked (password change, manual revocation in Google settings), the bot detects it automatically on the next API call and sends you a message to reconnect with `/google-auth`. See [auto-recovery](/self-hosting/google-oauth-setup#auto-recovery) for details.
+</Tip>
 
 ## Lifecycle commands
 

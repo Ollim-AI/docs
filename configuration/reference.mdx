@@ -125,7 +125,11 @@ Google integration uses file-based credentials rather than environment variables
 | File | Source | Description |
 |------|--------|-------------|
 | `~/.ollim-bot/state/credentials.json` | Manual — downloaded from Google Cloud Console | OAuth 2.0 client credentials |
-| `~/.ollim-bot/state/token.json` | Auto-generated on first authentication flow | OAuth refresh and access tokens |
+| `~/.ollim-bot/state/token.json` | Auto-generated after [`/google-auth`](/core-usage/slash-commands#google-auth) | OAuth refresh and access tokens |
+
+Tokens are refreshed automatically. If a token is revoked, the bot detects it
+and prompts you to run `/google-auth` again — see
+[auto-recovery](/self-hosting/google-oauth-setup#auto-recovery).
 
 See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full credential setup process.
 
