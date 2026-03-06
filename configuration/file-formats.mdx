@@ -293,9 +293,8 @@ JSON object storing persistent settings you configure via the [`/config`](/core-
 |-----|------|---------|-------------|
 | `model_main` | `str \| null` | `null` | Default model for the main session |
 | `model_fork` | `str \| null` | `null` | Default model for interactive forks |
-| `thinking_main` | `bool` | `false` | Extended thinking for the main session |
-| `thinking_fork` | `bool` | `true` | Extended thinking for interactive forks |
-| `max_thinking_tokens` | `int` | `10000` | Token budget when thinking is enabled |
+| `thinking_main` | `str` | `"off"` | Extended thinking mode for the main session (`"off"`, `"adaptive"`, or a budget integer as string) |
+| `thinking_fork` | `str` | `"adaptive"` | Extended thinking mode for interactive forks (`"off"`, `"adaptive"`, or a budget integer as string) |
 | `bg_fork_timeout` | `int` | `1800` | Max background fork runtime (seconds) |
 | `fork_idle_timeout` | `int` | `10` | Interactive fork idle timeout (minutes) |
 | `permission_mode` | `str` | `"dontAsk"` | Default permission mode |
@@ -303,7 +302,7 @@ JSON object storing persistent settings you configure via the [`/config`](/core-
 ```json title="config.json"
 {
   "model_main": "sonnet",
-  "thinking_fork": true,
+  "thinking_fork": "32000",
   "fork_idle_timeout": 15
 }
 ```

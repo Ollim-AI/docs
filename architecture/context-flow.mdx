@@ -22,7 +22,7 @@ What the agent sees depends on which mode it's running in. This matters for both
 | **File tools** | Read, Write, Edit, Glob, Grep (`*.md`) | Same as main | None by default | None by default |
 | **Other tools** | WebFetch, WebSearch, Task, Skill, CLI | Same as main | `ollim-bot help` only | `ollim-bot help` only |
 | **Skills** | Not loaded | Not loaded | Loaded if declared in YAML `skills` field | Loaded if declared in YAML `skills` field |
-| **Thinking** | User-controlled (`/thinking`) | Enabled by default | Configurable per job (`thinking` field) | Configurable per job |
+| **Thinking** | User-controlled (`/thinking`) | Adaptive by default | Configurable per job (`thinking` field) | Configurable per job |
 | **Permissions** | User-controlled (`dontAsk` default) | Inherits from main | Always deny | Always deny |
 | **Preamble sections** | None | None | Ping, update, busy, budget/schedule, tool restrictions, skills | Same |
 

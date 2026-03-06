@@ -14,7 +14,7 @@ Twelve slash commands for session management, model control, forks, lifecycle, a
 | `/cost` | Show token usage for this session | None |
 | `/fork` | Start a forked conversation | `topic` (optional) |
 | `/model` | Switch the AI model | `name` (required) |
-| `/thinking` | Toggle extended thinking | `enabled` (required) |
+| `/thinking` | Set thinking mode | `mode` (required) |
 | `/interrupt` | Stop the current response | None |
 | `/update` | Check for updates and apply immediately | None |
 | `/restart` | Restart the bot process | None |
@@ -82,17 +82,27 @@ The change takes effect immediately — the next message uses the new model.
 
 ### /thinking
 
-Toggles extended thinking (chain-of-thought reasoning) for deeper
-analysis. The token budget is controlled by the `thinking.max_tokens`
-[runtime config](/core-usage/slash-commands#config) key (default:
-10,000).
+Sets the extended thinking mode — controls whether Claude uses
+chain-of-thought reasoning and how many tokens it can spend on it.
 
 | Parameter | Type | Required | Choices |
 |-----------|------|----------|---------|
-| `enabled` | choice | Yes | `on`, `off` |
+| `mode` | choice | Yes | `off`, `adaptive`, `8k budget`, `32k budget`, `64k budget` |
+
+| Mode | Behavior |
+|------|----------|
+| **off** | Disables extended thinking entirely. |
+| **adaptive** | Claude decides whether to think based on query complexity. |
+| **8k / 32k / 64k budget** | Fixed token budget for thinking (8,000 / 32,000 / 64,000 tokens). |
+
+Changing the thinking mode drops the active client and exits any active
+fork — the next message creates a fresh connection with the new setting.
+
+You can also set a custom budget via [`/config thinking.main`](/core-usage/slash-commands#config)
+with any positive integer as the value.
 
 <Warning>
-  `/thinking` is blocked during interactive forks — exit the fork first. Switching thinking mode mid-fork would silently kill the fork client.
+  `/thinking` is blocked during interactive forks — exit the fork first. Changing thinking mode drops the active client, which would silently kill the fork.
 </Warning>
 
 ## Fork commands
@@ -198,9 +208,8 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 |-----|------|---------|-------------|
 | `model.main` | model | SDK default | Default model for the main session |
 | `model.fork` | model | Inherits from main | Default model for interactive forks |
-| `thinking.main` | boolean | `off` | Extended thinking for the main session |
-| `thinking.fork` | boolean | `on` | Extended thinking for interactive forks |
-| `thinking.max_tokens` | integer | `10000` | Token budget when thinking is enabled |
+| `thinking.main` | thinking mode | `off` | Extended thinking for the main session |
+| `thinking.fork` | thinking mode | `adaptive` | Extended thinking for interactive forks |
 | `bg_fork_timeout` | integer | `1800` | Max background fork runtime in seconds |
 | `fork_idle_timeout` | integer | `10` | Interactive fork idle timeout in minutes |
 | `permission_mode` | permission mode | `dontAsk` | Default [permission mode](/core-usage/permissions) |
@@ -210,6 +219,7 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 
 Model values: `opus`, `sonnet`, `haiku`, or empty to reset to default.
 Boolean values: `on`/`off`, `yes`/`no`, `true`/`false`.
+Thinking mode values: `off`, `adaptive`, or a positive integer for a custom token budget.
 
 <Tip>
 Use `/config` to set fork-specific defaults — for example, always use

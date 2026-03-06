@@ -47,11 +47,12 @@ If no topic is given, the agent waits for you to lead. The agent can
 also start a fork on its own when it decides a tangent needs isolated
 context.
 
-By default, interactive forks enable extended thinking even when the
-main session has thinking off. You can change this with
+By default, interactive forks use **adaptive** thinking — Claude
+decides whether to think based on query complexity, even when the main
+session has thinking off. You can change this with
 [`/config`](/core-usage/slash-commands#config) — set `thinking.fork`
-to `off` to disable it, or adjust `thinking.max_tokens` for a different
-token budget.
+to `off` to disable it, or to a token budget like `32000` for a fixed
+thinking allocation.
 
 When a fork starts, the bot sends a purple embed showing the topic
 (or a short description like "branched conversation — changes stay
