@@ -32,7 +32,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `isolated` | `bool` | `false` | Run in isolated session (no conversation history) |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed-tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with minimal defaults |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
@@ -49,7 +49,7 @@ Check the sleep tracker for any anomalies.
 ```
 
 <Note>
-When `allowed-tools` is not set, background forks receive `MINIMAL_BG_TOOLS` — report, ping, embed, follow-up chain, and help. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for the full list.
+Every background fork always receives `MINIMAL_BG_TOOLS` — report, ping, embed, follow-up chain, and help. When `allowed-tools` is set, your tools are merged in on top of these defaults. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for details.
 </Note>
 
 ### Reminders
@@ -70,7 +70,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `isolated` | `bool` | `false` | Run in isolated session |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed-tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with minimal defaults |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 ```yaml title="reminders/pick-up-groceries.md"
@@ -108,7 +108,7 @@ Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `allow-ping` | `bool` | `true` | Allow notification tools |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
-| `allowed-tools` | `list[str] \| null` | `null` | Tool allowlist (overrides defaults when set) |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with minimal defaults |
 
 The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
 

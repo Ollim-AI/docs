@@ -121,7 +121,7 @@ must report:
 | `on_ping` | Report if a ping or embed was sent | Task blocked until reported |
 | `always` | Must report regardless | Task blocked until reported |
 | `freely` | Reporting is optional | None |
-| `blocked` | Reporting disabled | None |
+| `blocked` | Reporting disabled | `report_updates` and `follow_up_chain` stripped at SDK level |
 
 <Tip>
 Use `update-main-session: always` for tasks where the main session needs
@@ -143,20 +143,26 @@ never sees restricted tools — they're removed at the SDK level.
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `allowed-tools` | Minimal defaults | Allowlist — overrides defaults when set. |
+| `allowed-tools` | Minimal defaults | Additional tools merged with minimal defaults. |
 
 <Note>
-When `allowed-tools` is not set, background forks receive the `MINIMAL_BG_TOOLS`
-default — just enough for reporting and notification:
+Every background fork always receives **MINIMAL_BG_TOOLS** — the communication
+channel back to you. These tools cannot be removed:
 
 - `mcp__discord__report_updates`
 - `mcp__discord__ping_user`
 - `mcp__discord__discord_embed`
 - `mcp__discord__follow_up_chain`
 - `Bash(ollim-bot help)`
+
+When you set `allowed-tools`, your tools are **merged in** on top of these
+defaults. Duplicates are dropped, so listing a system tool explicitly has
+no effect. You cannot accidentally disable reporting or pinging by
+forgetting to include a system tool.
 </Note>
 
-Tool names use the SDK format:
+Tool names use the SDK format. You only need to list tools beyond the
+minimal defaults:
 
 ```yaml title="routines/email-check.md"
 ---
@@ -167,9 +173,6 @@ isolated: true
 model: haiku
 allowed-tools:
   - "Bash(ollim-bot gmail *)"
-  - "mcp__discord__discord_embed"
-  - "mcp__discord__ping_user"
-  - "mcp__discord__report_updates"
 description: Email check (restricted tools)
 ---
 Check Gmail for unread messages from today.
@@ -206,7 +209,7 @@ frontmatter:
 | `thinking` | `bool` | `true` | Extended thinking override |
 | `update-main-session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
-| `allowed-tools` | `list[string]` | — | Tool allowlist (SDK format) |
+| `allowed-tools` | `list[string]` | — | Additional tools merged with minimal defaults (SDK format) |
 | `skills` | `list[string]` | — | [Skills](/extending/skills) to load at fire time |
 
 ## Examples
@@ -245,7 +248,7 @@ Check my calendar and tasks for today.
 Report a summary to the main session — do not ping.
 ```
 
-A background reminder with chain follow-ups and restricted tools:
+A background reminder with chain follow-ups:
 
 ```yaml title="reminders/take-medication.md"
 ---
@@ -254,11 +257,6 @@ run-at: "2026-02-24T09:00:00-08:00"
 background: true
 max-chain: 3
 update-main-session: freely
-allowed-tools:
-  - "mcp__discord__ping_user"
-  - "mcp__discord__discord_embed"
-  - "mcp__discord__report_updates"
-  - "mcp__discord__follow_up_chain"
 description: Medication reminder
 ---
 Remind me to take my medication.

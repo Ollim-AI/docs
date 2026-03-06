@@ -150,7 +150,7 @@ If your Google token is revoked (password change, manual revocation in Google se
 
 ### /update
 
-Checks for upstream updates and applies them immediately — bypasses the `auto_update_hour` window. If updates are found, the bot pulls the latest code, logs a "restarting" event to session history, and restarts the process. If already up to date, confirms with a message.
+Checks for upstream updates and applies them immediately — bypasses the `auto_update_hour` window. If updates are found, the bot pulls the latest code (`git pull --ff-only`), syncs the project venv (`uv sync`), syncs the global tool venv (`uv tool install --editable .`), logs a "restarting" event to session history, and restarts the process. If already up to date, confirms with a message.
 
 ### /restart
 
@@ -233,7 +233,7 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 | `bg_fork_timeout` | integer | `1800` | Max background fork runtime in seconds |
 | `fork_idle_timeout` | integer | `10` | Interactive fork idle timeout in minutes |
 | `permission_mode` | permission mode | `dontAsk` | Default [permission mode](/core-usage/permissions) |
-| `auto_update` | boolean | `off` | Auto-pull and restart on new commits |
+| `auto_update` | boolean | `off` | Auto-pull, sync both venvs, and restart on new commits |
 | `auto_update_interval` | integer | `60` | Update check interval (minutes) |
 | `auto_update_hour` | hour (0-23) | `6` | Hour of day to apply updates |
 
