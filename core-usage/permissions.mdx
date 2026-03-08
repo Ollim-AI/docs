@@ -131,17 +131,35 @@ Write-protection is enforced at two layers:
    falls inside `state/`, the hook denies the call with
    `"state/ is write-protected"`. This applies to all contexts — main
    session, interactive forks, and background forks.
-2. **Pattern stripping** — `tool_policy.py` validates tool patterns at
-   startup and strips any Write/Edit patterns that could match the
-   `state/` directory. This means even if a routine or skill declares a
-   broad pattern like `Edit(**)`, the pattern is removed before it
-   reaches the SDK.
+2. **Pattern validation** — `tool_policy.py` validates tool patterns at
+   startup and at dispatch time. Write/Edit patterns that could match
+   the `state/` directory are rejected — jobs declaring patterns like
+   `Edit(**)` will not dispatch.
 
 <Note>
 The agent can still read files in `state/` but cannot modify them
 through its tools. The `PreToolUse` hook catches attempts regardless of
 which patterns are declared in `allowed_tools`.
 </Note>
+
+## Customizing tool sets
+
+You can extend or override the default tool sets by creating a
+`tool-policy.yaml` file in `~/.ollim-bot/`. Changes take effect
+without a restart — the file is re-read when its modification time
+changes.
+
+```yaml title="tool-policy.yaml"
+main_session:
+  additional_allowed:
+    - "Bash(git status)"
+bg_forks:
+  additional_allowed:
+    - "Bash(ollim-bot cal *)"
+```
+
+See [File formats](/configuration/file-formats#tool-policy-tool-policyyaml)
+for the full key reference.
 
 ## Visual feedback
 

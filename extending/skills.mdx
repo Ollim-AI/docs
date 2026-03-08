@@ -141,7 +141,7 @@ Ping me if anything needs my attention before standup.
 
 ### Tool merging
 
-If a skill declares `allowed-tools`, `collect_skill_tools()` merges those tools into the host job's tool set. Background forks always have at least a minimal default tool set, so skill tools always merge. The function deduplicates — if two skills both need `Bash(git *)`, only one entry appears.
+If a skill declares `allowed-tools`, `collect_skill_tools()` merges those tools into the host job's tool set. Background forks always have at least `DEFAULT_BG_TOOLS`, so skill tools always merge on top. The function deduplicates — if two skills both need `Bash(git *)`, only one entry appears.
 
 ### Reminders with skills
 

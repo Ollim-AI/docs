@@ -161,7 +161,7 @@ Discord and the outside world.
 | `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
 | `fork_state.py` | Fork state — contextvars, dataclasses (`BgForkTracking`, `BgForkConfig`), interactive fork globals |
 | `forks.py` | Pending updates I/O and background fork execution (`run_agent_background`) |
-| `tool_policy.py` | Tool pattern validation, SDK ceiling builder, and `state/` write-protection |
+| `tool_policy.py` | Tool pattern validation, per-job tool restrictions, and YAML tool policy config |
 | `views.py` | Persistent button handlers via `DynamicItem` — delegates to google/, forks, and streamer |
 
 ### Storage and state

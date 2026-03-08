@@ -204,7 +204,7 @@ Dangerous patterns are rejected:
 |---------|--------|
 | `Bash(*)` | Error — too broad, specify a command prefix |
 | `Bash(ollim-bot gmail * ; rm -rf /)` | Error — chaining operators (`;`, `&`, `\|`) blocked |
-| `Edit(**)` | Stripped — matches paths inside the protected `state/` directory |
+| `Edit(**)` | Error — matches paths inside the protected `state/` directory |
 
 If a pattern fails validation with an error, the job is **skipped** —
 it will not dispatch. The bot logs the error so you can fix the
