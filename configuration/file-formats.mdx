@@ -32,7 +32,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `isolated` | `bool` | `false` | Run in isolated session (no conversation history) |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with minimal defaults |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default bg tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
@@ -49,7 +49,7 @@ Check the sleep tracker for any anomalies.
 ```
 
 <Note>
-Every background fork always receives `MINIMAL_BG_TOOLS` — report, ping, embed, follow-up chain, and help. When `allowed-tools` is set, your tools are merged in on top of these defaults. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for details.
+Every background fork always receives `DEFAULT_BG_TOOLS` — help, tasks CLI, and read-only file tools (`Read`, `Glob`, `Grep` scoped to `./**.md`). Discord MCP tools are dynamically gated at runtime. When `allowed-tools` is set, your tools are merged in on top of these defaults. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for details.
 </Note>
 
 ### Reminders
@@ -70,7 +70,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `isolated` | `bool` | `false` | Run in isolated session |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with minimal defaults |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default bg tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 ```yaml title="reminders/pick-up-groceries.md"
@@ -108,7 +108,7 @@ Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `allow-ping` | `bool` | `true` | Allow notification tools |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
-| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with minimal defaults |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default bg tools |
 
 The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
 
@@ -165,6 +165,31 @@ When designing user-facing features, follow these principles:
 
 <Note>
 Dynamic context markers (`` !`command` ``) have a 10-second per-command timeout and a 30-second total cap. Each command's output is truncated to 2000 characters. See [Dynamic context injection](/extending/skills#dynamic-context-injection) for the full expansion rules.
+</Note>
+
+### Tool policy (`tool-policy.yaml`)
+
+Stored at `~/.ollim-bot/tool-policy.yaml`. An optional YAML file that lets you extend or override the default tool sets without editing source code.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `main_session.additional_allowed` | `list[str]` | Extra tool patterns merged into the main session's `allowed_tools` |
+| `bg_forks.additional_allowed` | `list[str]` | Extra tool patterns merged into `DEFAULT_BG_TOOLS` |
+| `bg_forks.override` | `list[str]` | Completely replaces `DEFAULT_BG_TOOLS` (takes precedence over `additional_allowed`) |
+
+The file is loaded with mtime-based caching — changes take effect without a restart.
+
+```yaml title="tool-policy.yaml"
+main_session:
+  additional_allowed:
+    - "Bash(git status)"
+bg_forks:
+  additional_allowed:
+    - "Bash(ollim-bot cal *)"
+```
+
+<Note>
+If `bg_forks.override` is set, it completely replaces the default bg tools — use with care. The `additional_allowed` key is safer for most use cases.
 </Note>
 
 ## Shared markdown conventions

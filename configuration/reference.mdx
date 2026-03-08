@@ -74,6 +74,26 @@ restart, while `/config` changes take effect immediately. Use env vars for
 credentials and infrastructure, `/config` for preferences.
 </Note>
 
+## Tool policy
+
+You can extend or override the default tool sets by creating a
+`tool-policy.yaml` file in `~/.ollim-bot/`. This is useful for granting
+the agent access to additional tools without editing source code.
+
+```yaml title="~/.ollim-bot/tool-policy.yaml"
+main_session:
+  additional_allowed:
+    - "Bash(git status)"
+bg_forks:
+  additional_allowed:
+    - "Bash(ollim-bot cal *)"
+```
+
+Changes take effect without a restart — the file is re-read when its
+modification time changes. See
+[File formats](/configuration/file-formats#tool-policy-tool-policyyaml)
+for the full schema.
+
 ## Data directory
 
 All persistent data lives in `~/.ollim-bot/`. See

@@ -121,7 +121,7 @@ must report:
 | `on_ping` | Report if a ping or embed was sent | Task blocked until reported |
 | `always` | Must report regardless | Task blocked until reported |
 | `freely` | Reporting is optional | None |
-| `blocked` | Reporting disabled | `report_updates` and `follow_up_chain` stripped at SDK level |
+| `blocked` | Reporting disabled | `report_updates` and `follow_up_chain` denied at runtime via `canUseTool` |
 
 <Tip>
 Use `update-main-session: always` for tasks where the main session needs
@@ -138,31 +138,42 @@ context back to the main session.
 
 ## Tool restrictions
 
-You can limit which MCP tools a background fork has access to. The agent
-never sees restricted tools — they're removed at the SDK level.
+Tool access in background forks is enforced at two layers:
+
+- **SDK layer** — `allowed_tools` controls which tools are pre-approved.
+  The fork's `allowed_tools` list is built from `DEFAULT_BG_TOOLS` plus
+  any `allowed-tools` declared in YAML.
+- **App layer** — the `canUseTool` callback dynamically gates Discord
+  MCP tools based on `BgForkConfig` flags (`allow_ping`,
+  `update_main_session`). See
+  [Permissions](/core-usage/permissions#background-forks) for details.
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `allowed-tools` | Minimal defaults | Additional tools merged with minimal defaults. |
+| `allowed-tools` | Default bg tools | Additional tools merged with default bg tools. |
 
 <Note>
-Every background fork always receives **MINIMAL_BG_TOOLS** — the communication
-channel back to you. These tools cannot be removed:
+Every background fork always receives **DEFAULT_BG_TOOLS** — read-only
+context access and CLI helpers:
 
-- `mcp__discord__report_updates`
-- `mcp__discord__ping_user`
-- `mcp__discord__discord_embed`
-- `mcp__discord__follow_up_chain`
 - `Bash(ollim-bot help)`
+- `Bash(ollim-bot tasks *)`
+- `Read(./**.md)`
+- `Glob(./**.md)`
+- `Grep(./**.md)`
 
-When you set `allowed-tools`, your tools are **merged in** on top of these
-defaults. Duplicates are dropped, so listing a system tool explicitly has
-no effect. You cannot accidentally disable reporting or pinging by
-forgetting to include a system tool.
+Discord MCP tools (`ping_user`, `discord_embed`, `report_updates`,
+`follow_up_chain`) are **not** in the static list — they are dynamically
+gated at runtime based on the job's `allow-ping` and
+`update-main-session` flags.
+
+When you set `allowed-tools`, your tools are **merged in** on top of
+these defaults. Duplicates are dropped, so listing a default tool
+explicitly has no effect.
 </Note>
 
 Tool names use the SDK format. You only need to list tools beyond the
-minimal defaults:
+defaults:
 
 ```yaml title="routines/email-check.md"
 ---
@@ -184,7 +195,9 @@ propagates `allowed-tools` and `skills` to child reminders automatically.
 
 ### Tool pattern validation
 
-`tool_policy.py` validates all `allowed-tools` patterns at startup.
+`tool_policy.py` validates `allowed-tools` patterns both at startup
+(via `scan_all`) and at **dispatch time** (via `validate_dispatch`).
+Dispatch-time validation catches routines created after startup.
 Dangerous patterns are rejected:
 
 | Pattern | Result |
@@ -193,8 +206,9 @@ Dangerous patterns are rejected:
 | `Bash(ollim-bot gmail * ; rm -rf /)` | Error — chaining operators (`;`, `&`, `\|`) blocked |
 | `Edit(**)` | Stripped — matches paths inside the protected `state/` directory |
 
-If a pattern fails validation, the bot logs an error at startup. This
-catches misconfigurations before they reach the agent.
+If a pattern fails validation with an error, the job is **skipped** —
+it will not dispatch. The bot logs the error so you can fix the
+pattern.
 
 ## Configuration
 
@@ -209,7 +223,7 @@ frontmatter:
 | `thinking` | `bool` | `true` | Extended thinking override |
 | `update-main-session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
-| `allowed-tools` | `list[string]` | — | Additional tools merged with minimal defaults (SDK format) |
+| `allowed-tools` | `list[string]` | — | Additional tools merged with default bg tools (SDK format) |
 | `skills` | `list[string]` | — | [Skills](/extending/skills) to load at fire time |
 
 ## Examples

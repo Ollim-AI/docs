@@ -18,15 +18,15 @@ What the agent sees depends on which mode it's running in. This matters for both
 | **System prompt** | Full `SYSTEM_PROMPT` | Same as main | Assembled preamble | Assembled preamble |
 | **Conversation history** | Full (persistent, resumed across restarts) | Forked from main at branch point | Forked from main | None (clean slate) |
 | **Pending updates** | Popped (consumed) | Peeked (read-only) | Prepended to prompt | None |
-| **MCP tools** | All 7 discord tools + docs server | Same as main | 5 minimal tools by default | 5 minimal tools by default |
-| **File tools** | Read, Write, Edit, Glob, Grep (`*.md`) | Same as main | None by default | None by default |
-| **Other tools** | WebFetch, WebSearch, Task, Skill, CLI | Same as main | `ollim-bot help` only | `ollim-bot help` only |
+| **MCP tools** | All 7 discord tools + docs server | Same as main | Discord tools dynamically gated | Discord tools dynamically gated |
+| **File tools** | Read, Write, Edit, Glob, Grep (`./**.md`) | Same as main | Read, Glob, Grep (`./**.md`) | Read, Glob, Grep (`./**.md`) |
+| **Other tools** | WebFetch, WebSearch, Task, Skill, CLI | Same as main | `ollim-bot help`, `ollim-bot tasks *` | `ollim-bot help`, `ollim-bot tasks *` |
 | **Skills** | Not loaded | Not loaded | Loaded if declared in YAML `skills` field | Loaded if declared in YAML `skills` field |
 | **Thinking** | User-controlled (`/thinking`) | Adaptive by default | Configurable per job (`thinking` field) | Configurable per job |
-| **Permissions** | User-controlled (`dontAsk` default) | Inherits from main | Always deny | Always deny |
+| **Permissions** | User-controlled (`dontAsk` default) | Inherits from main | Dynamic gating per tool | Dynamic gating per tool |
 | **Preamble sections** | None | None | Ping, update, busy, budget/schedule, tool restrictions, skills | Same |
 
-The minimal background fork tool set (`MINIMAL_BG_TOOLS`) includes only the four discord MCP tools (`report_updates`, `ping_user`, `discord_embed`, `follow_up_chain`) and the `ollim-bot help` CLI command. Jobs can expand this via the `allowed-tools` YAML field — see [Background forks](/scheduling/background-forks#tool-restrictions).
+The default background fork tool set (`DEFAULT_BG_TOOLS`) includes read-only file tools (`Read`, `Glob`, `Grep` scoped to `./**.md`), the `ollim-bot help` and `ollim-bot tasks *` CLI commands. Discord MCP tools (`ping_user`, `discord_embed`, `report_updates`, `follow_up_chain`) are not in this static list — they are dynamically gated at runtime based on the job's `allow-ping` and `update-main-session` flags. Jobs can expand the tool set via the `allowed-tools` YAML field — see [Background forks](/scheduling/background-forks#tool-restrictions).
 
 <Tip>
 The isolated mode tradeoff: no conversation history means less context to reason over, but also no risk of acting on stale context from hours ago. Use `isolated: true` for tasks that should evaluate the current state fresh — like checking if a deadline passed.

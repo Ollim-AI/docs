@@ -10,12 +10,13 @@ first use and automatically managed as a git repository — `storage.py`
 auto-commits after most writes.
 
 The root contains agent-facing files (routines, reminders, webhooks, spec
-symlinks) that the agent reads and writes directly. Infrastructure state
-(sessions, credentials, ping budget, etc.) lives in the `state/`
-subdirectory, keeping the agent's working directory clean. The `state/`
-directory is **write-protected** from agent tool access — Write and Edit
-calls targeting paths inside `state/` are blocked at the permission layer.
-See [Permissions](/core-usage/permissions#state-directory-write-protection)
+symlinks, and the optional `tool-policy.yaml`) that the agent reads and
+writes directly. Infrastructure state (sessions, credentials, ping
+budget, etc.) lives in the `state/` subdirectory, keeping the agent's
+working directory clean. The `state/` directory is **write-protected**
+from agent tool access — a `PreToolUse` hook blocks Write and Edit calls
+targeting paths inside `state/`. See
+[Permissions](/core-usage/permissions#state-directory-write-protection)
 for details.
 
 ```text
@@ -23,6 +24,7 @@ for details.
 ├── routine-reminder-spec.md →       # Symlink to docs/routine-reminder-spec.md
 ├── webhook-spec.md →                # Symlink to docs/webhook-spec.md
 ├── skill-spec.md →                  # Symlink to docs/skill-spec.md
+├── tool-policy.yaml                 # Optional YAML tool policy overrides
 ├── routines/
 │   └── *.md                         # Recurring routine specs
 ├── reminders/

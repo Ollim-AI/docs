@@ -144,7 +144,7 @@ Routines, reminders, and webhooks share these YAML frontmatter fields for backgr
 | `isolated` | boolean | `false` | Run without main session history or fork state |
 | `update-main-session` | string | `on_ping` | `always`, `on_ping`, `freely`, or `blocked` — controls `report_updates` behavior |
 | `allow-ping` | boolean | `true` | Whether `ping_user` and `discord_embed` are available |
-| `allowed-tools` | list | — | Allowlist of tools — routines and reminders only (overrides defaults) |
+| `allowed-tools` | list | — | Allowlist of tools — routines and reminders only (merged with default bg tools) |
 | `skills` | list | — | Skill names to load at fire time — routines and reminders only |
 
 <Tip>Routines, reminders, webhooks, and skills are all markdown files with YAML frontmatter stored in `~/.ollim-bot/`. The agent can create and manage them directly using Glob, Read, Write, and Edit tools — no CLI required.</Tip>

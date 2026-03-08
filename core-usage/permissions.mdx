@@ -92,13 +92,19 @@ in `dontAsk` mode.
 
 ## Background forks
 
-Background forks always deny tool permission requests, regardless of the
-current mode — `handle_tool_permission()` returns a denial before
-checking the session-allowed set. The agent in a background fork cannot
-trigger approval prompts. Tools available to background forks are
-controlled separately through `allowed-tools` in the fork's YAML
-configuration — see [Background forks](/scheduling/background-forks)
-for details.
+Background forks use **dynamic gating** for Discord MCP tools — the
+`canUseTool` callback checks the fork's `BgForkConfig` flags at runtime:
+
+- **Ping tools** (`ping_user`, `discord_embed`) — allowed only when
+  `allow-ping` is `true` in the job's YAML
+- **Reporting tools** (`report_updates`, `follow_up_chain`) — allowed
+  unless `update-main-session` is `blocked`
+
+All other tools not in the fork's `allowed_tools` list are denied. The
+agent in a background fork cannot trigger approval prompts. Tools
+available to background forks are controlled through `allowed-tools` in
+the fork's YAML configuration — see
+[Background forks](/scheduling/background-forks) for details.
 
 ### Deny messages
 
@@ -107,9 +113,10 @@ was blocked:
 
 | Context | Deny message |
 |---------|-------------|
-| Background fork | `"{tool} is not available in background forks"` |
+| Background fork (pings disabled) | `"pings disabled for this job"` |
+| Background fork (reporting blocked) | `"reporting blocked for this job"` |
+| Background fork (other tools) | `"{tool} is not available in background forks"` |
 | `dontAsk` mode (not session-allowed) | `"{tool} requires permission — denied silently in current mode"` |
-| State directory write | `"{tool} to state/ is blocked — system files are write-protected"` |
 
 ## State directory write-protection
 
@@ -117,21 +124,23 @@ The `state/` directory under `~/.ollim-bot/` contains infrastructure
 files — session IDs, credentials, ping budget, and runtime config. These
 files are managed by application code, not by the agent.
 
-The permission system blocks all Write and Edit tool calls that target
-paths inside `state/`, regardless of permission mode or fork type. This
-is enforced at the `canUseTool` callback level — the agent receives a
-denial before the SDK attempts the write.
+Write-protection is enforced at two layers:
 
-Additionally, `tool_policy.py` validates tool patterns at startup and
-strips any Write/Edit patterns that could match the `state/` directory
-from the SDK tool ceiling. This means even if a routine or skill
-declares a broad pattern like `Edit(**)`, writes to `state/` are
-blocked both by pattern stripping and by the runtime permission check.
+1. **SDK hook** — a `PreToolUse` hook (`state_dir_guard`) intercepts
+   Write and Edit calls before execution. If the resolved `file_path`
+   falls inside `state/`, the hook denies the call with
+   `"state/ is write-protected"`. This applies to all contexts — main
+   session, interactive forks, and background forks.
+2. **Pattern stripping** — `tool_policy.py` validates tool patterns at
+   startup and strips any Write/Edit patterns that could match the
+   `state/` directory. This means even if a routine or skill declares a
+   broad pattern like `Edit(**)`, the pattern is removed before it
+   reaches the SDK.
 
 <Note>
-This protection applies to all contexts — main session, interactive
-forks, and background forks. The agent can still read files in `state/`
-but cannot modify them through its tools.
+The agent can still read files in `state/` but cannot modify them
+through its tools. The `PreToolUse` hook catches attempts regardless of
+which patterns are declared in `allowed_tools`.
 </Note>
 
 ## Visual feedback
@@ -143,7 +152,7 @@ shows with strikethrough text:
 | Outcome | Rendering |
 |---------|-----------|
 | Approved/executed | `-# *Read(reminders/foo.md)*` |
-| Denied | `-# *~~Read(reminders/foo.md)~~ — denied*` |
+| Denied | `-# *~~Read(reminders/foo.md)~~ — denied (use /permissions ask to approve)*` |
 
 In `dontAsk` mode, the stream shows denied tools with strikethrough so
 you see what the agent tried without receiving approval prompts.

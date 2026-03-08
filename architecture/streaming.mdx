@@ -48,7 +48,7 @@ phase transitions like thinking, tool use, and compaction).
 Tool labels are rendered as subdued text in Discord (using the `-# `
 markdown small-text prefix) when the next text block arrives or the
 stream ends. `StreamParser._drain()` converts deferred labels into
-`-# *{label}*` text — or `-# *~~{label}~~ — denied*` if the tool was
+`-# *{label}*` text — or `-# *~~{label}~~ — denied (use /permissions ask to approve)*` if the tool was
 denied by the permission system. This shows the user what the agent is
 doing during pauses.
 
