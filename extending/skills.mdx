@@ -7,17 +7,21 @@ Routines and reminders that need the same detailed instructions shouldn't duplic
 
 ## How skills work
 
-When a routine or reminder fires, the scheduler checks its `skills:` field. For each referenced skill:
+Skills are loaded natively by the Claude Agent SDK — there's no custom loading code in the bot. The flow:
 
-1. The scheduler loads the skill's `SKILL.md` from `~/.ollim-bot/skills/<name>/`
-2. The scheduler expands any **dynamic context injection** markers (`` !`command` ``) to command output
-3. The scheduler prepends the expanded instructions to the job message as a `SKILL INSTRUCTIONS:` block
-4. `collect_skill_tools()` merges tool dependencies from the skill's `allowed-tools` into the routine or reminder's tool set
+1. At startup, `_ensure_sdk_layout()` creates a symlink: `~/.ollim-bot/.claude/skills/ → ../skills/`
+2. The agent session uses `setting_sources=["project"]`, which tells the SDK to scan `.claude/skills/` for skill directories
+3. The SDK reads each `SKILL.md`, extracts its frontmatter metadata, and registers the skill as available via the built-in `Skill` tool
 
-The agent sees skill instructions before the job's own message — like a preamble.
+When a routine or reminder fires with a `skills:` field, two things happen:
+
+- **Prompt injection**: the preamble builder adds a `REQUIRED SKILLS` instruction block telling the agent to invoke each skill before proceeding
+- **Tool permissions**: `_merge_skill_tools()` adds `Skill(<name> *)` patterns to the background fork's `allowed_tools`, so the SDK permits the Skill tool for those skills
+
+The SDK handles everything else — content loading, `allowed-tools` enforcement from the skill's frontmatter, and dynamic context injection. The SDK's skill allowed-tools enforcement resolves *before* the bot's `can_use_tool` callback.
 
 <Note>
-The scheduler loads skills fresh every time a job fires. If you update a skill's instructions, the next firing picks up the changes automatically.
+The SDK loads skills fresh every time they're invoked. If you update a skill's instructions, the next invocation picks up the changes automatically.
 </Note>
 
 ## File format
@@ -52,7 +56,7 @@ Skills follow the [Claude Code skills spec](https://code.claude.com/docs/en/skil
 | `name` | No | Slash command name (`/<name>`). Defaults to the directory name |
 | `description` | Recommended | When the agent should use this skill — used for auto-discovery |
 | `argument-hint` | No | Autocomplete hint for expected arguments, e.g. `[issue-number]` |
-| `allowed-tools` | No | Tools allowed without prompts when this skill runs. In the **scheduler context**, also merged into the routine or reminder's tool set via `collect_skill_tools()` |
+| `allowed-tools` | No | Tools allowed without prompts when this skill runs. In the **scheduler context**, also added to the background fork's tool set via `_merge_skill_tools()` |
 | `model` | No | Model to use when this skill runs |
 | `disable-model-invocation` | No | `true` to prevent auto-loading — only invocable with `/<name>` |
 | `user-invocable` | No | `false` to hide from the `/` menu. Default: `true` |
@@ -70,7 +74,7 @@ Keep `description` concise and action-oriented. The SDK uses it to decide when a
 
 ## Dynamic context injection
 
-Skills sometimes need fresh data at fire time — not hardcoded values. The `` !`command` `` syntax embeds shell commands that the scheduler expands to their stdout before the agent sees the prompt.
+Skills sometimes need fresh data at fire time — not hardcoded values. The `` !`command` `` syntax embeds shell commands that the SDK expands to their stdout before the agent sees the prompt.
 
 ```markdown title="skills/repo-status/SKILL.md (body)"
 Current branch and recent commits:
@@ -82,7 +86,7 @@ Current branch and recent commits:
 Use this context when reviewing the latest changes.
 ```
 
-When the skill loads, the scheduler replaces each `` !`command` `` with the command's output.
+When the skill loads, the SDK replaces each `` !`command` `` with the command's output.
 
 ### Expansion rules
 
@@ -97,7 +101,7 @@ When the skill loads, the scheduler replaces each `` !`command` `` with the comm
 | Skipped commands | If the total 30s cap is reached, remaining commands become `[command skipped (total timeout): cmd]` |
 
 <Warning>
-Commands run synchronously and block the scheduler for their duration. Keep commands fast — read-only queries, not long-running processes. The 10-second per-command and 30-second total timeouts are hard caps.
+Commands run synchronously and block the skill loading for their duration. Keep commands fast — read-only queries, not long-running processes. The 10-second per-command and 30-second total timeouts are hard caps.
 </Warning>
 
 ## Using skills in routines and reminders
@@ -118,30 +122,24 @@ Review any open PRs in the main project repository.
 Ping me if anything needs my attention before standup.
 ```
 
-When this routine fires, the agent receives:
+When this routine fires, the agent receives a prompt like:
 
 ```text
 [routine-bg:f3a8b1c2] <bg preamble>
 
-SKILL INSTRUCTIONS:
-
-### code-review
-Review the staged changes in the repository.
-...
-
-### repo-status
-Current branch and recent commits:
-main
-a1b2c3d Fix login redirect
-...
+REQUIRED SKILLS: You must invoke these skills before proceeding:
+  - Skill(code-review)
+  - Skill(repo-status)
 
 Review any open PRs in the main project repository.
 Ping me if anything needs my attention before standup.
 ```
 
-### Tool merging
+The agent then invokes each skill via the SDK's `Skill` tool, which loads the skill's content and applies its `allowed-tools` before execution.
 
-If a skill declares `allowed-tools`, `collect_skill_tools()` merges those tools into the host job's tool set. Background forks always have at least `DEFAULT_BG_TOOLS`, so skill tools always merge on top. The function deduplicates — if two skills both need `Bash(git *)`, only one entry appears.
+### Tool permissions
+
+When a routine or reminder has skills, `_merge_skill_tools()` adds `Skill(<name> *)` patterns to the background fork's `allowed_tools`. This ensures the SDK permits the Skill tool for each referenced skill. Background forks always have at least `DEFAULT_BG_TOOLS`, so skill tool patterns merge on top.
 
 ### Reminders with skills
 
@@ -152,7 +150,7 @@ ollim-bot reminder add --delay 60 -m "Check deployment status" \
   --background --skills repo-status
 ```
 
-For chained reminders, skills propagate through the chain — the `follow_up_chain` tool forwards the `skills` field from the [`ChainContext`](/architecture/context-flow#chain-reminder-context), so subsequent chain links inherit the same skill set.
+For chained reminders, skills propagate through the chain — the `follow_up_chain` tool forwards the `skills` field from the [`ChainContext`](/architecture/context-flow#chain-reminder-context) via `--skills` CLI arguments, so subsequent chain links inherit the same skill set.
 
 ## Creating skills
 
@@ -182,35 +180,30 @@ The SDK discovers skills natively — no custom index needed. At startup, `_ensu
 
 The agent session uses `setting_sources=["project"]`, which tells the SDK to scan `.claude/skills/` for skill directories. The SDK reads each `SKILL.md`, extracts the `description` from frontmatter, and registers the skill as available. The agent can then invoke any skill interactively via the SDK's built-in `Skill` tool.
 
-For **per-job injection** (routines and reminders), skill loading is still custom. When a job fires, the scheduler calls `load_skills()` to read referenced skills by name, then `build_skills_section()` expands `` !`command` `` markers and formats the results as a `SKILL INSTRUCTIONS:` block prepended to the job message.
+For **per-job injection** (routines and reminders), the scheduler builds a `REQUIRED SKILLS` instruction block in the prompt and adds `Skill(<name> *)` patterns to the fork's `allowed_tools`. The SDK handles everything from there — content loading, command expansion, and allowed-tools enforcement.
 </Accordion>
 
-<Accordion title="Tool propagation">
-`collect_skill_tools()` collects `allowed-tools` from all referenced skills and returns a deduplicated list. The scheduler calls this in `_merge_skill_tools()` to extend the background fork's tool configuration before launching.
+<Accordion title="Tool permissions">
+`_merge_skill_tools()` in `scheduler.py` adds `Skill(<name> *)` patterns to `allowed_tools` for background fork dispatch:
 
 ```python
-def collect_skill_tools(skills: list[Skill]) -> list[str]:
-    """Collect tool dependencies from referenced skills. Deduplicated."""
-    tools: list[str] = []
-    seen: set[str] = set()
-    for skill in skills:
-        if skill.allowed_tools:
-            for tool in skill.allowed_tools:
-                if tool not in seen:
-                    seen.add(tool)
-                    tools.append(tool)
-    return tools
+def _merge_skill_tools(config: BgForkConfig, skill_names: list[str] | None) -> BgForkConfig:
+    """Add Skill(<name> *) patterns to allowed_tools for bg fork dispatch."""
+    if not skill_names:
+        return config
+    additions = [f"Skill({name} *)" for name in skill_names]
+    current = set(config.allowed_tools or [])
+    new = [t for t in additions if t not in current]
+    if not new:
+        return config
+    return replace(config, allowed_tools=list(current) + new)
 ```
 
-`load_skills()` in the scheduler loads skills before passing them to this function.
+The SDK's own allowed-tools enforcement — from the skill's `allowed-tools` frontmatter — resolves *before* the bot's `can_use_tool` callback. This means tool denials from skill-level permissions happen at the SDK level.
 </Accordion>
 
 <Accordion title="Chain propagation">
 The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the tool forwards skill names via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up.
-</Accordion>
-
-<Accordion title="Path traversal protection">
-`read_skill()` resolves the skill path and verifies it stays within the `skills/` directory, catching both path traversal sequences (e.g., `../../etc/passwd`) and symlink escapes.
 </Accordion>
 </AccordionGroup>
 
