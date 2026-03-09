@@ -1,71 +1,176 @@
 ---
 title: "Quickstart"
-description: "Install ollim-bot, create a Discord bot, and start chatting — 6 steps."
+description: "Install ollim-bot, create a Discord bot, and start chatting — 7 steps."
 ---
 
-Get ollim-bot running and send your first message in 6 steps.
+Get ollim-bot running and send your first message in 7 steps.
 
-## Prerequisites
+## Before you start
 
-- **OS** — Linux, macOS, or Windows (WSL works too)
-- **A terminal** — Terminal on macOS, PowerShell on Windows, `Ctrl + Alt + T` on Linux
-- [Git](https://git-scm.com/) — for cloning the source code
-- [uv](https://docs.astral.sh/uv/) — automatically installs the required Python version
-- A model provider — a [Claude](https://claude.ai) subscription (Pro or Max) is the default; see [Choose a model provider](/self-hosting/model-providers) for alternatives
-- A Discord account
+You need:
 
-Install uv if you don't have it:
-
-<Tabs>
-  <Tab title="Linux / macOS">
-    ```bash
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    ```
-  </Tab>
-  <Tab title="Windows">
-    ```powershell
-    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-    ```
-  </Tab>
-</Tabs>
+- **A computer** running macOS, Windows, or Linux
+- **A Discord account** — [create one here](https://discord.com/register) if you don't have one
+- **A Claude subscription** (Pro or Max) — [subscribe at claude.ai](https://claude.ai) if you don't have one; see [model providers](/self-hosting/model-providers) for alternatives
 
 <Note>
 ollim-bot is a single-user bot designed to run as a personal assistant
 in Discord DMs. No server is required.
 </Note>
 
+## Open a terminal
+
+You'll paste commands into a terminal throughout this guide. Open one now:
+
+<Tabs>
+  <Tab title="macOS">
+    Press **Cmd + Space**, type **Terminal**, and press **Enter**.
+  </Tab>
+  <Tab title="Windows">
+    Press the **Windows key**, type **PowerShell**, and click **Windows PowerShell**.
+  </Tab>
+  <Tab title="Linux">
+    Press **Ctrl + Alt + T**.
+  </Tab>
+</Tabs>
+
+A window with a blinking cursor appears — this is where you'll paste
+commands from this guide. To run a command, paste it in and press
+**Enter**.
+
+<Warning>
+Keep this terminal window open for the entire guide. If you close it,
+you'll need to open a new one and navigate back to the right folder.
+</Warning>
+
 <Steps>
-  <Step title="Clone and install">
+  <Step title="Install Git and uv">
+    ollim-bot needs two tools: **Git** (downloads code) and **uv**
+    (manages Python, the language the bot is written in).
+
+    ### Install Git
+
+    <Tabs>
+      <Tab title="macOS">
+        Git is pre-installed on macOS. Verify by pasting this and pressing **Enter**:
+
+        ```bash
+        git --version
+        ```
+
+        You should see something like `git version 2.39.0`. If you see
+        "command not found", download Git from
+        [git-scm.com](https://git-scm.com/) and run the installer.
+      </Tab>
+      <Tab title="Windows">
+        Download the installer from [git-scm.com](https://git-scm.com/)
+        and run it. Use all the default options.
+
+        After it finishes, **close PowerShell and open it again** so it
+        can find Git. Then verify:
+
+        ```powershell
+        git --version
+        ```
+
+        You should see something like `git version 2.44.0.windows.1`.
+      </Tab>
+      <Tab title="Linux">
+        ```bash
+        sudo apt install git
+        ```
+
+        On Fedora, use `sudo dnf install git` instead.
+      </Tab>
+    </Tabs>
+
+    ### Install uv
+
+    <Tabs>
+      <Tab title="Linux / macOS">
+        ```bash
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+        ```
+      </Tab>
+    </Tabs>
+
+    After uv installs, **close your terminal and open a new one** (same
+    way as before) so your computer can find the new command. Then
+    verify:
+
+    ```bash
+    uv --version
+    ```
+
+    You should see a version number like `uv 0.6.0`.
+  </Step>
+
+  <Step title="Download and install ollim-bot">
+    Paste each command below one at a time, pressing **Enter** after each
+    one.
+
+    Download the bot's code:
+
     ```bash
     git clone https://github.com/Ollim-AI/ollim-bot.git
+    ```
+
+    Move into the downloaded folder:
+
+    ```bash
     cd ollim-bot
+    ```
+
+    Install the bot:
+
+    ```bash
     uv tool install --editable .
     ```
 
-    This installs `ollim-bot` and
-    [`claude-history`](https://github.com/Ollim-AI/claude-history) as
-    global commands. `claude-history` is a CLI tool that lets the bot
-    search past conversations so it can remember things.
+    This also installs
+    [`claude-history`](https://github.com/Ollim-AI/claude-history), a
+    tool that lets the bot search past conversations so it can remember
+    things.
 
-    <Tip>
-    Command not found? Restart your terminal so the new commands are on your PATH. See [troubleshooting](/development/troubleshooting) for more.
-    </Tip>
+    **Close your terminal and open a new one**, then verify the bot
+    installed:
+
+    ```bash
+    ollim-bot --help
+    ```
+
+    You should see a list of commands starting with
+    `ollim-bot -- ADHD-friendly Discord assistant`. If you see "command
+    not found", see [troubleshooting](/development/troubleshooting).
   </Step>
 
   <Step title="Create a Discord bot">
     <Tip>
-    First time creating a Discord bot? See [Discord bot setup](/self-hosting/discord-bot-setup) for a step-by-step walkthrough with screenshots.
+    First time creating a Discord bot? See [Discord bot setup](/self-hosting/discord-bot-setup) for a walkthrough with screenshots.
     </Tip>
 
     1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**
-    2. Go to **Bot** in the sidebar, click **Reset Token**, and copy the token
-    3. Enable **Message Content Intent** under Privileged Gateway Intents (required for the bot to read your messages)
+    2. In the left sidebar, click **Bot**
+    3. Click **Reset Token** (or **Add Bot** if you see that instead), then copy the token — save it somewhere safe, you'll need it in the next step
+    4. Scroll down to **Privileged Gateway Intents** and enable **Message Content Intent** (this lets the bot read your messages)
 
-    <Warning>The bot token is shown only once. If you lose it, you must reset it.</Warning>
+    <Warning>The bot token is shown only once. If you lose it, click **Reset Token** again to get a new one.</Warning>
   </Step>
 
   <Step title="Configure the bot">
-    Copy the example environment file:
+    Back in your terminal, navigate to the ollim-bot folder. If you
+    closed your terminal since step 2, open a new one first:
+
+    ```bash
+    cd ollim-bot
+    ```
+
+    Create the configuration file:
 
     <Tabs>
       <Tab title="Linux / macOS">
@@ -73,39 +178,96 @@ in Discord DMs. No server is required.
         cp .env.example .env
         ```
       </Tab>
-      <Tab title="Windows (cmd)">
-        ```cmd
+      <Tab title="Windows">
+        ```powershell
         copy .env.example .env
         ```
       </Tab>
     </Tabs>
 
-    Open `.env` and set the three variables:
+    Open the file in a text editor:
 
-    - `DISCORD_TOKEN` — the bot token you just copied
-    - `OLLIM_USER_NAME` — your first name (the bot will call you this)
-    - `OLLIM_BOT_NAME` — whatever you want to call the bot (e.g., "Ollim")
+    <Tabs>
+      <Tab title="macOS">
+        ```bash
+        open -e .env
+        ```
+
+        This opens the file in TextEdit.
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        notepad .env
+        ```
+      </Tab>
+      <Tab title="Linux">
+        ```bash
+        nano .env
+        ```
+
+        Use arrow keys to move around. When done editing, press
+        **Ctrl + O** then **Enter** to save, then **Ctrl + X** to exit.
+      </Tab>
+    </Tabs>
+
+    Find these three lines and fill in the values:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=paste-your-bot-token-here
+    OLLIM_USER_NAME=YourFirstName
+    OLLIM_BOT_NAME=Ollim
+    ```
+
+    - Replace `paste-your-bot-token-here` with the token you copied in step 3
+    - Replace `YourFirstName` with your name (the bot will call you this)
+    - Replace `Ollim` with whatever you want to call the bot
+
+    Save the file and close the editor.
   </Step>
 
   <Step title="Install to your Discord account">
-    1. Go to **Installation** in the sidebar — check **User Install**, uncheck **Guild Install** (the bot runs in DMs, not server channels)
-    2. Set the install link to **Discord Provided Link** and add the `applications.commands` scope
-    3. Copy the **Install Link** and open it in your browser — select **Add to my apps**
-    4. Go back to **Bot** in the sidebar and uncheck **Public Bot** (the bot is single-user — only you should install it)
+    Back in the [Discord Developer Portal](https://discord.com/developers/applications), click your application, then:
+
+    1. Click **Installation** in the left sidebar
+    2. Under **Installation Contexts**, check **User Install** and uncheck **Guild Install**
+    3. Set the install link to **Discord Provided Link**
+    4. Under **Default Install Settings**, click the scopes dropdown and add `applications.commands`
+    5. Click **Save Changes** at the bottom
+    6. Copy the **Install Link** and open it in your browser — click **Add to my apps**
+    7. Go back to **Bot** in the left sidebar and uncheck **Public Bot** (the bot is personal — only you need it)
+
+    <Warning>
+    You must set the install link (steps 3–6) *before* unchecking
+    **Public Bot** (step 7). Discord does not allow private apps to have
+    an install link, so doing these out of order causes an error.
+    </Warning>
   </Step>
 
   <Step title="Start the bot">
+    In your terminal, navigate to the ollim-bot folder if you're not
+    already there:
+
+    ```bash
+    cd ollim-bot
+    ```
+
+    Start the bot:
+
     ```bash
     ollim-bot
     ```
 
-    On startup, the bot connects to your configured model provider. If
-    you're using the default Claude subscription and Claude Code isn't
-    authenticated, the bot DMs you an OAuth link via the Discord REST
-    API — click the link to sign in with your Anthropic account. The
-    bot blocks until you complete sign-in. Once ready, it creates its
-    data directory at `~/.ollim-bot/`, connects to Discord, and sends
-    you a startup DM.
+    <Warning>
+    Keep this terminal window open. The bot runs as long as the terminal
+    is open — closing the terminal stops the bot.
+    </Warning>
+
+    If this is your first time, the bot sends you a Discord DM with a
+    sign-in link. Open the link and log in with your Anthropic account
+    (the one with your Claude subscription). The bot waits for you to
+    finish signing in before continuing.
+
+    Once ready, the bot sends you a startup DM in Discord.
 
     <Tip>
     Bot not starting? See [common startup issues](/development/troubleshooting#startup-failures).
@@ -137,8 +299,8 @@ in Discord DMs. No server is required.
 
 ## CLI commands
 
-Beyond running the bot, `ollim-bot` provides CLI subcommands for
-managing routines, reminders, and Google services:
+Beyond running the bot, `ollim-bot` provides commands for managing
+routines, reminders, and Google services. Run these in your terminal:
 
 ```bash
 ollim-bot routine list     # Show all routines
