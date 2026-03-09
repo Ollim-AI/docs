@@ -148,6 +148,39 @@ ollim-bot cal today        # Show today's calendar events
 ollim-bot help             # Show all available commands
 ```
 
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title='"Private application cannot have a default authorization link"'>
+    This error appears on the **Installation** page when **Public Bot** is
+    already unchecked. Discord does not allow private applications to have a
+    default authorization link.
+
+    **Fix:** go to **Bot** in the sidebar, check **Public Bot**, then return to
+    **Installation** and configure the install link. After you've installed the
+    app to your account, go back and uncheck **Public Bot**.
+  </Accordion>
+
+  <Accordion title="Bot not responding to DMs">
+    Verify that **Message Content Intent** is enabled under **Bot** >
+    **Privileged Gateway Intents**. Without it, the bot connects but cannot
+    read your messages.
+  </Accordion>
+
+  <Accordion title="Slash commands not appearing">
+    Slash commands sync on startup. If they don't appear:
+
+    1. Confirm you installed via **User Install** (not Guild Install) — slash
+       commands in DMs require user installation
+    2. Wait a few minutes — Discord caches command lists and may take time to
+       update
+    3. Restart Discord (Ctrl+R on desktop) to force a cache refresh
+  </Accordion>
+</AccordionGroup>
+
+For runtime issues (startup failures, session problems, scheduling), see
+[troubleshooting](/development/troubleshooting).
+
 ## Next steps
 
 <Columns cols={2}>
