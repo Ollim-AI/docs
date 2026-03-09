@@ -59,14 +59,7 @@ ollim-bot runs entirely in DMs — no server invite is needed.
     </Frame>
 
     ollim-bot requires this intent to read message content in DMs.
-    The bot initialization enables it explicitly:
-
-    ```python
-    intents = discord.Intents.default()
-    intents.message_content = True
-    ```
-
-    Without this intent enabled, the bot cannot see what you type.
+    Without it enabled, the bot connects but cannot see what you type.
   </Step>
 
   <Step title="Configure user installation">

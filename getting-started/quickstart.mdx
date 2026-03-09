@@ -11,7 +11,7 @@ You need:
 
 - **A computer** running macOS, Windows, or Linux
 - **A Discord account** — [create one here](https://discord.com/register) if you don't have one
-- **A Claude subscription** (Pro or Max) — [subscribe at claude.ai](https://claude.ai) if you don't have one; see [model providers](/self-hosting/model-providers) for alternatives
+- **A Claude subscription** — Pro ($20/month) or Max ($100/month) at [claude.ai](https://claude.ai). Pro works fine to start; see [model providers](/self-hosting/model-providers) for alternatives
 
 <Note>
 ollim-bot is a single-user bot designed to run as a personal assistant
@@ -150,16 +150,34 @@ you'll need to open a new one and navigate back to the right folder.
   </Step>
 
   <Step title="Create a Discord bot">
-    <Tip>
-    First time creating a Discord bot? See [Discord bot setup](/self-hosting/discord-bot-setup) for a walkthrough with screenshots.
-    </Tip>
+    Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+    and click **New Application**. Give it any name (e.g. "ollim-bot").
 
-    1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**
-    2. In the left sidebar, click **Bot**
-    3. Click **Reset Token** (or **Add Bot** if you see that instead), then copy the token — save it somewhere safe, you'll need it in the next step
-    4. Scroll down to **Privileged Gateway Intents** and enable **Message Content Intent** (this lets the bot read your messages)
+    <Frame>
+      <img src="/images/discord-new-app.png" alt="Discord Developer Portal with a red arrow pointing to the New Application button in the top right" />
+    </Frame>
+
+    In the left sidebar, click **Bot**. Then click **Reset Token** (or
+    **Add Bot** if you see that instead) and copy the token that
+    appears — save it somewhere safe, you'll need it in the next step.
+
+    <Frame>
+      <img src="/images/discord-bot-token.png" alt="Screenshot of the Bot page showing the Reset Token button and the Public Bot toggle below it" />
+    </Frame>
 
     <Warning>The bot token is shown only once. If you lose it, click **Reset Token** again to get a new one.</Warning>
+
+    Scroll down on the same page to **Privileged Gateway Intents** and
+    turn on **Message Content Intent** (this lets the bot read your
+    messages).
+
+    <Frame>
+      <img src="/images/discord-message-intent.png" alt="Screenshot of the Privileged Gateway Intents section with the Message Content Intent toggle switched on" />
+    </Frame>
+
+    <Note>
+    Need more help? See [Discord bot setup](/self-hosting/discord-bot-setup) for a detailed walkthrough of every setting.
+    </Note>
   </Step>
 
   <Step title="Configure the bot">
@@ -226,20 +244,31 @@ you'll need to open a new one and navigate back to the right folder.
   </Step>
 
   <Step title="Install to your Discord account">
-    Back in the [Discord Developer Portal](https://discord.com/developers/applications), click your application, then:
+    Back in the [Discord Developer Portal](https://discord.com/developers/applications),
+    click your application, then click **Installation** in the left
+    sidebar.
 
-    1. Click **Installation** in the left sidebar
-    2. Under **Installation Contexts**, check **User Install** and uncheck **Guild Install**
-    3. Set the install link to **Discord Provided Link**
-    4. Under **Default Install Settings**, click the scopes dropdown and add `applications.commands`
-    5. Click **Save Changes** at the bottom
-    6. Copy the **Install Link** and open it in your browser — click **Add to my apps**
-    7. Go back to **Bot** in the left sidebar and uncheck **Public Bot** (the bot is personal — only you need it)
+    Under **Installation Contexts**, check **User Install** and uncheck
+    **Guild Install**. Set the install link dropdown to **Discord
+    Provided Link**. Under **Default Install Settings**, click the
+    scopes dropdown and add `applications.commands`. Then click **Save
+    Changes** at the bottom.
+
+    <Frame>
+      <img src="/images/discord-installation.png" alt="Screenshot of the Installation page with User Install checked, Discord Provided Link selected, and applications.commands scope added" />
+    </Frame>
+
+    Copy the **Install Link** shown on this page and open it in your
+    browser. Click **Add to my apps** to install the bot to your Discord
+    account.
+
+    Finally, go back to **Bot** in the left sidebar and uncheck **Public
+    Bot** (the bot is personal — only you need it).
 
     <Warning>
-    You must set the install link (steps 3–6) *before* unchecking
-    **Public Bot** (step 7). Discord does not allow private apps to have
-    an install link, so doing these out of order causes an error.
+    You must set the install link and install the app *before* unchecking
+    **Public Bot**. Discord does not allow private apps to have an
+    install link, so doing these out of order causes an error.
     </Warning>
   </Step>
 
