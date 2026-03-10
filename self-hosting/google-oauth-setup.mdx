@@ -1,14 +1,12 @@
 ---
-title: "Set up Google OAuth"
-description: "Set up Google Cloud OAuth credentials and connect your Google account with /google-auth."
+title: "Google OAuth reference"
+description: "Token lifecycle, auto-recovery, and scope management for Google OAuth."
 ---
 
-Google Tasks, Calendar, and Gmail integration requires OAuth 2.0 credentials
-from Google Cloud Console. This tutorial walks through creating a project,
-enabling APIs, downloading credentials, and connecting your account with the
-`/google-auth` slash command.
+Reference for how ollim-bot manages Google OAuth tokens after you've
+completed the [setup steps](/getting-started/google-integration).
 
-### What you'll have after this
+### What the setup creates
 
 | Key | Value |
 |-----|-------|
@@ -18,116 +16,6 @@ enabling APIs, downloading credentials, and connecting your account with the
 | **Credentials file** | `~/.ollim-bot/state/credentials.json` |
 | **Token file** | `~/.ollim-bot/state/token.json` (auto-created after `/google-auth`) |
 | **Consent screen** | External, Testing mode (only listed test users can authenticate) |
-
-## Prerequisites
-
-- A Google account
-- ollim-bot [installed and running](/getting-started/quickstart)
-
-<Steps>
-  <Step title="Create a Google Cloud project">
-    Go to the [Google Cloud Console](https://console.cloud.google.com/)
-    and create a new project (or select an existing one).
-
-    1. Click the project dropdown at the top of the page
-    2. Click **New Project**
-    3. Enter a name (e.g. `ollim-bot`) and click **Create**
-  </Step>
-
-  <Step title="Enable the required APIs">
-    Navigate to **APIs & Services > Library** and enable these three APIs:
-
-    | API | Used for |
-    |-----|----------|
-    | **Google Tasks API** | Task management — list, create, complete, delete |
-    | **Google Calendar API** | Event management — list, create, show, delete |
-    | **Gmail API** | Read-only email access — list unread, read, search |
-
-    Search for each API by name and click **Enable**.
-  </Step>
-
-  <Step title="Configure the OAuth consent screen">
-    Navigate to **APIs & Services > OAuth consent screen**.
-
-    1. Select **External** as the user type and click **Create**
-    2. Fill in the required fields (app name, user support email, developer email)
-    3. On the Scopes page, click **Add or Remove Scopes** and add:
-       - `https://www.googleapis.com/auth/tasks`
-       - `https://www.googleapis.com/auth/calendar.events`
-       - `https://www.googleapis.com/auth/gmail.readonly`
-    4. On the Test users page, add your Google account email
-
-    <Note>
-      For personal use, the project can stay in "Testing" mode — no verification needed.
-      Only accounts listed as test users can complete the OAuth flow.
-    </Note>
-  </Step>
-
-  <Step title="Create OAuth client credentials">
-    Navigate to **APIs & Services > Credentials**.
-
-    1. Click **Create Credentials > OAuth client ID**
-    2. Select **Desktop application** as the application type
-    3. Give it a name (e.g. `ollim-bot`)
-    4. Click **Create**
-    5. Click **Download JSON** to download the credentials file
-
-    The downloaded file has this structure:
-
-    ```json title="credentials.json"
-    {
-      "installed": {
-        "client_id": "...",
-        "project_id": "...",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "client_secret": "...",
-        "redirect_uris": ["http://localhost"]
-      }
-    }
-    ```
-
-    <Warning>
-      The application type must be **Desktop application** — not "Web application".
-      ollim-bot uses `InstalledAppFlow`, which expects the `"installed"` key in the JSON.
-    </Warning>
-  </Step>
-
-  <Step title="Save credentials to the data directory">
-    Move the downloaded file to `~/.ollim-bot/state/credentials.json`:
-
-    ```bash
-    mkdir -p ~/.ollim-bot/state
-    mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
-    ```
-
-    ollim-bot looks for credentials at this exact path. If the file is missing
-    when you run `/google-auth`, the command tells you to set up credentials first.
-  </Step>
-
-  <Step title="Connect with /google-auth">
-    Run the `/google-auth` slash command in your Discord DM with the bot.
-
-    The command starts an OAuth flow with a **5-minute timeout** and two
-    completion paths:
-
-    - **Browser path** — click the auth URL in the response. Your browser
-      opens the Google consent page. After you grant access, the browser
-      redirects to a local server and authentication completes automatically.
-    - **Paste path** — for cross-device scenarios (e.g., the bot runs on a
-      headless server with no browser), open the auth URL on another device,
-      complete the consent flow, and paste the redirect URL back into the
-      Discord DM.
-
-    On success, the bot sends "google connected." to the channel and saves
-    tokens to `~/.ollim-bot/state/token.json`.
-
-    <Tip>
-      Ask the bot to list your tasks or calendar events to verify Google
-      integration is working.
-    </Tip>
-  </Step>
-</Steps>
 
 ## Token lifecycle
 
@@ -189,7 +77,7 @@ If you add a new Google service and need additional scopes:
     How the Google services work together.
   </Card>
   <Card title="Set up Google integration" icon="puzzle-piece" href="/getting-started/google-integration">
-    Webhooks, timezone, and other optional features.
+    Step-by-step setup for Google Tasks, Calendar, and Gmail.
   </Card>
   <Card title="Google Tasks" icon="list-check" href="/integrations/google-tasks">
     Manage tasks through the bot and CLI.

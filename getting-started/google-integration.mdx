@@ -146,13 +146,9 @@ billing required) and link it to the bot.
   </Step>
 </Steps>
 
-<Note>
-ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and
-`gmail.readonly`. If scopes change after a code update, delete
-`~/.ollim-bot/state/token.json` and run `/google-auth` to re-consent.
-</Note>
-
-See [Google OAuth setup](/self-hosting/google-oauth-setup) for token
+If your token is ever revoked (e.g. after a Google password change), the
+bot detects it automatically and prompts you to run `/google-auth` again.
+See [Google OAuth reference](/self-hosting/google-oauth-setup) for token
 lifecycle, auto-recovery, and scope details.
 
 ## Troubleshooting
