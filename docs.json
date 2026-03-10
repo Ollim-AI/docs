@@ -48,6 +48,10 @@
       "destination": "/getting-started/google-integration"
     },
     {
+      "source": "/self-hosting/google-oauth-setup",
+      "destination": "/getting-started/google-integration"
+    },
+    {
       "source": "/getting-started/how-it-works",
       "destination": "/architecture/how-it-works"
     },
@@ -129,7 +133,6 @@
             "pages": [
               "self-hosting/guide",
               "self-hosting/discord-bot-setup",
-              "self-hosting/google-oauth-setup",
               "self-hosting/model-providers"
             ]
           }
