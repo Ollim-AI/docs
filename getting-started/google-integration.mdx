@@ -22,28 +22,45 @@ billing required) and link it to the bot.
     1. Click the project dropdown at the top of the page
     2. Click **New Project**
     3. Enter a name (e.g. `ollim-bot`) and click **Create**
-    4. Make sure the new project is selected in the dropdown at the top —
-       all following steps must be done inside this project
+    4. After creation, click the project dropdown again, find your new project
+       in the list, and click it to switch to it — the dropdown at the top
+       should now show your new project name
 
     <Note>
     Google Cloud Console is free for this use case — you will not be charged.
     </Note>
+
+    <Warning>
+    All following steps must be done inside this project. If the project name
+    at the top of the page doesn't match, click the dropdown and switch to it
+    before continuing.
+    </Warning>
   </Step>
 
   <Step titleSize="h3" title="Configure the consent screen">
-    Navigate to **APIs & Services > OAuth consent screen** in the left
-    sidebar.
+    Open the navigation menu (the three-line icon in the top-left corner) and
+    click **APIs & Services**. In the left sidebar, click **OAuth consent
+    screen**. This opens the **Google Auth Platform** section.
 
-    1. Select **External** as the user type and click **Create**
-    2. Fill in the required fields — app name (e.g. `ollim-bot`), user
-       support email, and developer email (your email for both is fine)
-    3. On the **Scopes** page, click **Add or Remove Scopes** and add:
-       - `https://www.googleapis.com/auth/tasks`
-       - `https://www.googleapis.com/auth/calendar.events`
-       - `https://www.googleapis.com/auth/gmail.readonly`
-    4. On the **Test users** page, click **Add users** and enter your Google
-       email address — only accounts listed here can complete the sign-in
-       flow
+    1. Click **Get started**
+    2. Enter an app name (e.g. `ollim-bot`) and select your email from the
+       **User support email** dropdown, then click **Next**
+    3. Under **Audience**, select **External** and click **Next**
+    4. Enter your email address in the **Email addresses** field and press
+       **Enter** to confirm it, then click **Next**
+    5. Check the box to agree to the Google API Services User Data Policy,
+       click **Continue**, then click **Create**
+
+    You should see "OAuth configuration created!" at the bottom of the page.
+  </Step>
+
+  <Step titleSize="h3" title="Add yourself as a test user">
+    In the **Google Auth Platform** sidebar on the left, click **Audience**.
+
+    1. Scroll down to the **Test users** section
+    2. Click **Add users**
+    3. Enter your Google email address and press **Enter**
+    4. Click **Save**
 
     <Warning>
     If you skip adding yourself as a test user, the "Connect with /google-auth"
@@ -52,7 +69,8 @@ billing required) and link it to the bot.
   </Step>
 
   <Step titleSize="h3" title="Enable APIs">
-    Navigate to **APIs & Services > Library** in the left sidebar. Search for
+    Open the navigation menu (three-line icon, top-left) and click
+    **APIs & Services**. In the left sidebar, click **Library**. Search for
     and enable each of these three APIs:
 
     | API to search for | Used for |
@@ -61,15 +79,15 @@ billing required) and link it to the bot.
     | Google Calendar API | Reading and creating calendar events |
     | Gmail API | Reading emails (read-only) |
 
-    **Verify:** After enabling all three, go to **APIs & Services >
-    Enabled APIs & services**. You should see all three listed.
+    **Verify:** After enabling all three, click **Enabled APIs & services** in
+    the left sidebar. You should see all three listed.
   </Step>
 
   <Step titleSize="h3" title="Create OAuth credentials">
-    Navigate to **APIs & Services > Credentials** in the left sidebar.
+    In the **APIs & Services** sidebar, click **Credentials**.
 
     1. Click **Create Credentials** at the top, then select **OAuth client ID**
-    2. For **Application type**, select **Desktop application** (not "Web
+    2. For **Application type**, select **Desktop app** (not "Web
        application")
     3. Give it a name (e.g. `ollim-bot`) and click **Create**
     4. In the popup that appears, click **Download JSON**
@@ -77,8 +95,8 @@ billing required) and link it to the bot.
     A file named `client_secret_[...].json` downloads to your computer.
 
     <Warning>
-    The application type **must** be **Desktop application**. If you select
-    "Web application", the downloaded file will have a `"web"` key instead of
+    The application type **must** be **Desktop app**. If you select "Web
+    application", the downloaded file will have a `"web"` key instead of
     `"installed"`, and the bot will not be able to use it.
     </Warning>
   </Step>
@@ -119,13 +137,14 @@ billing required) and link it to the bot.
 
     You should see JSON starting with `{"installed": {`. If it starts with
     `{"web": {`, you selected the wrong application type in "Create OAuth
-    credentials" — go back and create a new credential with **Desktop
-    application**.
+    credentials" — go back and create a new credential with **Desktop app**.
   </Step>
 
   <Step titleSize="h3" title="Connect with /google-auth">
     Open Discord and go to your DM with the bot (the bot must be running).
-    Type `/google-auth` and press **Enter**.
+    Click the message box, type `/google-auth` — a slash command menu appears
+    above the text box — select **google-auth** from the list and press
+    **Enter**.
 
     The bot responds with a sign-in link. Click it — your browser opens a
     Google consent page. Select your Google account, click **Continue**
@@ -150,6 +169,21 @@ If Google stops working (e.g. after a password change), the bot notices
 automatically and asks you to run `/google-auth` again.
 
 ## Troubleshooting
+
+<Accordion title="I don't see /google-auth in Discord">
+Slash commands only appear when the bot is online and has synced its commands
+with Discord. Check these in order:
+
+1. **Is the bot running?** Start it if it isn't — slash commands won't show up
+   for an offline bot.
+2. **Are you in the right place?** Open a DM with the bot, not a server
+   channel. Click the bot's name in the member list and click **Message**.
+3. **Did commands sync?** After the bot's first startup (or after being added
+   to a new server), slash commands can take up to an hour to appear. Restart
+   the bot and wait a few minutes.
+4. **Still nothing?** Try typing `/` in the message box — if no command menu
+   appears at all, Discord may need a restart.
+</Accordion>
 
 <Accordion title="Timestamps are in the wrong timezone">
 ollim-bot auto-detects your system timezone. If timestamps are wrong, set it
