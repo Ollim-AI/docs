@@ -38,11 +38,6 @@ A window with a blinking cursor appears — this is where you'll paste
 commands from this guide. To run a command, paste it in and press
 **Enter**.
 
-<Warning>
-Keep this terminal window open for the entire guide. If you close it,
-you'll need to open a new one and navigate back to the right folder.
-</Warning>
-
 <Steps>
   <Step title="Install Git and uv">
     ollim-bot needs two tools: **Git** (downloads code) and **uv**
@@ -99,20 +94,87 @@ you'll need to open a new one and navigate back to the right folder.
       </Tab>
     </Tabs>
 
-    After uv installs, **close your terminal and open a new one** (same
-    way as before) so your computer can find the new command. Then
-    verify:
+    After uv installs, **close your terminal**. You'll open a new one
+    later — first, let's set up Discord while the install takes effect.
+  </Step>
+
+  <Step title="Create a Discord bot">
+    Open the [Discord Developer Portal](https://discord.com/developers/applications)
+    in your browser and click **New Application**. Give it any name
+    (e.g. "ollim-bot").
+
+    <Frame>
+      <img src="/images/discord-new-app.png" alt="Discord Developer Portal with a red arrow pointing to the New Application button in the top right" />
+    </Frame>
+
+    In the left sidebar, click **Bot**. Then click **Reset Token** (or
+    **Add Bot** if you see that instead) and copy the token that
+    appears — save it somewhere safe, you'll need it soon.
+
+    <Frame>
+      <img src="/images/discord-reset-token.png" alt="Screenshot of the Bot page showing the Reset Token button" />
+    </Frame>
+
+    <Warning>The bot token is shown only once. If you lose it, click **Reset Token** again to get a new one.</Warning>
+
+    Scroll down on the same page to **Privileged Gateway Intents** and
+    turn on **Message Content Intent** (this lets the bot read your
+    messages).
+
+    <Frame>
+      <img src="/images/discord-message-intent.png" alt="Screenshot of the Privileged Gateway Intents section with the Message Content Intent toggle switched on" />
+    </Frame>
+
+    <Note>
+    Need more help? See [Discord bot setup](/self-hosting/discord-bot-setup) for a detailed walkthrough of every setting.
+    </Note>
+  </Step>
+
+  <Step title="Install to your Discord account">
+    Still in the Discord Developer Portal, click **Installation** in
+    the left sidebar.
+
+    Under **Installation Contexts**, check **User Install** and uncheck
+    **Guild Install**. Set the install link dropdown to **Discord
+    Provided Link**. Under **Default Install Settings**, click the
+    scopes dropdown and add `applications.commands`. Then click **Save
+    Changes** at the bottom.
+
+    <Frame>
+      <img src="/images/discord-installation.png" alt="Screenshot of the Installation page with User Install checked, Discord Provided Link selected, and applications.commands scope added" />
+    </Frame>
+
+    Copy the **Install Link** shown on this page and open it in your
+    browser. Click **Add to my apps** to install the bot to your Discord
+    account.
+
+    Finally, go back to **Bot** in the left sidebar and uncheck **Public
+    Bot** (the bot is personal — only you need it).
+
+    <Frame>
+      <img src="/images/discord-public-bot.png" alt="Screenshot of the Public Bot toggle under Authorization Flow, switched off" />
+    </Frame>
+
+    <Warning>
+    You must set the install link and install the app *before* unchecking
+    **Public Bot**. Discord does not allow private apps to have an
+    install link, so doing these out of order causes an error.
+    </Warning>
+  </Step>
+
+  <Step title="Download and install ollim-bot">
+    Open a new terminal (same way as [before](#open-a-terminal)). The
+    uv command you installed in step 1 is now available.
+
+    Verify uv is working:
 
     ```bash
     uv --version
     ```
 
-    You should see a version number like `uv 0.6.0`.
-  </Step>
-
-  <Step title="Download and install ollim-bot">
-    Paste each command below one at a time, pressing **Enter** after each
-    one.
+    You should see a version number like `uv 0.6.0`. If you see
+    "command not found", close the terminal, open a new one, and try
+    again.
 
     Download the bot's code:
 
@@ -148,46 +210,8 @@ you'll need to open a new one and navigate back to the right folder.
     not found", see [troubleshooting](/development/troubleshooting).
   </Step>
 
-  <Step title="Create a Discord bot">
-    Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-    and click **New Application**. Give it any name (e.g. "ollim-bot").
-
-    <Frame>
-      <img src="/images/discord-new-app.png" alt="Discord Developer Portal with a red arrow pointing to the New Application button in the top right" />
-    </Frame>
-
-    In the left sidebar, click **Bot**. Then click **Reset Token** (or
-    **Add Bot** if you see that instead) and copy the token that
-    appears — save it somewhere safe, you'll need it in the next step.
-
-    <Frame>
-      <img src="/images/discord-reset-token.png" alt="Screenshot of the Bot page showing the Reset Token button" />
-    </Frame>
-
-    <Warning>The bot token is shown only once. If you lose it, click **Reset Token** again to get a new one.</Warning>
-
-    Scroll down on the same page to **Privileged Gateway Intents** and
-    turn on **Message Content Intent** (this lets the bot read your
-    messages).
-
-    <Frame>
-      <img src="/images/discord-message-intent.png" alt="Screenshot of the Privileged Gateway Intents section with the Message Content Intent toggle switched on" />
-    </Frame>
-
-    <Note>
-    Need more help? See [Discord bot setup](/self-hosting/discord-bot-setup) for a detailed walkthrough of every setting.
-    </Note>
-  </Step>
-
   <Step title="Configure the bot">
-    Back in your terminal, navigate to the ollim-bot folder. If you
-    closed your terminal since step 2, open a new one first:
-
-    ```bash
-    cd ollim-bot
-    ```
-
-    Create the configuration file:
+    Create the configuration file (still in the same terminal):
 
     <Tabs>
       <Tab title="Linux / macOS">
@@ -235,55 +259,15 @@ you'll need to open a new one and navigate back to the right folder.
     OLLIM_BOT_NAME=Ollim
     ```
 
-    - Replace `paste-your-bot-token-here` with the token you copied in step 3
+    - Replace `paste-your-bot-token-here` with the token you copied in step 2
     - Replace `YourFirstName` with your name (the bot will call you this)
     - Replace `Ollim` with whatever you want to call the bot
 
     Save the file and close the editor.
   </Step>
 
-  <Step title="Install to your Discord account">
-    Back in the [Discord Developer Portal](https://discord.com/developers/applications),
-    click your application, then click **Installation** in the left
-    sidebar.
-
-    Under **Installation Contexts**, check **User Install** and uncheck
-    **Guild Install**. Set the install link dropdown to **Discord
-    Provided Link**. Under **Default Install Settings**, click the
-    scopes dropdown and add `applications.commands`. Then click **Save
-    Changes** at the bottom.
-
-    <Frame>
-      <img src="/images/discord-installation.png" alt="Screenshot of the Installation page with User Install checked, Discord Provided Link selected, and applications.commands scope added" />
-    </Frame>
-
-    Copy the **Install Link** shown on this page and open it in your
-    browser. Click **Add to my apps** to install the bot to your Discord
-    account.
-
-    Finally, go back to **Bot** in the left sidebar and uncheck **Public
-    Bot** (the bot is personal — only you need it).
-
-    <Frame>
-      <img src="/images/discord-public-bot.png" alt="Screenshot of the Public Bot toggle under Authorization Flow, switched off" />
-    </Frame>
-
-    <Warning>
-    You must set the install link and install the app *before* unchecking
-    **Public Bot**. Discord does not allow private apps to have an
-    install link, so doing these out of order causes an error.
-    </Warning>
-  </Step>
-
   <Step title="Start the bot">
-    In your terminal, navigate to the ollim-bot folder if you're not
-    already there:
-
-    ```bash
-    cd ollim-bot
-    ```
-
-    Start the bot:
+    In the same terminal, start the bot:
 
     ```bash
     ollim-bot
