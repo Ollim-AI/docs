@@ -52,6 +52,10 @@
       "destination": "/getting-started/google-integration"
     },
     {
+      "source": "/self-hosting/discord-bot-setup",
+      "destination": "/getting-started/quickstart#create-a-discord-bot"
+    },
+    {
       "source": "/getting-started/how-it-works",
       "destination": "/architecture/how-it-works"
     },
@@ -132,7 +136,6 @@
             "icon": "server",
             "pages": [
               "self-hosting/guide",
-              "self-hosting/discord-bot-setup",
               "self-hosting/model-providers"
             ]
           }
