@@ -161,22 +161,6 @@ bot detects it automatically and prompts you to run `/google-auth` again.
 See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full
 reference including token lifecycle and auto-recovery.
 
-## Configure your timezone
-
-ollim-bot auto-detects your system timezone. If that doesn't match where you
-are, set it explicitly in the `.env` file at the project root:
-
-```bash title=".env"
-OLLIM_TIMEZONE=America/New_York
-```
-
-Use a timezone name from the
-[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-— for example, `Europe/London`, `Asia/Tokyo`, or `US/Pacific`.
-
-This affects all timestamps — scheduling, Google Calendar, Gmail, session
-history, and the system prompt.
-
 ## Review environment variables
 
 The three required variables (`DISCORD_TOKEN`, `OLLIM_USER_NAME`,
@@ -195,6 +179,22 @@ startup — ollim-bot auto-commits changes to tracked files on each write. Push
 to a private remote for versioned backups of your routines, reminders, and
 session history.
 </Tip>
+
+## Troubleshooting
+
+<Accordion title="Timestamps are in the wrong timezone">
+ollim-bot auto-detects your system timezone. If timestamps are wrong, set it
+explicitly in the `.env` file at the project root:
+
+```bash title=".env"
+OLLIM_TIMEZONE=America/New_York
+```
+
+Use a name from the
+[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+— for example, `Europe/London`, `Asia/Tokyo`, or `US/Pacific`. This affects
+scheduling, Google Calendar, Gmail, session history, and the system prompt.
+</Accordion>
 
 ## Next steps
 
