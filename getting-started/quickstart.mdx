@@ -55,7 +55,8 @@ commands from this guide. To run a command, paste it in and press
 
         You should see something like `git version 2.39.0`. If you see
         "command not found", download Git from
-        [git-scm.com](https://git-scm.com/) and run the installer.
+        [git-scm.com](https://git-scm.com/), run the installer, then
+        run `git --version` again to confirm.
       </Tab>
       <Tab title="Windows">
         Download the installer from [git-scm.com](https://git-scm.com/)
@@ -94,8 +95,8 @@ commands from this guide. To run a command, paste it in and press
       </Tab>
     </Tabs>
 
-    After uv installs, **close your terminal**. You'll open a new one
-    later — first, let's set up Discord while the install takes effect.
+    After uv installs, **close your terminal** so your PATH updates.
+    The next step is in the browser, so you won't need it yet.
   </Step>
 
   <Step titleSize="h3" title="Create a Discord bot">
@@ -109,7 +110,7 @@ commands from this guide. To run a command, paste it in and press
 
     In the left sidebar, click **Bot**. Then click **Reset Token** (or
     **Add Bot** if you see that instead) and copy the token that
-    appears — save it somewhere safe, you'll need it soon.
+    appears.
 
     <Frame>
       <img src="/images/discord-reset-token.png" alt="Screenshot of the Bot page showing the Reset Token button" />
@@ -117,7 +118,7 @@ commands from this guide. To run a command, paste it in and press
 
     <Warning>The bot token is shown only once. If you lose it, click **Reset Token** again to get a new one.</Warning>
 
-    Scroll down on the same page to **Privileged Gateway Intents** and
+    Scroll down to **Privileged Gateway Intents** and
     turn on **Message Content Intent** (this lets the bot read your
     messages).
 
@@ -128,8 +129,7 @@ commands from this guide. To run a command, paste it in and press
   </Step>
 
   <Step titleSize="h3" title="Install to your Discord account">
-    Still in the Discord Developer Portal, click **Installation** in
-    the left sidebar.
+    Click **Installation** in the left sidebar.
 
     Under **Installation Contexts**, check **User Install** and uncheck
     **Guild Install**. Set the install link dropdown to **Discord
@@ -146,7 +146,7 @@ commands from this guide. To run a command, paste it in and press
     account.
 
     Finally, go back to **Bot** in the left sidebar and uncheck **Public
-    Bot** (the bot is personal — only you need it).
+    Bot**.
 
     <Frame>
       <img src="/images/discord-public-bot.png" alt="Screenshot of the Public Bot toggle under Authorization Flow, switched off" />
@@ -160,9 +160,6 @@ commands from this guide. To run a command, paste it in and press
   </Step>
 
   <Step titleSize="h3" title="Download and install ollim-bot">
-    Open a new terminal (same way as [before](#open-a-terminal)). The
-    uv command you installed in step 1 is now available.
-
     Verify uv is working:
 
     ```bash
@@ -170,8 +167,9 @@ commands from this guide. To run a command, paste it in and press
     ```
 
     You should see a version number like `uv 0.6.0`. If you see
-    "command not found", close the terminal, open a new one, and try
-    again.
+    "command not found", close the terminal, open a new one, and run
+    `uv --version` again. If it still fails, see
+    [troubleshooting](/development/troubleshooting).
 
     Download the bot's code:
 
@@ -208,7 +206,7 @@ commands from this guide. To run a command, paste it in and press
   </Step>
 
   <Step titleSize="h3" title="Configure the bot">
-    Create the configuration file (still in the same terminal):
+    Create the configuration file:
 
     <Tabs>
       <Tab title="Linux / macOS">
@@ -276,9 +274,7 @@ commands from this guide. To run a command, paste it in and press
     </Warning>
 
     If this is your first time, the bot sends you a Discord DM with a
-    sign-in link. Open the link and log in with your Anthropic account
-    (the one with your Claude subscription). The bot waits for you to
-    finish signing in before continuing.
+    sign-in link. Open the link and log in with your Anthropic account.
 
     Once ready, the bot sends you a startup DM in Discord.
 
@@ -293,16 +289,14 @@ commands from this guide. To run a command, paste it in and press
 
     > Remind me to take out the trash tomorrow at 10am, and follow up if I haven't done it by noon
 
-    This demonstrates smart follow-ups — the bot will check back if you
-    haven't confirmed the task.
+    The bot creates a reminder and a follow-up chain — at noon it
+    checks whether you've confirmed, and only pings you if the task is
+    still outstanding.
 
     > Set up a morning routine that gives me a summary of my day every weekday at 9am
 
-    This sets up a proactive check-in — the feature that makes ollim-bot
-    different from a regular chatbot.
-
-    You can also try `/cost` to see token usage or `/model sonnet` to
-    switch models.
+    The bot creates a routine that fires every weekday at 9am, pulls
+    your Google Tasks and Calendar, and sends you a summary DM.
 
     <Note>
     After [setting up Google integration](/getting-started/google-integration), try: "What's on my calendar today?"
