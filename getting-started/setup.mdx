@@ -1,10 +1,10 @@
 ---
-title: "Set up optional integrations"
-description: "Configure Google OAuth, timezone, and other optional features after the quickstart."
+title: "Set up Google integration"
+description: "Connect Google Tasks, Calendar, and Gmail to ollim-bot after the quickstart."
 ---
 
 You've completed the [quickstart](/getting-started/quickstart) and the bot is
-running. The bot works without these, but Google Tasks, Calendar, and Gmail
+running. The bot works without this, but Google Tasks, Calendar, and Gmail
 integration is where it really shines — if that's why you're here, this is
 the next step.
 
@@ -51,8 +51,8 @@ For a detailed walkthrough with screenshots of every screen, see
        flow
 
     <Warning>
-    If you skip adding yourself as a test user, the sign-in flow in step 6
-    will fail with "Access blocked: This app's request is invalid."
+    If you skip adding yourself as a test user, the "Connect with /google-auth"
+    step will fail with "Access blocked: This app's request is invalid."
     </Warning>
   </Step>
 
@@ -60,11 +60,11 @@ For a detailed walkthrough with screenshots of every screen, see
     Navigate to **APIs & Services > Library** in the left sidebar. Search for
     and enable each of these three APIs:
 
-    | API to search for | Click **Enable** |
-    |-------------------|-----------------|
-    | Google Tasks API | Manages your task lists |
-    | Google Calendar API | Reads and creates calendar events |
-    | Gmail API | Reads emails (read-only) |
+    | API to search for | Used for |
+    |-------------------|---------|
+    | Google Tasks API | Managing your task lists |
+    | Google Calendar API | Reading and creating calendar events |
+    | Gmail API | Reading emails (read-only) |
 
     **Verify:** After enabling all three, go to **APIs & Services >
     Enabled APIs & services**. You should see all three listed.
@@ -123,8 +123,9 @@ For a detailed walkthrough with screenshots of every screen, see
     </Tabs>
 
     You should see JSON starting with `{"installed": {`. If it starts with
-    `{"web": {`, you selected the wrong application type in step 4 — go
-    back and create a new credential with **Desktop application**.
+    `{"web": {`, you selected the wrong application type in "Create OAuth
+    credentials" — go back and create a new credential with **Desktop
+    application**.
   </Step>
 
   <Step titleSize="h3" title="Connect with /google-auth">
@@ -156,10 +157,8 @@ ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and
 `~/.ollim-bot/state/token.json` and run `/google-auth` to re-consent.
 </Note>
 
-If your token is ever revoked (e.g. after a Google password change), the
-bot detects it automatically and prompts you to run `/google-auth` again.
-See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full
-reference including token lifecycle and auto-recovery.
+See [Google OAuth setup](/self-hosting/google-oauth-setup) for token
+lifecycle, auto-recovery, and scope details.
 
 ## Troubleshooting
 
