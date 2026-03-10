@@ -2,12 +2,12 @@
 name: doc-walkthrough
 description: Walk through a doc page as a specific user role, following instructions literally with Playwright. Finds gaps, ambiguities, and broken steps.
 argument-hint: <page-path> [--role <role>]
-allowed-tools: Read, Glob, Grep, Bash, Agent, AskUserQuestion, mcp__plugin_playwright_playwright__*
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, mcp__plugin_playwright_playwright__*
 ---
 
 # Doc walkthrough
 
-Follow a documentation page's instructions **exactly as written** using Playwright. You are a literal instruction-follower — do only what the docs say. If a step is ambiguous, don't interpret it; flag it. If something is implied but not stated, don't do it; flag it.
+**Act, don't narrate.** You are literally performing the setup described in the docs. If the docs say "go to Google Cloud Console" — you open that URL in Playwright. If they say "click New Project" — you click it. If they say "run mkdir -p ..." — you run it in Bash. You are not reviewing the docs. You are following them.
 
 ## Arguments
 
@@ -16,48 +16,81 @@ Follow a documentation page's instructions **exactly as written** using Playwrig
 
 ## Role profiles
 
-Adopt the selected role's perspective when following instructions. This changes what you treat as "obvious" vs "unclear":
-
 | Role | Assumes | Flags when docs... |
 |------|---------|-------------------|
-| `new-user` | Nothing. Zero technical knowledge. Reads every word. | Use jargon without defining it, skip steps, assume tool familiarity |
-| `new-user:adhd-kid` | Short attention span, skims headings, skips walls of text | Are too dense, bury critical steps in paragraphs, lack visual structure |
-| `new-user:grandma` | Unfamiliar with dev tools, Discord, terminals | Assume CLI comfort, use unexplained acronyms, skip "how to open X" |
-| `new-user:busy-adult` | Will skim, wants fastest path, skips optional sections | Bury the happy path, mix optional and required steps, lack TL;DR |
-| `developer` | Knows git, CLI, general dev concepts | Miss technical details, have wrong code examples, skip error handling |
-| `agent` | Reads like an LLM — no context beyond the page | Are ambiguous, have implicit assumptions, unstated defaults, contradictions |
+| `new-user` | Nothing. Zero technical knowledge. | Use jargon, skip steps, assume tool familiarity |
+| `new-user:adhd-kid` | Short attention span, skims headings | Are too dense, bury critical steps, lack visual structure |
+| `new-user:grandma` | No dev tools, Discord, or terminal knowledge | Assume CLI comfort, use unexplained acronyms |
+| `new-user:busy-adult` | Skims, wants fastest path | Bury the happy path, mix optional and required steps |
+| `developer` | Knows git, CLI, general dev concepts | Miss technical details, have wrong code, skip error handling |
+| `agent` | No context beyond the page | Are ambiguous, have implicit assumptions, unstated defaults |
 
 ## Workflow
 
-### 1. Load the page
+### 1. Load
 
-Read the MDX file from the docs repo. Parse the instructions into discrete steps.
+Read the MDX source. Navigate Playwright to `http://localhost:3000/<page-path>`. This is **tab 1 — the docs tab**. It stays open for the entire walkthrough so you can re-read instructions at any point.
 
-### 2. Open Playwright
+### 2. Walk through — the loop
 
-Launch a browser. Navigate to `http://localhost:3000/<page-path>` to see the rendered page.
+This is a **loop**. You repeat this cycle for every single instruction on the page, from first to last:
 
-### 3. Follow each step literally
+```
+LOOP (for each instruction on the page):
+  1. SAY   → quote the instruction you're about to follow (one line)
+  2. DO    → ACTUALLY PERFORM IT (see rules below)
+  3. SEE   → browser_snapshot, then describe what you see
+  4. FLAG  → note issues from the role's perspective (or skip if none)
+  5. NEXT  → go back to step 1 with the next instruction
+```
 
-For each instruction in the doc:
+#### DO rules
 
-1. **Read the instruction exactly as written**
-2. **Do only what it says** — if it says "click the button", look for the button and click it. If no button exists, that's a gap.
-3. **Stop and ask the user** when you encounter something you cannot do:
-   - Logging into accounts (Discord, Google, etc.)
-   - Actions requiring credentials you don't have
-   - Physical-world steps ("plug in your device")
-   - Say exactly what you need them to do and wait for confirmation before continuing
-4. **Flag issues immediately** — don't fix or work around them. Categories:
-   - **GAP**: step missing entirely ("install X" but no install command given)
-   - **AMBIGUOUS**: multiple interpretations possible ("configure your settings")
-   - **WRONG**: instruction doesn't match reality (button doesn't exist, command fails)
-   - **JARGON**: unexplained term (role-dependent — `developer` won't flag "CLI")
-   - **ASSUMED**: prerequisite not stated but required
+You are the role. You only know what the docs tell you and what the role would know.
 
-### 4. Reflect
+- **"Go to [URL]"** → open a NEW TAB, then `browser_navigate` to that URL
+- **"Click X"** → `browser_click` on X in the active tab
+- **"Enter/type X"** → `browser_fill_form` or `browser_type`
+- **"Run [command]"** → execute in Bash
+- **"Navigate to X > Y"** → find and click X in the UI, then click Y. Do NOT type a direct URL — the role doesn't know the URL. Navigate the way the docs describe: clicking sidebar links, menu items, buttons. If the docs say "in the left sidebar," click things in the left sidebar.
 
-After completing (or getting stuck on) all steps, produce a report:
+External sites open in new tabs. The docs tab (tab 1) stays open — switch back to it whenever you need to re-read the next instruction.
+
+**Do what the docs say, not what you think is correct.** If the docs say "add scopes on the Scopes page" and there is no Scopes page, that's a WRONG flag — you don't skip it because you know scopes work differently now. Try to do it, fail, report the failure.
+
+#### SEE rules
+
+**Every** DO must be followed by `browser_snapshot` before you describe anything. No exceptions. Do not describe what you see from memory or from the previous tool call's response text.
+
+#### FLAG issue types
+
+- **GAP**: step missing ("install X" but no command)
+- **AMBIGUOUS**: multiple interpretations ("configure your settings")
+- **WRONG**: doesn't match reality (button missing, command fails)
+- **JARGON**: unexplained term (role-dependent)
+- **ASSUMED**: unstated prerequisite
+
+#### Blocking actions
+
+When you hit something you can't do (login, OAuth, credentials, downloading a file to the user's machine, physical action, anything requiring the user's account or environment): use `AskUserQuestion` to tell the user exactly what you need them to do. It pauses until they respond — then resume the loop.
+
+Do not skip blocking steps. Do not narrate what *would* happen. Every later step depends on earlier ones completing.
+
+#### Completeness
+
+**You do not decide when the walkthrough is done.** The loop ends when:
+- You reach the last instruction on the page, or
+- You hit a blocking action and stop
+
+You may NOT stop early because you "have enough data" or "the main issues are clear." Every step matters — a step that looks fine might have a subtle UI mismatch you'd only catch by doing it. If steps 3-6 are performable, perform them.
+
+#### Pacing
+
+**Never batch.** One instruction per loop iteration. Never group multiple instructions into one pass. If you catch yourself writing two SAY lines before a DO, you've broken the loop.
+
+### 3. Reflect
+
+After all steps (or getting stuck), produce:
 
 ```
 ## Walkthrough report: <page-path>
@@ -65,16 +98,16 @@ After completing (or getting stuck on) all steps, produce a report:
 **Completed**: <yes/no/partial — stopped at step N>
 
 ### What worked
-- <steps that were clear and correct>
+- <steps that were clear and executed successfully>
 
 ### Issues found
 | # | Type | Step | Description |
 |---|------|------|-------------|
-| 1 | GAP | "Run the bot" | No command provided — what do I actually run? |
+| 1 | GAP | "Run the bot" | No command given — what do I run? |
 
 ### Documentation gaps
-- <things the docs should cover but don't>
+- <what the docs should cover but don't>
 
 ### Suggestions
-- <concrete improvements, not vague "make it better">
+- <concrete fixes>
 ```
