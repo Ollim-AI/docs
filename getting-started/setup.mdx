@@ -10,39 +10,143 @@ the next step.
 
 ## Set up Google OAuth
 
-Google Tasks, Calendar, and Gmail integration requires OAuth credentials from
-Google Cloud Console.
+Google Tasks, Calendar, and Gmail integration requires connecting your Google
+account. You'll create a small project in Google Cloud Console (free, no
+billing required) and link it to the bot.
+
+<Tip>
+For a detailed walkthrough with screenshots of every screen, see
+[Google OAuth setup](/self-hosting/google-oauth-setup).
+</Tip>
 
 <Steps>
   <Step title="Create a Google Cloud project">
     Go to the [Google Cloud Console](https://console.cloud.google.com/) and
-    create a new project (or use an existing one).
+    sign in with the Google account you want the bot to access.
+
+    1. Click the project dropdown at the top of the page
+    2. Click **New Project**
+    3. Enter a name (e.g. `ollim-bot`) and click **Create**
+    4. Make sure the new project is selected in the dropdown at the top —
+       all following steps must be done inside this project
+
+    <Note>
+    Google Cloud Console is free for this use case — you will not be charged.
+    </Note>
+  </Step>
+
+  <Step title="Configure the consent screen">
+    Navigate to **APIs & Services > OAuth consent screen** in the left
+    sidebar.
+
+    1. Select **External** as the user type and click **Create**
+    2. Fill in the required fields — app name (e.g. `ollim-bot`), user
+       support email, and developer email (your email for both is fine)
+    3. On the **Scopes** page, click **Add or Remove Scopes** and add:
+       - `https://www.googleapis.com/auth/tasks`
+       - `https://www.googleapis.com/auth/calendar.events`
+       - `https://www.googleapis.com/auth/gmail.readonly`
+    4. On the **Test users** page, click **Add users** and enter your Google
+       email address — only accounts listed here can complete the sign-in
+       flow
+
+    <Warning>
+    If you skip adding yourself as a test user, the sign-in flow in step 6
+    will fail with "Access blocked: This app's request is invalid."
+    </Warning>
   </Step>
 
   <Step title="Enable APIs">
-    Enable the **Google Tasks API**, **Google Calendar API**, and **Gmail API**
-    in the project's API library.
+    Navigate to **APIs & Services > Library** in the left sidebar. Search for
+    and enable each of these three APIs:
+
+    | API to search for | Click **Enable** |
+    |-------------------|-----------------|
+    | Google Tasks API | Manages your task lists |
+    | Google Calendar API | Reads and creates calendar events |
+    | Gmail API | Reads emails (read-only) |
+
+    **Verify:** After enabling all three, go to **APIs & Services >
+    Enabled APIs & services**. You should see all three listed.
   </Step>
 
   <Step title="Create OAuth credentials">
-    Go to **Credentials**, click **Create Credentials** > **OAuth 2.0 Client ID**,
-    and select **Desktop application** as the type. Download the credentials JSON.
+    Navigate to **APIs & Services > Credentials** in the left sidebar.
+
+    1. Click **Create Credentials** at the top, then select **OAuth client ID**
+    2. For **Application type**, select **Desktop application** (not "Web
+       application")
+    3. Give it a name (e.g. `ollim-bot`) and click **Create**
+    4. In the popup that appears, click **Download JSON**
+
+    A file named `client_secret_[...].json` downloads to your computer.
+
+    <Warning>
+    The application type **must** be **Desktop application**. If you select
+    "Web application", the downloaded file will have a `"web"` key instead of
+    `"installed"`, and the bot will not be able to use it.
+    </Warning>
   </Step>
 
   <Step title="Save the credentials file">
-    ```bash
-    mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
-    ```
+    Move the downloaded file to `~/.ollim-bot/state/credentials.json`. Open
+    a terminal and run:
+
+    <Tabs>
+      <Tab title="Linux / macOS">
+        ```bash
+        mkdir -p ~/.ollim-bot/state
+        mv ~/Downloads/client_secret_*.json ~/.ollim-bot/state/credentials.json
+        ```
+      </Tab>
+      <Tab title="Windows (PowerShell)">
+        ```powershell
+        New-Item -ItemType Directory -Force -Path "$HOME\.ollim-bot\state"
+        Move-Item "$HOME\Downloads\client_secret_*.json" "$HOME\.ollim-bot\state\credentials.json"
+        ```
+      </Tab>
+    </Tabs>
+
+    **Verify:** Check the file is in the right place:
+
+    <Tabs>
+      <Tab title="Linux / macOS">
+        ```bash
+        cat ~/.ollim-bot/state/credentials.json
+        ```
+      </Tab>
+      <Tab title="Windows (PowerShell)">
+        ```powershell
+        Get-Content "$HOME\.ollim-bot\state\credentials.json"
+        ```
+      </Tab>
+    </Tabs>
+
+    You should see JSON starting with `{"installed": {`. If it starts with
+    `{"web": {`, you selected the wrong application type in step 4 — go
+    back and create a new credential with **Desktop application**.
   </Step>
 
   <Step title="Connect with /google-auth">
-    Run `/google-auth` in your Discord DM with the bot. Click the auth URL
-    to complete the consent flow in your browser, or paste the redirect URL
-    back if you are on a different device. The token is saved to
-    `~/.ollim-bot/state/token.json` and refreshed automatically from then on.
+    Open Discord and go to your DM with the bot (the bot must be running).
+    Type `/google-auth` and press **Enter**.
 
-    If your token is ever revoked, the bot detects it automatically and
-    prompts you to run `/google-auth` again.
+    The bot responds with a sign-in link. Click it — your browser opens a
+    Google consent page. Select your Google account, click **Continue**
+    through the permissions screens, and authentication completes
+    automatically.
+
+    When it works, the bot sends **"google connected."** in the DM.
+
+    **Verify:** Ask the bot something like "list my tasks" or "what's on my
+    calendar today?" to confirm the connection is working.
+
+    <Note>
+    **Running the bot on a different computer than your browser?** Open the
+    sign-in link on any device, complete the consent flow, then copy the URL
+    your browser redirected to (it starts with `http://127.0.0.1:`) and paste
+    it back into the Discord DM. The auth flow has a 5-minute timeout.
+    </Note>
   </Step>
 </Steps>
 
@@ -52,17 +156,23 @@ ollim-bot requests these OAuth scopes: `tasks`, `calendar.events`, and
 `~/.ollim-bot/state/token.json` and run `/google-auth` to re-consent.
 </Note>
 
-See [Google OAuth setup](/self-hosting/google-oauth-setup) for a detailed
-walkthrough with screenshots.
+If your token is ever revoked (e.g. after a Google password change), the
+bot detects it automatically and prompts you to run `/google-auth` again.
+See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full
+reference including token lifecycle and auto-recovery.
 
 ## Configure your timezone
 
 ollim-bot auto-detects your system timezone. If that doesn't match where you
-are, set it explicitly:
+are, set it explicitly in the `.env` file at the project root:
 
 ```bash title=".env"
 OLLIM_TIMEZONE=America/New_York
 ```
+
+Use a timezone name from the
+[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+— for example, `Europe/London`, `Asia/Tokyo`, or `US/Pacific`.
 
 This affects all timestamps — scheduling, Google Calendar, Gmail, session
 history, and the system prompt.
