@@ -161,25 +161,6 @@ bot detects it automatically and prompts you to run `/google-auth` again.
 See [Google OAuth setup](/self-hosting/google-oauth-setup) for the full
 reference including token lifecycle and auto-recovery.
 
-## Review environment variables
-
-The three required variables (`DISCORD_TOKEN`, `OLLIM_USER_NAME`,
-`OLLIM_BOT_NAME`) are covered in the quickstart. See the
-[Configuration reference](/configuration/reference) for all optional variables
-and their defaults.
-
-## Explore the data directory
-
-All persistent state lives in `~/.ollim-bot/`, which is auto-created on first
-run. See [Data directory](/configuration/data-directory) for the full layout.
-
-<Tip>
-The data directory is automatically initialized as a git repository on first
-startup — ollim-bot auto-commits changes to tracked files on each write. Push
-to a private remote for versioned backups of your routines, reminders, and
-session history.
-</Tip>
-
 ## Troubleshooting
 
 <Accordion title="Timestamps are in the wrong timezone">
@@ -205,10 +186,10 @@ scheduling, Google Calendar, Gmail, session history, and the system prompt.
   <Card title="Conversations" icon="comments" href="/core-usage/conversations">
     Learn how DM conversations, context, and streaming work.
   </Card>
-  <Card title="Slash commands" icon="terminal" href="/core-usage/slash-commands">
-    Reference for all Discord slash commands.
-  </Card>
   <Card title="Configuration reference" icon="sliders" href="/configuration/reference">
-    Full environment variable and configuration reference.
+    All environment variables, runtime settings, and their defaults.
+  </Card>
+  <Card title="Data directory" icon="folder-tree" href="/configuration/data-directory">
+    Layout of ~/.ollim-bot/ — auto-tracked with git for versioned backups.
   </Card>
 </Columns>
