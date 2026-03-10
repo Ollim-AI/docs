@@ -44,6 +44,10 @@
   },
   "redirects": [
     {
+      "source": "/getting-started/setup",
+      "destination": "/getting-started/google-integration"
+    },
+    {
       "source": "/getting-started/how-it-works",
       "destination": "/architecture/how-it-works"
     },
@@ -67,7 +71,7 @@
         "pages": [
           "getting-started/overview",
           "getting-started/quickstart",
-          "getting-started/setup",
+          "getting-started/google-integration",
           "getting-started/coming-from-other-assistants",
           {
             "group": "Using the Bot",
