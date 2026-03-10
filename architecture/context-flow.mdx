@@ -15,7 +15,7 @@ What the agent sees depends on which mode it's running in. This matters for both
 
 | | Main session | Interactive fork | Background fork (forked) | Background fork (isolated) |
 |---|---|---|---|---|
-| **System prompt** | Full `SYSTEM_PROMPT` | Same as main | Assembled preamble | Assembled preamble |
+| **System prompt** | `build_system_prompt()` (profile + operational) | Same as main | Assembled preamble | Assembled preamble |
 | **Conversation history** | Full (persistent, resumed across restarts) | Forked from main at branch point | Forked from main | None (clean slate) |
 | **Pending updates** | Popped (consumed) | Peeked (read-only) | Prepended to prompt | None |
 | **MCP tools** | All 7 discord tools + docs server | Same as main | Discord tools dynamically gated | Discord tools dynamically gated |

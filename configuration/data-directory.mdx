@@ -9,9 +9,9 @@ All persistent data lives in `~/.ollim-bot/`. The directory is created on
 first use and automatically managed as a git repository — `storage.py`
 auto-commits after most writes.
 
-The root contains agent-facing files (routines, reminders, webhooks, spec
-symlinks, and the optional `tool-policy.yaml`) that the agent reads and
-writes directly. Infrastructure state (sessions, credentials, ping
+The root contains agent-facing files (profile files, routines, reminders,
+webhooks, spec symlinks, and the optional `tool-policy.yaml`) that the
+agent reads and writes directly. Infrastructure state (sessions, credentials, ping
 budget, etc.) lives in the `state/` subdirectory, keeping the agent's
 working directory clean. The `state/` directory is **write-protected**
 from agent tool access — a `PreToolUse` hook blocks Write and Edit calls
@@ -21,6 +21,8 @@ for details.
 
 ```text
 ~/.ollim-bot/
+├── IDENTITY.md                         # Bot persona (bootstrapped on first run)
+├── USER.md                             # User context (user-created, optional)
 ├── routine-reminder-spec.md →       # Symlink to docs/routine-reminder-spec.md
 ├── webhook-spec.md →                # Symlink to docs/webhook-spec.md
 ├── skill-spec.md →                  # Symlink to docs/skill-spec.md
@@ -53,6 +55,28 @@ for details.
     ├── config.json                  # Runtime configuration (persistent, no git commit)
     └── ping_budget.json             # Ping budget state (ephemeral, no git commit)
 ```
+
+## Profile files
+
+Two markdown files in the data directory root define the bot's identity
+and your context. Both are prepended to the system prompt when the bot
+starts — see [System prompt](/development/system-prompt#profile-section)
+for how they compose into the final prompt.
+
+| File | Bootstrapped | Description |
+|------|-------------|-------------|
+| `IDENTITY.md` | Yes — created on first run from a built-in template | Bot persona: tone, personality, communication style, and relationship dynamics. Edit this to change how the bot speaks and behaves. |
+| `USER.md` | No — you create this yourself | Context about you: work patterns, schedule, ADHD specifics, priorities. The bot and its agent can also edit this file. |
+
+`IDENTITY.md` is written by `bootstrap_identity()` in `profile.py` on
+first run. It includes default personality traits (concise, warm,
+ADHD-aware, honest pushback) and communication style guidance. If the
+file already exists, bootstrapping is skipped — your edits persist
+across updates.
+
+`USER.md` is never created automatically. Create it when you want the
+bot to have persistent context about you that survives compaction. The
+agent can read and edit both files at runtime.
 
 ## Session files
 
@@ -311,8 +335,8 @@ The `~/.ollim-bot/` directory is initialized as a git repository.
 | `.claude/agents/*.md` | SDK infrastructure — written once at startup, not managed by `storage.py` |
 | `.claude/skills/` | Symlink — SDK infrastructure |
 
-All other files — session history, routines, reminders, webhooks, and
-skills — are auto-committed on every write.
+All other files — profile files, session history, routines, reminders,
+webhooks, and skills — are auto-committed on every write.
 
 <Warning>
 All writes use atomic temp-file-then-rename
