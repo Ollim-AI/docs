@@ -89,6 +89,11 @@ Follow existing patterns — read a similar page before adding components:
 | main session | primary session, root session |
 | context compaction | context compression, summarization |
 
+## Paths
+
+- Use `~/.ollim-bot/` as the canonical path — it works in every shell the bot runs in (bash, zsh, Git Bash on Windows)
+- For non-technical readers, explain `~` in one line — don't use platform-specific path tables
+
 ## Git workflow
 
 - NEVER use `--no-verify` when committing
