@@ -48,6 +48,12 @@ Replying to a previous message gives the bot additional context:
 
 Attach images directly to your Discord message — no special syntax needed. The bot supports JPEG, PNG, GIF, and WebP formats.
 
+## File attachments
+
+Non-image attachments — PDFs, text files, spreadsheets, etc. — are saved to `~/.ollim-bot/downloads/` so the bot can read them with its built-in Read tool. The file paths are included in the message automatically, so you can just attach and ask.
+
+Filename collisions are handled with numeric suffixes (`report-2.pdf`, `report-3.pdf`).
+
 ## Streaming responses
 
 Responses stream to Discord progressively — you see text appear in real time as the bot generates it. Long responses that exceed Discord's character limit automatically split across multiple messages.

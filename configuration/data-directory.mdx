@@ -27,6 +27,7 @@ for details.
 ├── webhook-spec.md →                # Symlink to docs/webhook-spec.md
 ├── skill-spec.md →                  # Symlink to docs/skill-spec.md
 ├── tool-policy.yaml                 # Optional YAML tool policy overrides
+├── downloads/                       # Saved non-image Discord attachments
 ├── routines/
 │   └── *.md                         # Recurring routine specs
 ├── reminders/
@@ -72,6 +73,16 @@ they compose into the final prompt.
 See [Customize personality](/personalizing/personality) and
 [Tell the bot about yourself](/personalizing/user-context) for
 editing guidance and examples.
+
+## Downloads
+
+Non-image Discord attachments (PDFs, text files, spreadsheets, etc.)
+are saved to `downloads/` so the agent can read them with its Read
+tool. Filename collisions are handled with numeric suffixes
+(`file-2.txt`, `file-3.txt`). This directory is created on first use.
+
+See [File attachments](/core-usage/conversations#file-attachments)
+for user-facing details.
 
 ## Session files
 
