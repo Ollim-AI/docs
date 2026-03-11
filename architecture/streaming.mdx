@@ -3,6 +3,10 @@ title: "Streaming & Discord"
 description: "How agent responses stream to Discord with throttled edits and overflow handling."
 ---
 
+<Note>
+This page covers the internal streaming pipeline — it's aimed at developers working on the bot's source code. For how messages appear in Discord from a user perspective, see [Conversations](/core-usage/conversations).
+</Note>
+
 Agent responses stream token-by-token from the Claude Agent SDK into
 Discord messages. Two modules handle this: `agent_streaming.py` consumes
 the SDK response (parsing `StreamEvent` messages, handling
