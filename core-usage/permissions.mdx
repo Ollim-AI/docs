@@ -12,23 +12,12 @@ silent denial of unapproved tools all the way to full bypass.
 Switch modes with the `/permissions` slash command or persistently
 with [`/config permission_mode`](/core-usage/slash-commands#config).
 
-**ollim-bot's own mode:**
-
 | Mode | Behavior |
 |------|----------|
 | `dontAsk` | Silent denial of tools not in the session-allowed set. No prompt. **Default.** |
-
-`dontAsk` is ollim-bot's own layer — it intercepts tool requests in `handle_tool_permission()` before the SDK's permission callback fires. This is a module-level flag, not a SDK setting, which affects [fork scoping](#fork-scoping).
-
-**SDK-native modes:**
-
-| Mode | Behavior |
-|------|----------|
 | `default` | Discord message with reaction buttons for each tool use. |
 | `acceptEdits` | File-edit tools auto-approved, others prompt. |
 | `bypassPermissions` | All tools auto-approved, no prompts. |
-
-These three modes are passed directly to the SDK via `set_permission_mode()` and operate at the SDK level.
 
 ### Persistence
 
@@ -38,24 +27,23 @@ to persist the mode across restarts.
 
 ### Fork scoping
 
-The SDK permission mode (`default`, `acceptEdits`, `bypassPermissions`)
-is **fork-scoped**: `set_permission_mode()` targets the fork client
-when inside an interactive fork, leaving the main session unchanged.
+`default`, `acceptEdits`, and `bypassPermissions` are **fork-scoped** —
+changing the mode inside an interactive fork leaves the main session
+unchanged.
 
-`dontAsk` is **not** fork-scoped — it uses a module-level flag in
-`permissions.py`. Switching to or from `dontAsk` inside an interactive
-fork affects the main session too.
+`dontAsk` is **not** fork-scoped. Switching to or from `dontAsk` inside
+an interactive fork affects the main session too.
 
 ## Approval flow
 
 In `default` mode, unapproved tool use triggers an interactive approval
-prompt in your Discord DM. (`acceptEdits` auto-approves file-edit tools
-at the SDK level, and `bypassPermissions` approves everything at the SDK
-level — neither mode triggers the interactive flow below.)
+prompt in your Discord DM. (`acceptEdits` auto-approves file-edit tools,
+and `bypassPermissions` approves everything — neither triggers the
+approval flow below.)
 
 <Steps>
   <Step title="Agent requests a tool">
-    The SDK invokes the `canUseTool` callback with the tool name and input data.
+    The agent attempts to use a tool that isn't in the session-allowed set.
   </Step>
   <Step title="Bot sends an approval message">
     A message appears in your DM showing the tool label
@@ -92,18 +80,16 @@ in `dontAsk` mode.
 
 ## Background forks
 
-Background forks use **dynamic gating** for Discord MCP tools — the
-`canUseTool` callback checks the fork's `BgForkConfig` flags at runtime:
+Background forks have their own tool restrictions based on the job's
+YAML configuration:
 
 - **Ping tools** (`ping_user`, `discord_embed`) — allowed only when
   `allow-ping` is `true` in the job's YAML
 - **Reporting tools** (`report_updates`, `follow_up_chain`) — allowed
   unless `update-main-session` is `blocked`
 
-All other tools not in the fork's `allowed_tools` list are denied. The
-agent in a background fork cannot trigger approval prompts. Tools
-available to background forks are controlled through `allowed-tools` in
-the fork's YAML configuration — see
+All other tools not in the fork's `allowed-tools` list are denied. The
+agent in a background fork cannot trigger approval prompts — see
 [Background forks](/scheduling/background-forks) for details.
 
 ### Deny messages
@@ -111,7 +97,7 @@ the fork's YAML configuration — see
 The deny message varies by context so the agent understands why a tool
 was blocked:
 
-| Context | Deny message |
+| Situation | Deny message |
 |---------|-------------|
 | Background fork (pings disabled) | `"pings disabled for this job"` |
 | Background fork (reporting blocked) | `"reporting blocked for this job"` |
@@ -122,25 +108,22 @@ was blocked:
 
 The `state/` directory under `~/.ollim-bot/` contains infrastructure
 files — session IDs, credentials, ping budget, and runtime config. These
-files are managed by application code, not by the agent.
+files are managed by ollim-bot itself, not by the agent.
 
-Write-protection is enforced at two layers:
+The agent can **read** files in `state/` but cannot modify them. Any
+write or edit attempt targeting `state/` is automatically denied — this
+applies in the main session, interactive forks, and background forks.
 
-1. **SDK hook** — a `PreToolUse` hook (`state_dir_guard`) intercepts
-   Write and Edit calls before execution. If the resolved `file_path`
-   falls inside `state/`, the hook denies the call with
-   `"state/ is write-protected"`. This applies to all contexts — main
-   session, interactive forks, and background forks.
-2. **Pattern validation** — `tool_policy.py` validates tool patterns at
-   startup and at dispatch time. Write/Edit patterns that could match
-   the `state/` directory are rejected — jobs declaring patterns like
-   `Edit(**)` will not dispatch.
+<Accordion title="How write-protection works">
+Protection is enforced at two layers:
 
-<Note>
-The agent can still read files in `state/` but cannot modify them
-through its tools. The `PreToolUse` hook catches attempts regardless of
-which patterns are declared in `allowed_tools`.
-</Note>
+1. **Tool hook** — a pre-execution hook intercepts Write and Edit calls.
+   If the target path falls inside `state/`, the call is denied with
+   `"state/ is write-protected"`.
+2. **Pattern validation** — tool patterns are validated at startup and
+   dispatch time. Patterns that could match the `state/` directory
+   (like `Edit(**)`) are rejected before the job runs.
+</Accordion>
 
 ## Customizing tool sets
 
