@@ -17,22 +17,20 @@ baseline context, even after a `/clear` or a long break.
 
 ## Where to create it
 
-Create the file in the bot's data directory as `USER.md`. Unlike
-`IDENTITY.md`, this file is **not** created automatically — you write
-it yourself when you're ready.
+Create the file at `~/.ollim-bot/USER.md`. Unlike `IDENTITY.md`, this
+file is **not** created automatically — you write it yourself when
+you're ready.
 
-| Platform | Path |
-|----------|------|
-| macOS / Linux | `~/.ollim-bot/USER.md` |
-| Windows | `C:\Users\<your-username>\.ollim-bot\USER.md` |
+`~` is your home directory — `/home/you` on Linux, `/Users/you` on
+macOS, or `C:\Users\you` on Windows.
 
 <Tabs>
   <Tab title="Ask the bot">
     Tell the bot to create or update it:
 
-    > "Create a USER.md with the following: I'm a remote ML engineer,
-    > I work 9am-5pm Pacific, I have ADHD and struggle most with task
-    > initiation in the morning."
+    > "Create a USER.md with the following: I'm in Pacific time,
+    > I work from home, and I have ADHD — mornings are my hardest
+    > time to get started."
 
     The bot will write the file for you.
   </Tab>
@@ -54,25 +52,27 @@ The file is freeform, but here are useful categories:
 ```markdown title="USER.md"
 # About me
 
-- Remote ML engineer, Pacific timezone
-- Work hours: 9am-5pm weekdays, flexible on weekends
+- Pacific timezone, work from home
+- Usually available 9am-5pm weekdays
+- Kids get picked up at 3:30 — don't schedule anything 3-4pm
 
 # ADHD patterns
 
-- Task initiation is hardest in the morning
-- Hyperfocus kicks in around 2-4pm — don't interrupt unless urgent
-- I forget to eat when deep in work
+- Mornings are the hardest — I need help getting started
+- Once I'm focused, don't interrupt unless it's urgent
+- I tend to forget things that aren't written down
 
-# Priorities
+# Current priorities
 
-- Current project: fine-tuning pipeline for client X (deadline: March 20)
-- Side project: personal blog (low priority, evening hobby)
+- Finish quarterly report (due Friday)
+- Schedule dentist appointment (been putting it off)
+- Plan weekend trip
 
 # Preferences
 
-- I prefer one task at a time over a full list
-- Ping me about deadlines, don't ping me about routine check-ins
-- I track everything in Google Tasks — don't suggest other tools
+- Give me one thing at a time, not a full list
+- Ping me about deadlines, skip routine check-ins
+- I use Google Tasks for everything
 ```
 
 You don't need all of these sections. Start with whatever feels most
@@ -84,8 +84,8 @@ The bot has permission to read and edit `USER.md` at runtime. If you
 tell it something important during conversation, you can ask it to
 save that to your profile:
 
-> "Add to my USER.md that I have therapy on Wednesdays at 2pm and
-> shouldn't be disturbed."
+> "Add to my USER.md that Tuesdays and Thursdays I have calls from
+> 1-2pm — don't ping me during those."
 
 This is especially useful for context that comes up naturally — you
 don't have to remember to edit the file later.
