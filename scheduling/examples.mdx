@@ -14,20 +14,20 @@ Personal details have been scrubbed.
 A single user's `routines/` directory can define an entire day. Here's how
 17 routines and a handful of reminders fit together:
 
-| Time | Routine | Mode | Purpose |
-|------|---------|------|---------|
-| 8:00 AM | Self-reflection | bg | Review last 24h, report one finding |
-| 8:30 AM | Morning briefing | bg | Email triage, tasks, calendar dashboard |
-| 9:15 AM | Sleep diary | bg | Collect last night's sleep data |
-| 10:00 AM | Email check (morning) | bg | Catch emails after briefing cutoff |
-| 12:00 PM | Workout nudge | bg | Weather-aware workout suggestion |
-| 12:30 PM | Lunch break | bg | Break nudge + midday task triage |
-| 2:00 PM | Email check (afternoon) | bg | Afternoon email sweep |
-| 4:30 PM | End-of-day wrap-up | bg | EOD triage, schedule follow-ups |
-| 6:00 PM | Chore time | bg | Pick one chore, 15 minutes |
-| 8:00 PM | Music practice | bg | Practice nudge with category rotation |
-| 10:00 PM | Nightly sleep | bg | Schedule dynamic bedtime ping |
-| Every 4h | Identity stabilize | bg, no ping | Keep profile file current |
+| Time | Routine | Purpose |
+|------|---------|---------|
+| 8:00 AM | Self-reflection | Review last 24h, report one finding |
+| 8:30 AM | Morning briefing | Email triage, tasks, calendar dashboard |
+| 9:15 AM | Sleep diary | Collect last night's sleep data |
+| 10:00 AM | Email check (morning) | Catch emails after briefing cutoff |
+| 12:00 PM | Workout nudge | Weather-aware workout suggestion |
+| 12:30 PM | Lunch break | Break nudge + midday task triage |
+| 2:00 PM | Email check (afternoon) | Afternoon email sweep |
+| 4:30 PM | End-of-day wrap-up | End-of-day triage, schedule follow-ups |
+| 6:00 PM | Chore time | Pick one chore, 15 minutes |
+| 8:00 PM | Music practice | Practice nudge with category rotation |
+| 10:00 PM | Nightly sleep | Schedule dynamic bedtime ping |
+| Every 4h | Identity stabilize | Keep profile file current (never pings) |
 
 Weekly additions: fitness review (Sun 9 AM), sleep review (Sun 9:30 AM),
 music review (Sun 10 AM), responsiveness review (Sun 6 PM), weekend
@@ -139,7 +139,7 @@ reminders scheduled.
 - **Parallel enrichment** — core steps always run; enrichment steps are
   best-effort and skipped on failure
 - **Graceful degradation** — the embed always sends, even with partial data
-- **Dedup awareness** — checks existing reminders before scheduling new ones
+- **Duplicate prevention** — checks existing reminders before scheduling new ones
 - **Cap overwhelm** — limits "needs a deadline" suggestions to 2-3 items
 - **Subagent delegation** — uses the user-proxy subagent to make
   judgment calls (prioritization, rescheduling dates) that benefit from
@@ -319,7 +319,7 @@ is valuable.
 - **Behavioral design** — the prompt encodes knowledge about the user's
   ADHD and designs the interaction around it
 - **Chain length by urgency** — more urgent tasks get longer chains
-- **Dedup before scheduling** — checks `reminder list` to avoid
+- **Checks before scheduling** — checks `reminder list` to avoid
   compounding chain reminders
 
 ### Email check — conditional silence
@@ -355,7 +355,7 @@ click links found in email bodies.
 - **Conditional ping** — strict criteria for when to notify; defaults
   to silence
 - **Content boundary** — explicit instruction to treat email as data,
-  preventing prompt injection via email
+  preventing the bot from being tricked by instructions hidden in emails
 
 ### Self-reflection — observation-only meta-routine
 
@@ -505,8 +505,8 @@ wallet and redeem. 3 more batches remaining. Don't let this slip.
   future agent needs (batch number, remaining count, action to take)
 - **Foreground** — no `background: true`, so this fires as a direct DM
   for maximum visibility on a financial deadline
-- **Far future** — scheduled 6 weeks out; the scheduler handles this
-  natively via `DateTrigger`
+- **Far future** — scheduled 6 weeks out; the scheduler handles dates far in the future
+  without any special configuration
 
 ### Chain reminders and single reminders — spawned by routines
 
