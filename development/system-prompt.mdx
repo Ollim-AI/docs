@@ -1,20 +1,24 @@
 ---
 title: "System prompt"
-description: "How the system prompt is structured and what gets injected."
+description: "How the system prompt is structured and what context the bot receives."
 ---
 
-The system prompt is built dynamically by `build_system_prompt()` in
-`prompts.py` and passed to `ClaudeAgentOptions` in `agent.py`. It
-composes two layers: user-editable profile files (`IDENTITY.md` and
-`USER.md`) prepended to operational instructions covering behavior
-rules and inline documentation for every tool. Additional context —
-timestamps, pending background updates, and background preambles — is
-injected at runtime per message.
+The system prompt defines how the bot behaves — its personality, what
+tools it knows about, and the rules it follows. It combines two layers:
+your editable profile files (`IDENTITY.md` and `USER.md`) plus
+operational instructions covering behavior rules and documentation for
+every tool. Additional context — timestamps, pending background updates,
+and background preambles — is added before each message.
+
+<Accordion title="Developer reference: prompt construction">
+  The prompt is built dynamically by `build_system_prompt()` in `prompts.py`
+  and passed to `ClaudeAgentOptions` in `agent.py`. The profile section is
+  loaded by `load_profile()` in `profile.py`.
+</Accordion>
 
 ## Prompt structure
 
-`build_system_prompt()` concatenates the profile and operational
-sections, in order:
+The prompt combines two sections in order:
 
 | Section | Purpose |
 |---------|---------|
@@ -37,27 +41,22 @@ sections, in order:
 | Background forks | Ping budget, reporting modes |
 | Webhooks | Webhook spec format reference |
 
-<Note>
-The operational section uses f-string substitution for two values:
-`USER_NAME` (fork instructions, tool sections) and `TZ` (Google
-Calendar section), both from `config.py`. The profile section is
-loaded verbatim from disk — no template substitution at prompt-build
-time.
-</Note>
+<Accordion title="Developer reference: template substitution">
+  The operational section uses Python template substitution for two
+  values: `USER_NAME` (fork instructions, tool sections) and `TZ`
+  (Google Calendar section), both from `config.py`. The profile section
+  is loaded verbatim from disk — no substitution at prompt-build time.
+</Accordion>
 
 ## Profile section
 
 If either `IDENTITY.md` or `USER.md` exists in the data directory,
-`load_profile()` in `profile.py` reads both files and concatenates
-them with a blank line separator. The combined content is prepended
-to the operational instructions.
+both files are combined and placed at the top of the prompt.
 
-`IDENTITY.md` is bootstrapped from a template on first run.
-`{USER_NAME}` is substituted into the file at bootstrap time (baked
-in), not at prompt-build time. `USER.md` is user-created — not
-bootstrapped. Both files are readable and editable by the agent at
-runtime. The operational section includes a note telling the agent
-these files exist.
+`IDENTITY.md` is created from a template on first run. Your name is
+written into the file when it's first created — it doesn't change each
+time the bot starts. `USER.md` is one you create yourself — no template
+is provided. The bot can read and update both files while running.
 
 See [Customize personality](/personalizing/personality) for what the
 default template contains and how to edit it. See
@@ -67,9 +66,9 @@ default template contains and how to edit it. See
 ## Tool instruction sections
 
 Each tool section follows the same pattern: a heading, a command table,
-and behavioral rules. The agent is restricted to only the tools documented
-in the prompt — it is explicitly told not to hallucinate tools like
-Notion, Slack, or Trello.
+and behavioral rules. The bot is restricted to only the tools documented
+in the prompt — it is told not to make up tools that don't exist (like
+Notion, Slack, or Trello).
 
 <Tabs>
   <Tab title="Google Tasks">
@@ -94,15 +93,15 @@ Notion, Slack, or Trello.
     | `ollim-bot cal delete <id>` | Delete event |
     | `ollim-bot cal update <id> [--summary] [--start] [--end]` | Update |
 
-    All times use the configured timezone (`OLLIM_TIMEZONE`). The agent checks `today`
-    when planning the user's day.
+    All times use the configured timezone (`OLLIM_TIMEZONE`). The bot checks `today`
+    when planning your day.
   </Tab>
   <Tab title="Routines">
     The routines and reminders section is compact — it tells the
-    agent to browse routines via Glob/Read and edit them directly.
+    bot to browse and edit routine files directly.
     For complex configurations (background options, model overrides,
-    tool restrictions), the agent is directed to enter a fork and
-    read `routine-reminder-spec.md` for the full spec.
+    tool restrictions), the bot enters a fork and reads
+    `routine-reminder-spec.md` for the full spec.
 
     See [Routines](/scheduling/routines) for the complete field
     reference.
@@ -119,17 +118,17 @@ Notion, Slack, or Trello.
     | `ollim-bot reminder cancel <id>` | Cancel |
 
     For complex reminder options (model overrides, isolated mode,
-    `update-main-session`, `allow-ping`), the agent enters a fork
-    and reads `routine-reminder-spec.md`.
+    `update-main-session`, `allow-ping`), the bot enters a fork and
+    reads `routine-reminder-spec.md`.
   </Tab>
 </Tabs>
 
 ### Subagent delegation
 
 Five tool sections — Guide, Gmail, Claude History, Responsiveness, and User Proxy — consist
-entirely of delegation instructions. The main agent is told to never
-perform these tasks directly, instead spawning the appropriate
-[subagent](/extending/subagents) via the Task tool.
+entirely of delegation instructions. The bot is told to never perform
+these tasks directly, instead handing off to the appropriate
+[subagent](/extending/subagents).
 
 ### Fork and background instructions
 
@@ -145,9 +144,8 @@ See [Background forks](/scheduling/background-forks) for the full reference.
 
 ## Context injection
 
-User messages are not passed to the agent verbatim. The `prepend_context`
-function in `agent_context.py` prepends two pieces of dynamic context before
-every message:
+The bot adds context to every message before processing it. Two pieces
+of dynamic context are included:
 
 ### Timestamp
 
@@ -157,7 +155,7 @@ Every user message gets a timestamp header:
 [2026-02-24 Mon 02:30 PM PT]
 ```
 
-Format: `[YYYY-MM-DD DDD HH:MM AM/PM PT]`. The agent uses this for
+Format: `[YYYY-MM-DD DDD HH:MM AM/PM PT]`. The bot uses this for
 time-awareness — knowing when tasks are due, whether to say "good morning,"
 and how long ago things happened.
 
@@ -166,7 +164,7 @@ and how long ago things happened.
 If background forks have called `report_updates`, those messages accumulate
 in a pending updates file (capped at
 [10 entries](/architecture/context-flow#write-path)). When the user next
-sends a message, they are injected with a context-specific header:
+sends a message, they are included with a context-specific header:
 
 ```text
 [2026-02-24 Mon 02:30 PM PT] RECENT BACKGROUND UPDATES (mention key findings in your response):
@@ -176,25 +174,21 @@ sends a message, they are injected with a context-specific header:
 How's it going?
 ```
 
-In the main session, pending updates are consumed (cleared after
-injection). In interactive forks, they are peeked (read without
-clearing). See [Context flow](/architecture/context-flow#read-path) for
+In the main session, pending updates are cleared after delivery. In
+interactive forks, they are read without clearing. See [Context flow](/architecture/context-flow#read-path) for
 the full read path and header variants.
 
 ### Skills section
 
-The system prompt's skills section tells the agent how skills work — the
+The system prompt's skills section tells the bot how skills work — the
 directory structure, the `skills:` field on routines and reminders, and
-how to invoke skills interactively using the SDK's built-in `Skill` tool.
-The SDK discovers available skills natively via the
-`.claude/skills/ -> ../skills/` symlink, so no custom index is appended
-to the system prompt.
+how to invoke skills interactively. The SDK discovers available skills
+automatically, so no custom index is added to the system prompt.
 
 ## Background preamble
 
-When a routine, reminder, or webhook fires as a background fork, a preamble
-is prepended to the prompt. This is built by `build_bg_preamble` in
-`scheduling/preamble.py` and contains these sections in order:
+When a routine, reminder, or webhook runs in the background, the bot
+receives additional instructions at the top of the prompt. These cover:
 
 | Section | Condition | Content |
 |---------|-----------|---------|
@@ -231,15 +225,15 @@ Upcoming bg tasks (next 3h):
 ~2 refills before last task.
 ```
 
-Constants controlling the schedule window:
-
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `_GRACE_MINUTES` | `15` | Grace period for recently-fired items |
-| `_BASE_WINDOW_HOURS` | `3` | Default lookahead window |
-| `_MIN_FORWARD` | `3` | Minimum forward items to show |
-| `_MAX_WINDOW_HOURS` | `12` | Maximum window expansion |
-| `_TRUNCATE_LEN` | `60` | Max description length before truncation |
+<Accordion title="Developer reference: schedule window constants">
+  | Constant | Value | Purpose |
+  |----------|-------|---------|
+  | `_GRACE_MINUTES` | `15` | Grace period for recently-fired items |
+  | `_BASE_WINDOW_HOURS` | `3` | Default lookahead window |
+  | `_MIN_FORWARD` | `3` | Minimum forward items to show |
+  | `_MAX_WINDOW_HOURS` | `12` | Maximum window expansion |
+  | `_TRUNCATE_LEN` | `60` | Max description length before truncation |
+</Accordion>
 
 The preamble also includes a decision heuristic: "Would the user regret
 missing this?" Informational items should use `report_updates`, while
@@ -250,7 +244,7 @@ devastating to miss.
 ## Scheduled prompt tags
 
 When the scheduler fires a routine or reminder, the prompt is tagged so
-the agent knows the source:
+the bot knows the source:
 
 | Tag | Meaning |
 |-----|---------|
@@ -293,15 +287,14 @@ TASK (from your webhook spec -- this is your instruction):
 CI result for ollim-bot: failure. Check if it warrants attention.
 ```
 
-The explicit labeling of webhook payload data as "untrusted" is a prompt
-injection defense — it prevents external payloads from being interpreted
-as agent instructions.
+The explicit labeling of webhook data as "untrusted" is a security
+measure — it prevents external data from being misread as instructions
+for the bot.
 
 ## Fork resume prompt
 
-When a user clicks a button on a background fork's output, the fork
-resumes as an interactive session. The `fork_bg_resume_prompt` function
-in `prompts.py` generates the transition prompt:
+When you click a button on a background fork's output, the fork resumes
+as an interactive session. The bot receives a transition prompt:
 
 ```text
 [fork-started] You are now inside an interactive fork resumed from a
@@ -315,11 +308,11 @@ interactive fork, not a one-shot answer.
 
 ## Subagent prompts
 
-Each [subagent](/extending/subagents) has its own system prompt — a standalone
-markdown file with YAML frontmatter in `subagents/`. These are
-not derived from `build_system_prompt()`. Each file contains task-specific
-instructions, available commands, output format requirements, and triage
-rules.
+Each [subagent](/extending/subagents) has its own system prompt — a
+standalone markdown file with a configuration header in `subagents/`.
+These are separate from the main system prompt. Each file contains
+task-specific instructions, available commands, output format
+requirements, and triage rules.
 
 | File | Subagent | Key focus |
 |------|----------|-----------|
@@ -346,6 +339,6 @@ has the opposite bias: a wrong answer is worse than "unknown."
     The background preamble in context — fork config and reporting modes.
   </Card>
   <Card title="Routines" icon="clock" href="/scheduling/routines">
-    YAML frontmatter spec referenced by the system prompt.
+    Routine field reference used by the system prompt.
   </Card>
 </Columns>
