@@ -16,8 +16,7 @@ one-click completion or deletion.
 ## Setup
 
 No additional setup is required beyond the shared Google OAuth flow. The
-`https://www.googleapis.com/auth/tasks` scope is part of the default scope
-list in `google/auth.py`. Once you've completed the
+`tasks` scope is included by default. Once you've completed the
 [Google integration](/integrations/google-overview) setup, Tasks is ready to use.
 
 ## Usage
@@ -88,14 +87,13 @@ list in `google/auth.py`. Once you've completed the
     ### Embed buttons
 
     When the agent presents tasks in a Discord embed, it can attach action
-    buttons using the `discord_embed` MCP tool:
+    buttons:
 
-    - **Complete** — button action `task_done:<task_id>`, marks the task as completed
-    - **Delete** — button action `task_del:<task_id>`, permanently removes the task
+    - **Complete** — marks the task as completed
+    - **Delete** — permanently removes the task
 
-    Clicking a button triggers an ephemeral Discord response confirming the
-    action and appends a context update to the session
-    (e.g., `User completed task "Buy groceries"`), so the agent knows what you did.
+    Clicking a button shows a temporary confirmation only you can see.
+    The agent also gets an update so it knows what you did.
 
     ### CLI delegation
 
@@ -110,19 +108,6 @@ All operations use your default task list (`@default`). ollim-bot does not
 support multiple task lists.
 </Note>
 
-## API helpers
-
-Two functions are exported from `google/tasks.py` for use by Discord button
-handlers in `views.py`:
-
-| Function | Signature | Returns |
-|----------|-----------|---------|
-| `complete_task` | `complete_task(task_id: str) -> str` | Task title |
-| `delete_task` | `delete_task(task_id: str) -> str` | Task title |
-
-Both are called via `asyncio.to_thread` in the button handlers to avoid
-blocking the Discord event loop.
-
 ## Troubleshooting
 
 <AccordionGroup>
@@ -133,8 +118,7 @@ blocking the Discord event loop.
   </Accordion>
   <Accordion title="How do I find a task ID?">
     Task IDs are displayed as the first column in `ollim-bot tasks list`
-    output. When using embed buttons, the agent encodes the ID into the
-    button action automatically.
+    output. When using embed buttons, the agent handles IDs automatically.
   </Accordion>
   <Accordion title="Due dates show the wrong day">
     Due dates are stored as midnight UTC. The Google Tasks API and CLI both
