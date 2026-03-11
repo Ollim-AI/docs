@@ -32,7 +32,8 @@ macOS, or `C:\Users\you` on Windows.
     > I work from home, and I have ADHD — mornings are my hardest
     > time to get started."
 
-    The bot will write the file for you.
+    The bot will write the file for you and keep the new context in mind
+    for the rest of the session — no restart needed.
   </Tab>
   <Tab title="Create it yourself">
     Create `USER.md` at the path above in any text editor. It's plain
@@ -88,13 +89,22 @@ save that to your profile:
 > 1-2pm — don't ping me during those."
 
 This is especially useful for context that comes up naturally — you
-don't have to remember to edit the file later.
+don't have to remember to edit the file later. The bot keeps the new
+context in mind immediately, not just for future sessions.
 
 ## When changes take effect
 
-Like `IDENTITY.md`, changes take effect after a `/restart`, `/clear`,
-or the next time the bot starts up. The file is loaded fresh each time
-the system prompt is built.
+It depends on how the change was made:
+
+- **You or the bot added it during conversation** — the bot already
+  knows what changed and acts on it immediately. The file is also saved,
+  so the context persists across restarts.
+- **The change happened in a fork** — the fork sends an update to the
+  main session summarizing what was added, so the main session knows
+  about it too.
+- **You edited the file yourself** — changes take effect after
+  `/restart`, `/clear`, or the next time the bot starts up. The bot
+  doesn't watch the file for changes mid-session.
 
 ## Next steps
 

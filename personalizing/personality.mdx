@@ -41,7 +41,8 @@ You have two options:
     > "Update your personality to be more casual and use humor. Also,
     > stop celebrating small wins — I find it patronizing."
 
-    The bot will edit the file and confirm the changes.
+    The bot will edit the file and confirm the changes. It also keeps the
+    new personality in mind for the rest of the session — no restart needed.
   </Tab>
   <Tab title="Edit the file yourself">
     Open `IDENTITY.md` from the path above in any text editor. It's
@@ -70,9 +71,17 @@ are some things people customize:
 
 ## When changes take effect
 
-Changes to `IDENTITY.md` take effect the next time the bot builds its
-system prompt — after a `/restart`, `/clear`, or the next time the bot
-starts up. The file is loaded fresh each time.
+It depends on how the change was made:
+
+- **You asked the bot** — the bot applies the changes immediately. It
+  knows what it just edited and adjusts its behavior for the rest of the
+  session. The file is also saved, so the changes persist across restarts.
+- **You asked the bot in a fork** — the fork sends an update to the
+  main session summarizing the changes, so the main session knows about
+  them too.
+- **You edited the file yourself** — changes take effect after
+  `/restart`, `/clear`, or the next time the bot starts up. The bot
+  doesn't watch the file for changes mid-session.
 
 <Tip>
 Your edits persist across bot updates. The bot only writes the default
