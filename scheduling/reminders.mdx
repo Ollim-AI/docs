@@ -15,6 +15,7 @@ A reminder tells ollim-bot to run a prompt at a specific future time. When
 created, you specify a delay in minutes and the scheduler computes the
 absolute fire time. Like routines, reminders can run in the foreground
 (sending you a DM) or in the background (running silently in a fork).
+Reminders default to background mode.
 
 Reminders are stored as markdown files in `~/.ollim-bot/reminders/`. The
 scheduler polls this directory every 10 seconds. After a reminder fires,
@@ -37,7 +38,6 @@ frontmatter.
 id: "f4a9c1e2"
 run-at: "2026-02-24T15:30:00+01:00"
 description: "Check deployment status"
-background: true
 ---
 Check if the deployment completed successfully.
 If there were errors, send me an embed with the details.
@@ -55,7 +55,7 @@ If there were errors, send me an embed with the details.
 | `id` | `str` | — | Auto-generated 8-char hex ID |
 | `run-at` | `str` | — | ISO datetime (computed from delay) |
 | `description` | `str` | `""` | Short summary for `reminder list` |
-| `background` | `bool` | `false` | Run in a background fork |
+| `background` | `bool` | `true` | Run in a background fork |
 | `chain-depth` | `int` | `0` | Current position in a chain |
 | `max-chain` | `int` | `0` | Max follow-up depth (0 = plain one-shot) |
 | `chain-parent` | `str \| null` | `null` | ID of the chain root |
@@ -87,14 +87,14 @@ Filenames are slugified from the message text (lowercase, hyphens, max
     ollim-bot reminder add \
       --message "Check if the deployment completed successfully" \
       --delay 30 \
-      --description "Check deployment status" \
-      --background
+      --description "Check deployment status"
     ```
 
-    Additional flags for background reminders:
+    Reminders run in the background by default. These flags configure background behavior:
 
     | Flag | Description |
     |------|-------------|
+    | `--foreground` | Run in the foreground instead of a background fork |
     | `--model <model>` | Model override |
     | `--no-thinking` | Disable extended thinking |
     | `--isolated` | Run with fresh context |
@@ -109,8 +109,7 @@ Filenames are slugified from the message text (lowercase, hyphens, max
     ollim-bot reminder add \
       --message "Check for a response to my email" \
       --delay 60 \
-      --max-chain 3 \
-      --background
+      --max-chain 3
     ```
 
     **List pending reminders:**
@@ -122,8 +121,8 @@ Filenames are slugified from the message text (lowercase, hyphens, max
     Output:
 
     ```text
-      f4a9c1e2  [bg] at 2026-02-24T15:30  Check deployment status
-      b7d3e8a1  [bg] at 2026-02-24T16:00  (chain 1/3)  Check for email response
+      f4a9c1e2  at 2026-02-24T15:30  Check deployment status
+      b7d3e8a1  at 2026-02-24T16:00  (chain 1/3)  Check for email response
     ```
 
     **Cancel a reminder:**
@@ -183,7 +182,6 @@ matters.
 id: "b7d3e8a1"
 run-at: "2026-02-24T16:00:00+01:00"
 description: "Check for email response"
-background: true
 max-chain: 3
 chain-depth: 0
 chain-parent: "b7d3e8a1"
@@ -198,29 +196,16 @@ from the parent via `ChainContext`.
 
 ## Background vs foreground
 
-By default, reminders run in the **foreground** — the agent sends you
-a DM when the reminder fires, running the prompt in the main session
-context.
+By default, reminders run in the **background** — silently in a
+disposable fork. Text output is discarded — the agent must use
+`ping_user` or `discord_embed` to reach you.
 
-Set `background: true` to run the reminder silently in a background
-fork. Text output is discarded — the agent must use `ping_user` or
-`discord_embed` to reach you.
+Set `background: false` (or pass `--foreground` via CLI) to run the
+reminder in the foreground instead. The agent sends you a DM with its
+response, just like a normal conversation.
 
 <Tabs>
-  <Tab title="Foreground">
-    The reminder fires and the agent sends you a DM with its response,
-    just like a normal conversation.
-
-    ```yaml title="reminders/standup-prep.md"
-    ---
-    id: "a2b3c4d5"
-    run-at: "2026-02-24T09:45:00+01:00"
-    description: "Standup prep"
-    ---
-    What should I mention in standup? Check my recent tasks and calendar.
-    ```
-  </Tab>
-  <Tab title="Background">
+  <Tab title="Background (default)">
     The reminder runs in a forked session. Background reminders support
     additional configuration for model, thinking, isolation, and tool
     restrictions.
@@ -230,7 +215,6 @@ fork. Text output is discarded — the agent must use `ping_user` or
     id: "f4a9c1e2"
     run-at: "2026-02-24T15:30:00+01:00"
     description: "Check deployment status"
-    background: true
     isolated: true
     model: "haiku"
     ---
@@ -238,12 +222,25 @@ fork. Text output is discarded — the agent must use `ping_user` or
     If there were errors, send me an embed with the details.
     ```
   </Tab>
+  <Tab title="Foreground">
+    The reminder fires and the agent sends you a DM with its response,
+    just like a normal conversation.
+
+    ```yaml title="reminders/standup-prep.md"
+    ---
+    id: "a2b3c4d5"
+    run-at: "2026-02-24T09:45:00+01:00"
+    description: "Standup prep"
+    background: false
+    ---
+    What should I mention in standup? Check my recent tasks and calendar.
+    ```
+  </Tab>
 </Tabs>
 
 <Tip>
-  Combine `background: true` with `max-chain` for monitoring tasks.
-  The agent checks periodically in the background and only pings you
-  when there is something to report.
+  Add `max-chain` for monitoring tasks. The agent checks periodically
+  in the background and only pings you when there is something to report.
 </Tip>
 
 ## Overdue reminders
@@ -269,6 +266,7 @@ hours late may warrant different wording than one arriving on time.
 id: "e1f2a3b4"
 run-at: "2026-02-24T14:00:00+01:00"
 description: "Break reminder"
+background: false
 ---
 Time for a break. What have I been working on for the last 2 hours?
 ```
@@ -280,7 +278,6 @@ Time for a break. What have I been working on for the last 2 hours?
 id: "c5d6e7f8"
 run-at: "2026-02-24T13:00:00+01:00"
 description: "CI pipeline check"
-background: true
 isolated: true
 max-chain: 5
 chain-depth: 0
@@ -301,7 +298,6 @@ If passed, send me an embed. If failed, ping me with the error.
 id: "a8b9c0d1"
 run-at: "2026-02-24T12:00:00+01:00"
 description: "Inbox scan"
-background: true
 isolated: true
 allow-ping: false
 allowed-tools:

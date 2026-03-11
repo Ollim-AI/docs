@@ -265,7 +265,7 @@ enough for a single gentle ping:
 
 ## 4. Schedule
 
-Schedule with: `ollim-bot reminder add --delay <mins> --background -m "<prompt>" -d "Bedtime ping"`
+Schedule with: `ollim-bot reminder add --delay <mins> -m "<prompt>" -d "Bedtime ping"`
 
 No chain needed — single ping, no follow-up. Check for existing
 bedtime reminders first — don't duplicate.
@@ -470,7 +470,6 @@ agent during conversation when the user mentioned a pickup.
 ---
 id: "85b192a2"
 run-at: "2026-02-25T14:49:07-08:00"
-background: true
 ---
 Cake pickup in 45 min! Main Street Bakery, 3:30 PM pickup.
 Then head to pick up your friend (~4:30 PM).
@@ -503,8 +502,9 @@ wallet and redeem. 3 more batches remaining. Don't let this slip.
 **Key patterns:**
 - **Self-contained context** — the reminder includes everything a
   future agent needs (batch number, remaining count, action to take)
-- **Foreground** — no `background: true`, so this fires as a direct DM
-  for maximum visibility on a financial deadline
+- **Background by default** — runs in a background fork and pings via
+  `ping_user` for maximum visibility on a financial deadline. Add
+  `background: false` if you prefer a direct DM instead
 - **Far future** — scheduled 6 weeks out; the scheduler handles dates far in the future
   without any special configuration
 
@@ -515,15 +515,15 @@ progressive follow-up, others use a single fire-and-forget reminder:
 
 ```bash
 # Workout follow-up — chain (from workout-nudge routine)
-ollim-bot reminder add --delay 120 --background --max-chain 2 \
+ollim-bot reminder add --delay 120 --max-chain 2 \
   -m "Check if workout was completed. If not, offer quick 15-min option."
 
 # Chore follow-up — chain (from chore-time routine)
-ollim-bot reminder add --delay 60 --background --max-chain 2 \
+ollim-bot reminder add --delay 60 --max-chain 2 \
   -m "Check if chore task was completed. Gentle nudge if not."
 
 # Bedtime ping — single (from nightly-sleep routine)
-ollim-bot reminder add --delay 180 --background \
+ollim-bot reminder add --delay 180 \
   -m "Bedtime ping. It's 1:00 AM — prescribed bedtime. ..."
 ```
 

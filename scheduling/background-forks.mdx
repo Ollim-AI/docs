@@ -4,8 +4,8 @@ description: "Configure disposable agent sessions for routines and reminders wit
 ---
 
 Background forks run agent tasks on disposable sessions that don't pollute
-your main conversation. Routines and reminders with `background: true`
-execute this way — the agent does its work, optionally pings you or reports
+your main conversation. Routines with `background: true` and all reminders
+(which default to background) execute this way — the agent does its work, optionally pings you or reports
 findings, and the fork is discarded.
 
 ## Overview
@@ -258,7 +258,6 @@ A background reminder with chain follow-ups:
 ---
 id: take-medication
 run-at: "2026-02-24T09:00:00-08:00"
-background: true
 max-chain: 3
 update-main-session: freely
 description: Medication reminder
