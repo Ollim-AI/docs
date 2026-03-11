@@ -172,19 +172,26 @@ Start with `docs.json`. Only add `custom.css` when config doesn't support the st
 
 ### 10. Verify
 
-Run through before submitting. Fix any failures and re-verify. If issues persist after two fix attempts, stop and report the remaining failures to the user:
+Run through before submitting. Fix any failures and re-verify. If issues persist after two fix attempts, stop and report the remaining failures to the user.
 
+**Structural checks** (every page):
 - [ ] Frontmatter includes `title` and `description`
 - [ ] All code blocks have language tags
 - [ ] Internal links use root-relative paths without file extensions
 - [ ] New pages are added to `docs.json` navigation
-- [ ] Content matches the style of surrounding pages
-- [ ] No marketing language or filler phrases
 - [ ] Headings are sequential (no skipped levels) with unique names at each level
-- [ ] Link text is descriptive (no "click here", "learn more", or bare URLs)
 - [ ] TODOs are clearly marked for anything uncertain
 - [ ] `mint broken-links` passes
 - [ ] `mint validate` passes
+
+**Content quality analysis** — read `page-review-checklist.md` and run the sections relevant to the page. Skip sections that don't apply (e.g., skip media checks if no images, skip video checks if no embeds). Key areas:
+- [ ] Accessibility: alt text, table headers, embeds, color contrast, code block context
+- [ ] Content type structure: page follows the structural expectations for its type (how-to, tutorial, explanation, reference)
+- [ ] Style & tone: consistent terminology, single audience, no marketing language or filler, user-facing language
+- [ ] Linking: no circular links, descriptive link text
+- [ ] SEO: title/description length, keywords in headings and alt text
+- [ ] Media: supplementary only, appropriate type for the content
+- [ ] Content matches the style of surrounding pages
 
 ## Reusable content (snippets)
 
@@ -218,6 +225,8 @@ Mintlify deploys automatically when changes are pushed to the connected Git repo
 | `mint dev` | Local preview at localhost:3000 |
 | `mint broken-links` | Check internal links |
 | `mint a11y` | Check accessibility issues |
+| `mint a11y --skip-contrast` | Check alt text only |
+| `mint a11y --skip-alt-text` | Check contrast only |
 | `mint rename` | Rename/move files and update references |
 | `mint validate` | Validate documentation builds |
 
