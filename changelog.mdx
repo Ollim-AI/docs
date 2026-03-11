@@ -7,7 +7,7 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Note>ollim-bot has been in active development since February 9, 2026 with 516 commits across 29 active development days.</Note>
+<Note>ollim-bot has been in active development since February 9, 2026 with 527 commits across 29 active development days.</Note>
 
 ## Mar 10-11, 2026
 
@@ -25,6 +25,22 @@ chronological order.
   prompts and scoped to agent-initiated forks only.
 - **Terminology consistency** — docstrings and internal prompts updated
   to use "background fork" consistently (docs already used correct terms).
+- **Context usage warning** — a small annotation appears after responses
+  when context exceeds 60% of the 200k window
+  (`context: 67% (134k) — consider /compact`). Escalates at 80% with
+  "compaction soon" messaging, giving you a heads-up to
+  [compact proactively](/core-usage/conversations#context-and-memory)
+  before auto-compaction kicks in.
+- **/setup wizard** — guided `/setup` command that walks through
+  configuring names, [personality](/personalizing/personality), and
+  [user context](/personalizing/user-context). Detects fresh vs
+  configured state and offers fast or extended paths.
+- **Nested tool activity** — subagent status messages now show what tool
+  the subagent is using (e.g., `Task(desc) · Read... (12s)`) instead of
+  a static timer.
+- Internal: extracted shared formatting helpers, deferred task progress
+  Discord edits for rate limit relief, updated history-reviewer for
+  current `claude-history` CLI, made setup skill self-contained.
 
 ## Mar 9-10, 2026
 

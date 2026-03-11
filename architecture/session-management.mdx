@@ -83,6 +83,8 @@ history to free up space. This happens through two paths:
   original message against the freshly compacted context so the agent
   produces a response without you needing to repeat yourself.
 
+The bot also shows a **context usage warning** after responses when context exceeds 60% of the window — escalating at 80% — so you can [compact proactively](/core-usage/conversations#context-and-memory) before auto-compaction kicks in.
+
 Both paths log a `compacted` event to the session history, linking the new
 session to the previous one.
 

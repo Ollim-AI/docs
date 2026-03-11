@@ -91,6 +91,8 @@ This tells you compaction happened, how much context was compacted, and
 how long it took. The response continues in a new message after the
 annotation. See [Auto-compaction annotation](/architecture/streaming#auto-compaction-annotation) for the technical flow.
 
+Before auto-compaction becomes necessary, the bot shows a **context usage warning** — a small annotation after responses when context exceeds 60% of the window. At 80%, the warning escalates to recommend `/compact`. This gives you a heads-up to compact proactively.
+
 You can also manage this manually:
 
 - **`/compact`** — compact conversation context while keeping the session. Use the optional `instructions` parameter to tell it what to preserve (e.g., "keep the routine config details").
