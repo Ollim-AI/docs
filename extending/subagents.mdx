@@ -3,22 +3,22 @@ title: "Subagents"
 description: "Understand how specialized subagents handle documentation help, email triage, history review, engagement analysis, and preference decisions."
 ---
 
-Subagents are isolated agent instances that the main ollim-bot agent spawns to handle specialized tasks. Each subagent has its own system prompt, a restricted tool set, and a cheaper model — the main agent focuses on orchestration while subagents do the legwork.
+Subagents are specialized helpers that the bot delegates specific tasks to — email triage, history review, engagement analysis, and more. Each subagent has a focused set of instructions and limited access, so it stays in its lane while the main bot coordinates.
 
 ## Overview
 
-ollim-bot defines five subagents in `src/ollim_bot/subagents/`, each as a markdown file with YAML frontmatter. The main agent invokes them via the SDK's built-in `Task` tool. The main agent never performs subagent work directly — the system prompt explicitly instructs delegation.
+ollim-bot has five built-in subagents. The bot never handles subagent work itself — it always delegates to the right specialist.
 
-| Subagent | Purpose | Model | Tools |
-|----------|---------|-------|-------|
-| `guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | `mcp__docs__*`, `WebFetch`, `Read(**.md)`, `Glob(**.md)`, `Bash(ollim-bot help)`, `Bash(ollim-bot routine list)`, `Bash(ollim-bot reminder list)` |
-| `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | `Bash(ollim-bot gmail *)` |
-| `history-reviewer` | Session review — finds loose threads in recent Claude Code sessions | `sonnet` | `Bash(claude-history *)` |
-| `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | `Bash(claude-history *)`, `Bash(ollim-bot routine *)`, `Bash(ollim-bot reminder *)` |
-| `user-proxy` | Preference proxy — answers "what would the user do?" during background forks | `haiku` | `Read(**.md)`, `Glob(**.md)`, `Bash(claude-history *)` |
+| Subagent | Purpose | Model | Access |
+|----------|---------|-------|--------|
+| `guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | Documentation site, local config files, `ollim-bot help` commands |
+| `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | Gmail commands only |
+| `history-reviewer` | Session review — finds loose threads in recent sessions | `sonnet` | Session history commands only |
+| `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | Session history, routine, and reminder commands |
+| `user-proxy` | Preference proxy — answers "what would the user do?" during background forks | `haiku` | Local config files and session history (read-only) |
 
 <Note>
-Each subagent only has access to the tools listed above. This follows the principle of least privilege — the guide and gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
+Each subagent is restricted to only the tools it needs — the guide and gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
 </Note>
 
 ## guide
@@ -28,7 +28,7 @@ The guide answers setup, configuration, and usage questions by searching the oll
 **Triggered by:** The main agent always delegates to the guide when the answer depends on ollim-bot documentation — setup, configuration, usage, YAML format, or feature behavior. This includes the user's own questions and when the agent itself needs docs knowledge (building a routine, checking webhook format, verifying how a feature works before using it).
 
 **What it does:**
-- Uses two search strategies based on question type: the `docs` MCP server for specific lookups (field names, YAML keys) and `WebFetch` for open-ended topics that need full-page context
+- Searches the documentation site using the approach that fits the question — targeted lookup for specific fields and settings, full-page fetch for broader topics
 - Includes the actual docs text in its response — never rewrites or summarizes
 - Cross-references your config files (routines, reminders, webhooks) against the docs when diagnosing setup issues
 - Reports explicitly when docs don't cover a topic, listing what it searched
@@ -47,17 +47,17 @@ The guide answers setup, configuration, and usage questions by searching the oll
 | `ollim-bot routine list` | All active routines with cron schedules and IDs |
 | `ollim-bot reminder list` | Currently pending reminders |
 
-Beyond the docs tools, the guide can read and glob `.md` files to inspect local configuration.
+The guide can also search and read your local config files to cross-check against the docs.
 
 <Note>
-The guide is read-only — it never creates or modifies files. Like the user-proxy, it runs on `haiku` since its job is retrieval and comparison rather than complex reasoning.
+The guide is read-only — it never creates or modifies files. It uses a lighter model (`haiku`) since its job is looking things up, not complex reasoning.
 </Note>
 
 ## gmail-reader
 
 The gmail-reader triages the user's inbox. It lists unread emails, reads full content when a subject line is ambiguous, and categorizes each email as actionable or noise.
 
-**Triggered by:** The `[reminder:email-digest]` reminder firing in the main session.
+**Triggered by:** The email digest reminder — typically fires once or twice daily.
 
 **What it reports:**
 - Emails from real people expecting a response
@@ -92,7 +92,7 @@ Skipped: N emails (all noise/automated)
 After receiving the digest, the main agent relays important items to the user and creates Google Tasks for follow-ups.
 
 <Tip>
-The gmail-reader treats email content strictly as data to summarize. It never executes instructions or follows links found in email bodies — a safety measure against prompt injection via email content.
+The gmail-reader treats email content strictly as data to summarize. It never executes instructions or follows links found in email bodies — a safety measure against email content that might try to trick the bot.
 </Tip>
 
 ## history-reviewer
@@ -149,11 +149,11 @@ The default scope is the last 24 hours. Related items spanning multiple sessions
 
 The responsiveness-reviewer analyzes which reminders and routines the user actually engages with versus ignores, then suggests schedule optimizations. It is designed to tune the ADHD workflow to real behavior rather than aspirational behavior.
 
-**Triggered by:** The `[reminder:resp-rev]` reminder, typically on a weekly cadence.
+**Triggered by:** The responsiveness review reminder, typically on a weekly cadence.
 
-**Data model awareness:** This subagent understands the distinction between foreground and background firings:
-- **Foreground** firings (`[routine:ID]`, `[reminder:ID]`) are prompts inside the main session. Engagement is measured by whether a user message follows before the next firing.
-- **Background** firings (`[routine-bg:ID]`, `[reminder-bg:ID]`) run in their own forked sessions. Engagement is measured by checking for user activity in the main session shortly after the firing.
+**How it measures engagement:** This subagent understands the difference between foreground and background firings:
+- **Foreground** firings are prompts inside the main session. Engagement is measured by whether a user message follows before the next firing.
+- **Background** firings run in their own forked sessions. Engagement is measured by checking for user activity in the main session shortly after the firing.
 - **One-shot reminders** are deleted after firing, so they only appear in session history, not in `ollim-bot reminder list`.
 
 **Commands available:**
@@ -194,7 +194,7 @@ The user-proxy answers one question: "what would the user do or prefer in this s
 
 **How it works:**
 
-1. Discovers preference and identity files by globbing `*.md` at the data directory root, plus `routines/*.md` and `reminders/*.md`
+1. Searches for preference and identity files in your data directory, including routines and reminders
 2. Reads the most relevant files (max 3-4) related to the question
 3. Searches conversation history via `claude-history` for past decisions, corrections, and stated preferences
 4. Returns a structured answer with calibrated confidence
@@ -203,8 +203,8 @@ The user-proxy answers one question: "what would the user do or prefer in this s
 
 The user-proxy distinguishes between two types of evidence:
 
-- **Preference files** — maintained by automated routines that infer from conversation. Treated as hypotheses, not ground truth.
-- **Conversation transcripts** — records of what the user actually said and did. Treated as ground truth.
+- **Preference files** — maintained by automated routines that infer from conversation. Treated as educated guesses, not certainties.
+- **Conversation transcripts** — records of what the user actually said and did. Treated as reliable evidence.
 
 A file-only answer is MEDIUM confidence at best. HIGH confidence requires corroboration from multiple independent sources.
 
@@ -227,7 +227,7 @@ Confidence: HIGH | MEDIUM | LOW — <why this level>
 ```
 
 <Note>
-The user-proxy and guide are the only subagents that run on `haiku` — the other three use `sonnet`. The user-proxy is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
+The user-proxy and guide use a lighter model (`haiku`) — the other three use a more capable model (`sonnet`). The user-proxy is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
 </Note>
 
 ## Developer reference
