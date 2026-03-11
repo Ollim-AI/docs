@@ -162,7 +162,7 @@ For **per-job injection** (routines and reminders), the scheduler builds a `REQU
 
 ```python
 def _merge_skill_tools(config: BgForkConfig, skill_names: list[str] | None) -> BgForkConfig:
-    """Add Skill(<name> *) patterns to allowed_tools for bg fork dispatch."""
+    """Add Skill(<name> *) patterns to allowed_tools for background fork dispatch."""
     if not skill_names:
         return config
     additions = [f"Skill({name} *)" for name in skill_names]
