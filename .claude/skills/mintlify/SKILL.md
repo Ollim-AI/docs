@@ -27,29 +27,60 @@ Build and maintain documentation sites with Mintlify. MDX files with YAML frontm
 
 ## Workflow
 
+Each step produces a **named output** — state it in your response before moving on. Later steps consume earlier outputs, so do not skip ahead.
+
 ### 1. Understand the project
 
 Read `docs.json` in the project root first. It defines navigation structure, theme, colors, links, API specs, and all site-wide settings.
 
-Understanding `docs.json` tells you:
-- What pages exist and how they're organized
-- What navigation groups and patterns are used
-- What theme and configuration the site uses
+**Output → navigation context**: what pages exist, how they're organized, what navigation groups and patterns are used, what theme the site uses.
 
 ### 2. Check for existing content
 
-Search the docs before creating new pages — because creating a new page when content already exists causes duplication and navigation confusion, and merging duplicate pages later is costly while adding a section to an existing page is trivial. You may need to:
+Search the docs before creating new pages — creating a new page when content already exists causes duplication and navigation confusion, and merging duplicate pages later is costly while adding a section to an existing page is trivial. You may need to:
 - Update an existing page instead of creating a new one
 - Add a section to an existing page
 - Link to existing content rather than duplicating
 
 If the user requests a new page that substantially overlaps with existing content, flag the overlap and suggest updating the existing page instead.
 
-### 3. Read surrounding pages
+**Output → overlap assessment**: whether to create a new page or update an existing one, and why.
 
-Before writing, read 2-3 similar pages to understand the site's voice, structure, formatting conventions, and level of detail. Match the existing style — even when it diverges from this skill's conventions (see priority ordering above).
+### 3. Define audience
 
-### 4. Choose components
+Before writing, define who this page is for. Each page targets one specific persona — writing for multiple audiences leads to compromises that satisfy no one.
+
+State:
+- **Who** is reading this page?
+- **What** are they trying to accomplish?
+- **Prior knowledge** — what do they already know?
+
+For ollim-bot: both humans and agents read these docs. Structure for both — humans scan headings and cards, agents parse tables, code blocks, and explicit parameter lists. Both benefit from consistent patterns. The human audience is mainly non-technical; avoid jargon.
+
+**Output → audience statement**: one sentence naming the persona, their goal, and their knowledge level.
+
+### 4. Read surrounding pages
+
+Read 2-3 similar pages to understand the site's voice, structure, formatting conventions, and level of detail. Match the existing style — even when it diverges from this skill's conventions (see priority ordering above).
+
+**Output → style notes**: voice, formatting patterns, detail level, and component usage observed in neighbor pages.
+
+### 5. Assign content type
+
+Classify the page into exactly one content type. Do not mix types on a single page — a tutorial that detours into reference material loses the reader.
+
+| Type | Orientation | Structural template |
+|------|-------------|-------------------|
+| **How-to guide** | Task-oriented | Title starts with a verb. Description: "[Do X] to [achieve Y]". Prerequisites section. Action-oriented headings. Optional: verification section, troubleshooting ("Problem → Solution"). |
+| **Tutorial** | Learning-oriented | Title: "[Verb] [specific outcome]". Description: "Learn how to [outcome] by [method]". Intro with expected learnings. Prerequisites with time commitment. Sequential steps with milestones. Next steps. |
+| **Explanation** | Understanding-oriented | Title: "About [concept]". Description: "Understand [concept] and how it works within [context]". Plain-language definition. "How [concept] works" section. "Why [approach]" with trade-offs. "When to use [concept]" with scenarios. |
+| **Reference** | Information-oriented | Title: "[Feature] reference". One-sentence opener. Properties with type, required status, descriptions. Basic and advanced examples. For APIs: response structure. |
+
+Most early-stage docs are how-to guides or reference pages.
+
+**Output → content type + template**: the chosen type and which structural elements from the template apply to this page.
+
+### 6. Choose components
 
 When using components you haven't used recently in this session, fetch the [components overview](https://mintlify.com/docs/components) to verify current syntax. Common decision points:
 
@@ -74,15 +105,9 @@ When using components you haven't used recently in this session, fetch the [comp
 | `<Warning>` | Potentially destructive actions |
 | `<Check>` | Success confirmation |
 
-### 5. Write content
+### 7. Write content
 
-Identify the page's content type — this shapes the writing approach:
-- **Tutorial**: Learning-oriented, step-by-step, assumes no prior knowledge. Focus on concrete actions, minimize choices.
-- **How-to guide**: Task-oriented, assumes some knowledge. Get straight to the solution, omit unnecessary context.
-- **Reference**: Information-oriented, scannable, concise. Prioritize consistency and copy-pasteable examples.
-- **Explanation**: Understanding-oriented, provides context and rationale. Draw connections, acknowledge alternatives.
-
-Most early-stage docs are how-to guides or reference pages. Don't mix types on a single page — a tutorial that detours into reference material loses the reader.
+Using the **audience statement** from step 3, the **style notes** from step 4, and the **content type template** from step 5, write the page.
 
 **Frontmatter** — every page requires `title`. Include `description` for SEO and navigation. Keep titles under 60 characters and descriptions under 160 characters for search engine display:
 
@@ -108,8 +133,9 @@ Optional frontmatter: `sidebarTitle`, `icon`, `tag`, `mode` (`default`, `wide`, 
 - New pages must be added to `docs.json` navigation to appear in the sidebar
 - Headings must follow sequential order — one H1 per page (from `title` frontmatter), then H2, H3 in order without skipping levels. Headings at the same level must have unique names.
 
-**Defaults** (follow unless the existing site establishes a different pattern):
+**Writing standards:**
 - Second-person voice ("you"), active voice, direct language
+- Imperative for instructions: "Create a file", not "A file should be created"
 - Sentence case for headings ("Getting started", not "Getting Started")
 - Lead with context: explain what something is before how to use it
 - Prerequisites at the start of procedural content
@@ -117,19 +143,23 @@ Optional frontmatter: `sidebarTitle`, `icon`, `tag`, `mode` (`default`, `wide`, 
 - Descriptive link text — `[configure authentication](/auth)`, not `[click here](/auth)` or `[learn more](/auth)`. Link text should make sense out of context.
 - Text context around code blocks — describe what the code does before the block so screen readers and skimmers can follow
 - Media is supplementary — never rely on images alone to convey information. If a workflow is clear in text, skip the screenshot. Every image is maintenance debt when the UI changes.
-- Consistent terminology — pick one term for each concept and use it across all pages
+- Consistent terminology — pick one term for each concept and use it across all pages. Check the CLAUDE.md terminology table.
+- Scannability — use headings for orientation, keep paragraphs short, use lists where appropriate
 
 **Avoid** (these degrade documentation quality regardless of context):
-- Marketing language ("powerful", "seamless", "robust") — because it erodes reader trust and adds no information
-- Filler phrases ("in order to", "it's important to note") — because they waste reader attention
-- Editorializing ("obviously", "simply", "just", "easily") — because they dismiss reader difficulty
+- Marketing language ("powerful", "seamless", "robust") — erodes reader trust, adds no information
+- Filler phrases ("in order to", "it's important to note") — wastes reader attention
+- Editorializing ("obviously", "simply", "just", "easily") — dismisses reader difficulty
+- Colloquialisms or informal expressions — harms clarity, especially if docs are localized
+- Product-centric jargon — use language users are familiar with, not internal terminology
+- Spelling and grammar errors — makes docs less credible and harder to read
 
 **Code examples:**
 - Keep examples simple and practical with realistic values (not "foo" or "bar")
 - One clear example is better than multiple variations
 - Test that code works before including it
 
-### 6. Choose navigation pattern
+### 8. Choose navigation pattern
 
 The `navigation` property in `docs.json` controls site structure. Match the existing pattern, or choose one when building from scratch:
 
@@ -149,18 +179,18 @@ The `navigation` property in `docs.json` controls site structure. Match the exis
 - **`expanded: false`** — collapse nested groups by default for reference sections
 - **`openapi`** — auto-generate pages from OpenAPI spec at group/tab level
 
-### 7. Document APIs (if applicable)
+### 9. Document APIs (if applicable)
 
 Choose based on what exists:
 - **Have an OpenAPI spec?** Add to `docs.json` with `"openapi": ["openapi.yaml"]`. Pages auto-generate. Reference in navigation as `GET /endpoint`. This is the most efficient and easiest to maintain.
 - **No spec?** Write endpoints manually with `api: "POST /users"` in frontmatter. More work but full control.
 - **Hybrid** — OpenAPI for most endpoints, manual pages for complex workflows.
 
-### 8. Update navigation
+### 10. Update navigation
 
 When you create a new page, add it to the appropriate group in `docs.json` — pages not in navigation won't appear in the sidebar. Hidden pages (accessible by URL but not in sidebar) are intentionally omitted from navigation.
 
-### 9. Customize appearance (if needed)
+### 11. Customize appearance (if needed)
 
 **Where to customize what:**
 - **Brand colors, fonts, logo** → `docs.json` — see [global settings](https://mintlify.com/docs/settings/global)
@@ -170,28 +200,85 @@ When you create a new page, add it to the appropriate group in `docs.json` — p
 
 Start with `docs.json`. Only add `custom.css` when config doesn't support the styling you need — because custom CSS creates a maintenance burden that scales with Mintlify updates.
 
-### 10. Verify
+### 12. Verify
 
 Run through before submitting. Fix any failures and re-verify. If issues persist after two fix attempts, stop and report the remaining failures to the user.
 
-**Structural checks** (every page):
+**Which passes to run** — tier by task size:
+
+| Task | Passes |
+|------|--------|
+| **Quick edit** (typo, wording, adding a paragraph) | Pass 1 only |
+| **New section** (adding a section to an existing page) | Passes 1–3 |
+| **New page** (creating a new page from scratch) | All 6 passes |
+
+#### Pass 1: Structural (must-pass — blocks publishing)
+
 - [ ] Frontmatter includes `title` and `description`
+- [ ] Description is 10–30 words, action-oriented
 - [ ] All code blocks have language tags
 - [ ] Internal links use root-relative paths without file extensions
 - [ ] New pages are added to `docs.json` navigation
 - [ ] Headings are sequential (no skipped levels) with unique names at each level
-- [ ] TODOs are clearly marked for anything uncertain
+- [ ] No TODOs left unmarked
 - [ ] `mint broken-links` passes
 - [ ] `mint validate` passes
 
-**Content quality analysis** — read `page-review-checklist.md` and run the sections relevant to the page. Skip sections that don't apply (e.g., skip media checks if no images, skip video checks if no embeds). Key areas:
-- [ ] Accessibility: alt text, table headers, embeds, color contrast, code block context
-- [ ] Content type structure: page follows the structural expectations for its type (how-to, tutorial, explanation, reference)
-- [ ] Style & tone: consistent terminology, single audience, no marketing language or filler, user-facing language
-- [ ] Linking: no circular links, descriptive link text
-- [ ] SEO: title/description length, keywords in headings and alt text
-- [ ] Media: supplementary only, appropriate type for the content
-- [ ] Content matches the style of surrounding pages
+#### Pass 2: Content type compliance
+
+Using the **content type + template** from step 5:
+
+- [ ] Page follows one content type — no mixing
+- [ ] Title matches the type's format (verb for how-to, "About X" for explanation, etc.)
+- [ ] Description matches the type's format
+- [ ] All required structural sections from the template are present
+- [ ] No structural sections from a different type bleed in
+
+Flag: missing required sections, wrong title format, type mixing.
+
+#### Pass 3: Style and tone
+
+- [ ] Second-person voice ("you"), active voice throughout
+- [ ] Imperative for instructions ("Create", not "You should create")
+- [ ] No marketing language ("powerful", "seamless", "robust")
+- [ ] No filler phrases ("in order to", "it's important to note", "it should be noted")
+- [ ] No editorializing ("obviously", "simply", "just", "easily")
+- [ ] No colloquialisms or informal expressions
+- [ ] No product-centric jargon — uses language the audience knows
+- [ ] Terminology matches CLAUDE.md terminology table (background fork, not bg fork; routine, not scheduled task; etc.)
+- [ ] Scannable — headings break up content, paragraphs are short, lists used where appropriate
+- [ ] Spelling and grammar are correct
+- [ ] Matches the voice and detail level from the **style notes** (step 4)
+
+#### Pass 4: Audience and scope
+
+- [ ] Page targets the one audience from the **audience statement** (step 3)
+- [ ] Content matches that audience's prior knowledge — not too advanced, not too basic
+- [ ] Not over-documented — excessive edge cases reduce navigability. Prioritize evergreen content.
+- [ ] No time-specific references that will go stale (use changelogs for that)
+- [ ] For ollim-bot: dual-audience structure works for both humans (scannable headings, cards) and agents (tables, code blocks, explicit parameters)
+
+#### Pass 5: Accessibility
+
+Skip individual checks that don't apply (no images → skip alt text). But do not skip the entire pass.
+
+- [ ] Images: alt text is specific (1-2 sentences), doesn't start with "Image of", includes "Screenshot of"/"Diagram of" when relevant
+- [ ] Tables: have headers, contain genuine tabular data (not used for layout)
+- [ ] Embeds: iframes and video embeds have descriptive `title` attributes
+- [ ] Video (if any): captions synchronized, speaker ID for multiple speakers, transcript provided as searchable text
+- [ ] Links: descriptive text that makes sense out of context — no "click here", "read more", bare URLs
+- [ ] Code blocks: text context before each block describing what the code does
+- [ ] Color: information not conveyed by color alone
+
+#### Pass 6: Maintenance signals
+
+- [ ] Technical claims verified against source code at `~/ollim-bot/src/ollim_bot/`
+- [ ] No references to features that may have changed without verification
+- [ ] If editing an existing page: check `git log` for last modification date — flag if unmodified 3+ months as potentially stale
+- [ ] Prefer removing inaccurate content over keeping it — wrong docs are worse than missing docs
+- [ ] If page has accumulated incremental fixes that make it incoherent, flag for full rewrite rather than patching further
+
+**Report format**: for each pass, state pass/fail with specific findings. Classify findings as **must-fix** (blocks publishing), **should-fix** (degrades quality), or **note** (minor improvement). Fix all must-fix items before submitting.
 
 ## Reusable content (snippets)
 
@@ -255,6 +342,7 @@ If migrating to Mintlify from ReadMe or Docusaurus, use the [@mintlify/scraping]
 - The user asks for marketing language or promotional tone — explain why it degrades reader trust
 - The request would break site navigation or leave orphaned pages
 - Content is visibly outdated or inaccurate — wrong docs are worse than missing docs because they waste reader time and erode trust. Flag it and suggest updating or removing.
+- Incremental patches have made a page incoherent — suggest a full rewrite instead of further patching
 
 **Don't ask when:**
 - The navigation pattern is already established in `docs.json` — match it
