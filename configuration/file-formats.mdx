@@ -49,7 +49,7 @@ Check the sleep tracker for any anomalies.
 ```
 
 <Note>
-Every background fork always receives `DEFAULT_BG_TOOLS` — help, tasks CLI, and read-only file tools (`Read`, `Glob`, `Grep` scoped to `./**.md`). Discord MCP tools are dynamically gated at runtime. When `allowed-tools` is set, your tools are merged in on top of these defaults. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for details.
+Every background fork always receives the [default tools](/scheduling/background-forks#default-tools) — help, tasks CLI, and read-only file tools (`Read`, `Glob`, `Grep` scoped to `./**.md`). Discord tools are controlled separately by `allow-ping` and `update-main-session`. When `allowed-tools` is set, your tools are merged in on top of these defaults. See [Tool restrictions](/scheduling/background-forks#tool-restrictions) for details.
 </Note>
 
 ### Reminders
@@ -149,7 +149,7 @@ Stored in `~/.ollim-bot/skills/<name>/SKILL.md`. Each skill is a directory conta
 | `description` | `str` | — | What the skill does and when to use it |
 | `allowed-tools` | `list[str] \| null` | `null` | Tool dependencies merged into the host job's allowed tools |
 
-The markdown body contains the skill's instructions. It can include dynamic context markers using the `` !`command` `` syntax — shell commands the SDK expands to their stdout at load time.
+The markdown body contains the skill's instructions. It can include dynamic context markers using the `` !`command` `` syntax — shell commands expanded to their output at load time.
 
 ```yaml title="skills/ux-principles/SKILL.md"
 ---
@@ -173,8 +173,8 @@ Stored at `~/.ollim-bot/tool-policy.yaml`. An optional YAML file that lets you e
 | Key | Type | Description |
 |-----|------|-------------|
 | `main_session.additional_allowed` | `list[str]` | Extra tool patterns merged into the main session's `allowed_tools` |
-| `bg_forks.additional_allowed` | `list[str]` | Extra tool patterns merged into `DEFAULT_BG_TOOLS` |
-| `bg_forks.override` | `list[str]` | Completely replaces `DEFAULT_BG_TOOLS` (takes precedence over `additional_allowed`) |
+| `bg_forks.additional_allowed` | `list[str]` | Extra tool patterns merged into the default background fork tools |
+| `bg_forks.override` | `list[str]` | Completely replaces the default background fork tools (takes precedence over `additional_allowed`) |
 
 The file is loaded with mtime-based caching — changes take effect without a restart.
 
@@ -199,12 +199,12 @@ These rules apply to routines, reminders, and webhooks. Skills use a directory-b
 |----------|---------|
 | **Slug generation** | Lowercase, replace non-alphanumeric characters with `-`, max 50 characters, strip trailing `-` |
 | **Collision handling** | Same `id` overwrites the file; different `id` appends `-2`, `-3`, etc. |
-| **Atomic writes** | `tempfile.mkstemp()` + `os.replace()` (POSIX-atomic) |
+| **Atomic writes** | Writes are atomic — partial writes never corrupt files |
 | **Default omission** | Only non-default fields appear in YAML frontmatter |
 | **String serialization** | Double-quoted: `key: "value"` |
 | **Boolean serialization** | Lowercase: `key: true` |
 | **List serialization** | YAML block format with quoted string items |
-| **Parsing** | `yaml.safe_load()`; unknown YAML keys are silently skipped (forward-compatible) |
+| **Parsing** | Unknown YAML keys are silently skipped (forward-compatible) |
 | **Git integration** | Each write auto-commits with a message like `"add routine eb56e06b"` |
 
 ## JSON and JSONL files
@@ -215,7 +215,7 @@ Append-only JSONL log of session lifecycle events.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `session_id` | `str` | Agent SDK session identifier |
+| `session_id` | `str` | Session identifier |
 | `event` | `str` | Event type (see below) |
 | `timestamp` | `str` | ISO datetime in the configured timezone |
 | `parent_session_id` | `str \| null` | Parent session for forks and compactions |
@@ -225,7 +225,7 @@ Event types:
 | Event | Description |
 |-------|-------------|
 | `created` | New session created |
-| `compacted` | Session ID changed due to SDK auto-compaction |
+| `compacted` | Session ID changed due to [context compaction](/architecture/session-management#compaction) |
 | `swapped` | Fork promoted to main session |
 | `cleared` | Session cleared via `/clear` |
 | `interactive_fork` | Interactive fork created |
@@ -241,7 +241,7 @@ Event types:
 
 ### Current session (`sessions.json`)
 
-Plain text file containing the current Agent SDK session ID. Despite the
+Plain text file containing the current session ID. Despite the
 `.json` extension, it is **not** JSON — it contains only the raw session
 ID string.
 
@@ -265,11 +265,11 @@ JSON array of updates written by background forks for the main session.
 | Field | Type | Description |
 |-------|------|-------------|
 | `ts` | `str` | ISO datetime string |
-| `message` | `str` | Summary text from the `report_updates` MCP tool |
+| `message` | `str` | Summary text from the `report_updates` tool |
 
 Main sessions **pop** (read + clear) pending updates on the next
 interaction. Interactive forks **peek** (read-only). Writes are protected
-by an `asyncio.Lock()`.
+by a lock to prevent concurrent corruption.
 
 ### Inquiries (`inquiries.json`)
 

@@ -48,7 +48,7 @@ Summarize findings as a bulleted list, grouped by file.
 
 ### Frontmatter fields
 
-Skills follow the [Claude Code skills spec](https://code.claude.com/docs/en/skills) — see that page for full semantics and examples. ollim-bot-specific behavior is noted below.
+Skills use the same format as [Claude Code skills](https://code.claude.com/docs/en/skills). ollim-bot-specific behavior is noted below.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -154,38 +154,17 @@ The bot creates the skill directory and writes the `SKILL.md` with appropriate f
 
 <AccordionGroup>
 <Accordion title="Skill discovery">
-The SDK discovers skills natively — no custom index needed. At startup, `_ensure_sdk_layout()` in `main.py` creates a symlink:
+The bot scans `~/.ollim-bot/skills/` at startup and registers all valid skills automatically. Each skill's `description` field determines when the bot considers invoking it. Interactive skills are invocable via `/<name>` in Discord.
 
-```text
-~/.ollim-bot/.claude/skills/ → ../skills/
-```
-
-The agent session uses `setting_sources=["project"]`, which tells the SDK to scan `.claude/skills/` for skill directories. The SDK reads each `SKILL.md`, extracts the `description` from frontmatter, and registers the skill as available. The agent can then invoke any skill interactively via the SDK's built-in `Skill` tool.
-
-For **per-job injection** (routines and reminders), the scheduler builds a `REQUIRED SKILLS` instruction block in the prompt and adds `Skill(<name> *)` patterns to the fork's `allowed_tools`. The SDK handles everything from there — content loading, command expansion, and allowed-tools enforcement.
+For **per-job injection** (routines and reminders), the scheduler loads the referenced skills into the prompt and grants the background fork permission to use each skill's tools. Content loading, command expansion, and allowed-tools enforcement all happen automatically.
 </Accordion>
 
 <Accordion title="Tool permissions">
-`_merge_skill_tools()` in `scheduler.py` adds `Skill(<name> *)` patterns to `allowed_tools` for background fork dispatch:
-
-```python
-def _merge_skill_tools(config: BgForkConfig, skill_names: list[str] | None) -> BgForkConfig:
-    """Add Skill(<name> *) patterns to allowed_tools for background fork dispatch."""
-    if not skill_names:
-        return config
-    additions = [f"Skill({name} *)" for name in skill_names]
-    current = set(config.allowed_tools or [])
-    new = [t for t in additions if t not in current]
-    if not new:
-        return config
-    return replace(config, allowed_tools=list(current) + new)
-```
-
-The SDK's own allowed-tools enforcement — from the skill's `allowed-tools` frontmatter — resolves *before* the bot's `can_use_tool` callback. This means tool denials from skill-level permissions happen at the SDK level.
+When a scheduled job references a skill, the skill's `allowed-tools` are automatically merged into the background fork's tool set. The bot handles deduplication — declaring a tool that's already in the defaults has no effect. Tool permissions from skill-level `allowed-tools` are enforced before the bot's own tool policy, so skill-level denials take priority.
 </Accordion>
 
 <Accordion title="Chain propagation">
-The `ChainContext` dataclass in `agent_tools.py` includes a `skills` field. When a chained reminder calls `follow_up_chain`, the tool forwards skill names via `--skills` CLI arguments to the next link in the chain. This means a reminder chain that starts with skills continues using those skills through every follow-up.
+Skills propagate through reminder chains automatically. When a chained reminder schedules a follow-up via `follow_up_chain`, the same skills carry forward to every link in the chain.
 </Accordion>
 </AccordionGroup>
 
