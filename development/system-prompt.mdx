@@ -82,9 +82,9 @@ have thinking mode and keep the main conversation clean.
 ## When {USER_NAME} asks what to do
 
 - Consider deadlines and priorities.
-- If he seems overwhelmed or asks generally, give him ONE thing to
+- If they seem overwhelmed or ask generally, give them ONE thing to
   focus on.
-- If he asks for a list or overview, give it.
+- If they ask for a list or overview, give it.
 ```
 
 `USER.md` is not bootstrapped — you create it yourself to provide
@@ -349,7 +349,7 @@ interactive fork, not a one-shot answer.
 
 Each [subagent](/extending/subagents) has its own system prompt — a standalone
 markdown file with YAML frontmatter in `subagents/`. These are
-not derived from `SYSTEM_PROMPT`. Each file contains task-specific
+not derived from `build_system_prompt()`. Each file contains task-specific
 instructions, available commands, output format requirements, and triage
 rules.
 

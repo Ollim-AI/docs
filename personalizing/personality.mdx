@@ -1,0 +1,93 @@
+---
+title: "Customize the bot's personality"
+description: "Edit IDENTITY.md to change how the bot speaks, what tone it uses, and how it relates to you."
+---
+
+The bot's personality — how it speaks, its tone, and how it relates to
+you — is defined in a single file called `IDENTITY.md`. Edit this file
+to make the bot feel like yours.
+
+## Where to find it
+
+The file lives in the bot's data directory at `IDENTITY.md`. It's
+created automatically the first time the bot starts, with a default
+personality that's concise, warm, and ADHD-aware.
+
+| Platform | Path |
+|----------|------|
+| macOS / Linux | `~/.ollim-bot/IDENTITY.md` |
+| Windows | `C:\Users\<your-username>\.ollim-bot\IDENTITY.md` |
+
+## What's in the default
+
+Out of the box, `IDENTITY.md` includes:
+
+- **Personality traits** — concise and direct, warm but not overbearing,
+  ADHD-aware (breaks things down, reminds without nagging, celebrates
+  small wins), gives honest pushback when something seems off
+- **Communication style** — keep responses short, use forks for anything
+  beyond a quick answer
+- **Decision guidance** — when you ask what to do, consider deadlines
+  and priorities; if you seem overwhelmed, suggest one thing to focus on
+
+## How to edit it
+
+You have two options:
+
+<Tabs>
+  <Tab title="Ask the bot">
+    Tell the bot what you want to change. It can read and edit
+    `IDENTITY.md` directly:
+
+    > "Update your personality to be more casual and use humor. Also,
+    > stop celebrating small wins — I find it patronizing."
+
+    The bot will edit the file and confirm the changes.
+  </Tab>
+  <Tab title="Edit the file yourself">
+    Open `IDENTITY.md` from the path above in any text editor. It's
+    plain markdown — no special syntax required.
+
+    <Warning>
+    Don't edit the file while the bot is running. Stop the bot first,
+    make your changes, then restart.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Ideas for what to change
+
+The file is freeform markdown — you can write whatever you want. Here
+are some things people customize:
+
+| What to change | Example |
+|----------------|---------|
+| **Tone** | "Be more blunt" or "Be gentler with reminders" |
+| **Humor** | "Use dry humor" or "No jokes, keep it professional" |
+| **ADHD style** | "Don't break tasks into sub-steps unless I ask" |
+| **Pushback** | "Always push back on tasks after 6pm" or "Don't question my decisions" |
+| **Communication** | "Use bullet points for everything" or "Keep responses under 2 sentences" |
+| **Relationship** | "Talk to me like a coworker, not an assistant" |
+
+## When changes take effect
+
+Changes to `IDENTITY.md` take effect the next time the bot builds its
+system prompt — after a `/restart`, `/clear`, or the next time the bot
+starts up. The file is loaded fresh each time.
+
+<Tip>
+Your edits persist across bot updates. The bot only writes the default
+template if `IDENTITY.md` doesn't exist yet — once you've edited it,
+your version is never overwritten.
+</Tip>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Tell the bot about yourself" icon="user" href="/personalizing/user-context">
+    Give the bot context about your work, schedule, and preferences.
+  </Card>
+  <Card title="Data directory" icon="folder" href="/configuration/data-directory#profile-files">
+    Technical reference for profile files and the data directory.
+  </Card>
+</Columns>

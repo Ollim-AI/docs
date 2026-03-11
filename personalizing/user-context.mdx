@@ -1,0 +1,108 @@
+---
+title: "Tell the bot about yourself"
+description: "Create USER.md to give the bot persistent context about your work, schedule, and preferences."
+---
+
+The bot can only help with what it knows. `USER.md` gives it persistent
+context about you — your work, schedule, ADHD patterns, and priorities.
+This context survives conversation resets and compaction, so the bot
+doesn't lose track of who you are.
+
+## Why this matters
+
+Without `USER.md`, the bot learns about you through conversation — but
+that context gradually fades as older messages get compacted. Writing
+things down in `USER.md` means the bot always has access to your
+baseline context, even after a `/clear` or a long break.
+
+## Where to create it
+
+Create the file in the bot's data directory as `USER.md`. Unlike
+`IDENTITY.md`, this file is **not** created automatically — you write
+it yourself when you're ready.
+
+| Platform | Path |
+|----------|------|
+| macOS / Linux | `~/.ollim-bot/USER.md` |
+| Windows | `C:\Users\<your-username>\.ollim-bot\USER.md` |
+
+<Tabs>
+  <Tab title="Ask the bot">
+    Tell the bot to create or update it:
+
+    > "Create a USER.md with the following: I'm a remote ML engineer,
+    > I work 9am-5pm Pacific, I have ADHD and struggle most with task
+    > initiation in the morning."
+
+    The bot will write the file for you.
+  </Tab>
+  <Tab title="Create it yourself">
+    Create `USER.md` at the path above in any text editor. It's plain
+    markdown — write whatever you want the bot to know about you.
+
+    <Warning>
+    Don't edit the file while the bot is running. Stop the bot first,
+    make your changes, then restart.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## What to include
+
+The file is freeform, but here are useful categories:
+
+```markdown title="USER.md"
+# About me
+
+- Remote ML engineer, Pacific timezone
+- Work hours: 9am-5pm weekdays, flexible on weekends
+
+# ADHD patterns
+
+- Task initiation is hardest in the morning
+- Hyperfocus kicks in around 2-4pm — don't interrupt unless urgent
+- I forget to eat when deep in work
+
+# Priorities
+
+- Current project: fine-tuning pipeline for client X (deadline: March 20)
+- Side project: personal blog (low priority, evening hobby)
+
+# Preferences
+
+- I prefer one task at a time over a full list
+- Ping me about deadlines, don't ping me about routine check-ins
+- I track everything in Google Tasks — don't suggest other tools
+```
+
+You don't need all of these sections. Start with whatever feels most
+useful and add more over time.
+
+## The bot can update it too
+
+The bot has permission to read and edit `USER.md` at runtime. If you
+tell it something important during conversation, you can ask it to
+save that to your profile:
+
+> "Add to my USER.md that I have therapy on Wednesdays at 2pm and
+> shouldn't be disturbed."
+
+This is especially useful for context that comes up naturally — you
+don't have to remember to edit the file later.
+
+## When changes take effect
+
+Like `IDENTITY.md`, changes take effect after a `/restart`, `/clear`,
+or the next time the bot starts up. The file is loaded fresh each time
+the system prompt is built.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Customize personality" icon="face-smile" href="/personalizing/personality">
+    Change the bot's tone, humor, and communication style.
+  </Card>
+  <Card title="Data directory" icon="folder" href="/configuration/data-directory#profile-files">
+    Technical reference for profile files and the data directory.
+  </Card>
+</Columns>

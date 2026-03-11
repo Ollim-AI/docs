@@ -8,7 +8,7 @@
 - **Format**: MDX files with YAML frontmatter, Mintlify components
 - **Config**: `docs.json` — theme, navigation (4 tabs: Guide, Customizing, Reference, Changelog), branding (Discord blurple `#4752C4`)
 - **Dev server**: `mint dev` → localhost:3000
-- **44 pages** across 9 sections: getting-started, core-usage, scheduling, integrations, extending, configuration, architecture, development, self-hosting
+- **46 pages** across 10 sections: getting-started, core-usage, scheduling, integrations, personalizing, extending, configuration, architecture, development, self-hosting
 
 ## Working relationship
 

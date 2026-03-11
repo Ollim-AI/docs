@@ -121,6 +121,14 @@
         "tab": "Customizing",
         "groups": [
           {
+            "group": "Personalizing",
+            "icon": "user-pen",
+            "pages": [
+              "personalizing/personality",
+              "personalizing/user-context"
+            ]
+          },
+          {
             "group": "Extending",
             "icon": "puzzle-piece",
             "root": "extending/overview",
