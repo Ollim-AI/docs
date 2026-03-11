@@ -140,7 +140,7 @@ so you know background context is being included.
 
 ## Prompt tags
 
-Every scheduled task and fork injects a tag at the start of its prompt.
+Every routine, reminder, and fork injects a tag at the start of its prompt.
 These tags tell the agent what type of session it's in and which task
 triggered it.
 
@@ -192,7 +192,7 @@ sections.
     - Current ping budget status (available tokens, capacity)
     - Upcoming schedule: a list of tasks within the schedule window,
       each with fire time, label, description, and file path
-    - Refill estimation before the last scheduled task
+    - Refill estimation before the last routine or reminder
     - Guidance on when to ping vs. report (the "regret test")
     - Note about `critical=True` bypass
   </Accordion>

@@ -5,7 +5,7 @@ description: "Reference all seven MCP tools the agent uses for embeds, pings, fo
 
 ollim-bot exposes seven MCP tools to the agent via a server named `discord`. These tools let the agent send messages, manage forks, report findings, and schedule follow-ups — all without direct access to the Discord API.
 
-The tools are defined in `agent_tools.py` and registered on a single `create_sdk_mcp_server("discord", ...)` instance. The agent also has access to a second MCP server named `docs` — a remote server at `https://docs.ollim.ai/mcp` that lets it look up its own documentation and architecture.
+The tools are defined in `agent_tools.py` and registered on a single `create_sdk_mcp_server("discord", ...)` instance. The agent also has access to a second MCP server named `docs` — a remote server at [`docs.ollim.ai/mcp`](https://docs.ollim.ai/mcp) that lets it look up its own documentation and architecture.
 
 ## Output tools
 
