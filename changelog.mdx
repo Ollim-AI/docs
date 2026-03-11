@@ -7,7 +7,27 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Note>ollim-bot has been in active development since February 9, 2026 with 527 commits across 29 active development days.</Note>
+<Note>ollim-bot has been in active development since February 9, 2026 with 531 commits across 29 active development days.</Note>
+
+## Mar 11, 2026
+
+**Job-config skill, safety gating, and fork exit controls**
+
+- **Job-config skill** — new bundled [skill](/extending/skills) that guides
+  tool selection and behavioral configuration when creating background jobs
+  (routines, reminders, webhooks). The bot invokes it automatically during
+  job setup.
+- **Discord tools stripped from allowed-tools** — Discord MCP tools are now
+  automatically removed from `allowed-tools` in
+  [background forks](/scheduling/background-forks). They're gated by
+  `allow-ping` and `update-main-session` flags instead, preventing bypass
+  of safety gating.
+- **Fork exit tools require explicit request** — in interactive forks, the
+  bot no longer calls `report_updates`, `save_context`, or `exit_fork` on
+  its own. It waits for you to explicitly ask to wrap up or leave.
+  See [Forks](/core-usage/forks).
+- Internal: `--foreground`/`--background` mutual exclusivity in reminder
+  CLI, isolated reminder label format updated to `[bg,isolated]`.
 
 ## Mar 10-11, 2026
 
