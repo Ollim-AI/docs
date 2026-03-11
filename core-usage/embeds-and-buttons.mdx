@@ -7,24 +7,24 @@ The agent communicates structured information — task lists, calendar events, e
 
 ## Overview
 
-The agent decides when and what to send — there is no manual embed API. Buttons attached to embeds follow an action pattern that either performs a direct operation (complete a task, delete an event) or opens a conversation with the agent through the inquiry system.
+The agent decides when and what to send — you don't create embeds manually. Buttons either perform a direct operation (complete a task, delete an event) or open a conversation with the agent through the inquiry system.
 
 Embeds sent from [background forks](/scheduling/background-forks) or [interactive forks](/core-usage/forks) are tagged with a footer indicating their source.
 
-## The `discord_embed` tool
+## What embeds include
 
-The agent uses `discord_embed` to send rich embed messages with a title (required) and optional description, color, fields, buttons, and critical flag.
+Each embed has a title and can include body text, a color-coded accent bar, structured fields, and up to five interactive buttons.
 
-### Parameters
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `title` | string | Yes | — | Embed heading |
-| `description` | string | No | — | Body text below the title |
-| `color` | string | No | `"blue"` | Embed accent color |
-| `fields` | array | No | `[]` | Structured name/value pairs |
-| `buttons` | array | No | `[]` | Interactive buttons attached below the embed |
-| `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and [ping budget](/scheduling/ping-budget) in background forks |
+<Accordion title="Developer reference: discord_embed parameters">
+  | Parameter | Type | Required | Default | Description |
+  |-----------|------|----------|---------|-------------|
+  | `title` | string | Yes | — | Embed heading |
+  | `description` | string | No | — | Body text below the title |
+  | `color` | string | No | `"blue"` | Embed accent color |
+  | `fields` | array | No | `[]` | Structured name/value pairs |
+  | `buttons` | array | No | `[]` | Interactive buttons attached below the embed |
+  | `critical` | boolean | No | `false` | Bypasses per-session limit, busy check, and [ping budget](/scheduling/ping-budget) in background forks |
+</Accordion>
 
 ### Colors
 
@@ -38,11 +38,11 @@ The agent uses `discord_embed` to send rich embed messages with a title (require
 
 ### Fields
 
-Each field is an object with `name`, `value`, and optional `inline` (defaults to `true`). Fields render as labeled sections within the embed — inline fields appear side-by-side, non-inline fields stack vertically.
+Fields render as labeled sections within the embed — inline fields appear side-by-side, non-inline fields stack vertically.
 
 ### Buttons
 
-Each button has a `label`, an `action` string, and an optional `style` (defaults to `"secondary"`).
+Each button has a label and an optional style (defaults to grey).
 
 | Style | Appearance |
 |-------|------------|
@@ -51,39 +51,41 @@ Each button has a `label`, an `action` string, and an optional `style` (defaults
 | `success` | Green |
 | `danger` | Red |
 
-The schema enforces a maximum of **5 buttons** per embed. Use "Close" (not "Dismiss") as the label for buttons that delete the embed message — this is enforced in the tool's schema description to guide the agent toward user-friendly wording.
+Embeds can have up to **5 buttons**. Buttons that delete the embed message are labeled "Close".
 
 ## Button actions
 
-Button behavior is determined by the `action` string. There are two categories: direct actions that execute immediately, and agent inquiries that route a prompt back through the agent.
+Buttons fall into two categories: direct actions that execute immediately, and inquiry buttons that route a prompt back through the agent.
 
 <Tabs>
   <Tab title="Direct actions">
-    Direct actions perform a single operation and respond with an ephemeral message. No agent involvement. If the Google API returns an error, the error reason is shown as an ephemeral message.
+    Direct actions perform a single operation and respond with a temporary message only you can see. No agent involvement. If something goes wrong (for example, a Google API error), the error reason is shown the same way.
 
-    | Action pattern | What it does |
-    |----------------|--------------|
-    | `task_done:<task_id>` | Marks a Google Tasks item complete |
-    | `task_del:<task_id>` | Deletes a Google Tasks item |
-    | `event_del:<event_id>` | Deletes a Google Calendar event |
-    | `dismiss` | Deletes the embed message |
+    | Button | What it does |
+    |--------|--------------|
+    | Mark complete | Marks a Google Tasks item complete |
+    | Delete task | Deletes a Google Tasks item |
+    | Delete event | Deletes a Google Calendar event |
+    | Close | Deletes the embed message |
   </Tab>
-  <Tab title="Agent inquiries">
-    Agent inquiry buttons store a prompt and route it back through the agent when clicked. If the button was sent by a background fork, clicking it opens an [interactive fork](/core-usage/forks) that resumes that session; otherwise the prompt is processed in the current session.
-
-    The action format is `agent:<prompt>`, where `<prompt>` is the instruction the agent receives when the button is pressed.
+  <Tab title="Inquiry buttons">
+    Inquiry buttons store a prompt and route it back through the agent when clicked. If the button was sent by a background fork, clicking it opens an [interactive fork](/core-usage/forks) that resumes that session; otherwise the prompt is processed in your current session.
   </Tab>
 </Tabs>
 
+<Accordion title="Developer reference: action string formats">
+  Button behavior is determined by an `action` string encoded in the button. Direct actions use patterns like `task_done:<task_id>`, `task_del:<task_id>`, `event_del:<event_id>`, and `dismiss`. Inquiry buttons use the format `agent:<prompt>`, where `<prompt>` is the instruction the agent receives when clicked.
+</Accordion>
+
 ## Inquiry buttons
 
-When the agent sends a button with an `agent:` action, the prompt is stored so it can be retrieved when you click. Clicking the button sends that prompt to the agent, and the agent responds in your conversation.
+When the agent sends an inquiry button, it stores a prompt behind the scenes. Clicking the button sends that prompt to the agent, and the agent responds in your conversation.
 
 If the button was sent by a background fork, clicking it opens an interactive fork that resumes from that fork's session — so you can continue where the background task left off. Otherwise the prompt is processed in your current session.
 
 Inquiry buttons expire after **7 days**. If you click an expired button, you'll see an expiration notice.
 
-<Accordion title="How inquiry buttons work internally">
+<Accordion title="Developer detail: how inquiry buttons work internally">
   When the agent creates an inquiry button, the prompt text is persisted to disk with a unique ID. The button's custom ID encodes this reference. When you click:
 
   1. Discord dispatches the interaction to the bot
@@ -96,7 +98,7 @@ Inquiry buttons expire after **7 days**. If you click an expired button, you'll 
 
 ## Fork embeds
 
-Forks produce their own embeds at entry and exit, separate from the `discord_embed` tool.
+Forks produce their own embeds at entry and exit, separate from the embeds the agent sends during conversation.
 
 ### Fork entry
 
