@@ -7,7 +7,24 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Note>ollim-bot has been in active development since February 9, 2026 with 511 commits across 28 active development days.</Note>
+<Note>ollim-bot has been in active development since February 9, 2026 with 516 commits across 29 active development days.</Note>
+
+## Mar 10-11, 2026
+
+**Reminders default to background, fork prompt improvements**
+
+- **Reminders default to background** — reminders now run as
+  [background forks](/scheduling/background-forks) by default, letting the
+  agent decide at fire-time whether to ping. The `--foreground` flag
+  explicitly opts into direct-DM mode. The old `--background` flag is
+  deprecated (still accepted, prints a warning).
+- **Fork prompt improvements** — interactive fork topic prompts reframed
+  from "respond then consider exit" to "engage and follow the user's lead."
+  Pre-loaded timeout and exit-strategy guidance removed from the system
+  prompt — exit rules are now delivered just-in-time by `[fork-timeout]`
+  prompts and scoped to agent-initiated forks only.
+- **Terminology consistency** — docstrings and internal prompts updated
+  to use "background fork" consistently (docs already used correct terms).
 
 ## Mar 9-10, 2026
 

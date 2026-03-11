@@ -133,9 +133,11 @@ these tasks directly, instead handing off to the appropriate
 ### Fork and background instructions
 
 The interactive fork section documents fork lifecycle rules: always branch
-from main (never nested forks), wait for user response before exiting, and
-present an embed with all three exit strategies (`save_context`,
-`report_updates`, `exit_fork`) when work is complete.
+from main (never nested forks) and use forks for research, complex tool
+chains, or tangential work. Exit tools — `report_updates` (default),
+`exit_fork`, and `save_context` — are listed for agent-initiated forks.
+Timeout and idle-exit guidance is delivered just-in-time via
+`[fork-timeout]` prompts rather than pre-loaded in the system prompt.
 
 The background fork section documents the ping budget system,
 `report_updates` for bridging information back to the main session, and the
