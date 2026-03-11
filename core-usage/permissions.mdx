@@ -27,12 +27,9 @@ to persist the mode across restarts.
 
 ### Fork scoping
 
-`default`, `acceptEdits`, and `bypassPermissions` are **fork-scoped** —
-changing the mode inside an interactive fork leaves the main session
-unchanged.
-
-`dontAsk` is **not** fork-scoped. Switching to or from `dontAsk` inside
-an interactive fork affects the main session too.
+All permission modes are **fork-scoped** — changing the mode inside an
+interactive fork leaves the main session unchanged. The original mode is
+restored when you exit the fork.
 
 ## Approval flow
 
