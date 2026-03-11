@@ -121,7 +121,7 @@ must report:
 | `on_ping` | Report if a ping or embed was sent | Task blocked until reported |
 | `always` | Must report regardless | Task blocked until reported |
 | `freely` | Reporting is optional | None |
-| `blocked` | Reporting disabled | `report_updates` and `follow_up_chain` denied at runtime via `canUseTool` |
+| `blocked` | Reporting disabled | `report_updates` and `follow_up_chain` unavailable |
 
 <Tip>
 Use `update-main-session: always` for tasks where the main session needs
@@ -138,23 +138,17 @@ context back to the main session.
 
 ## Tool restrictions
 
-Tool access in background forks is enforced at two layers:
-
-- **SDK layer** — `allowed_tools` controls which tools are pre-approved.
-  The fork's `allowed_tools` list is built from `DEFAULT_BG_TOOLS` plus
-  any `allowed-tools` declared in YAML.
-- **App layer** — the `canUseTool` callback dynamically gates Discord
-  MCP tools based on `BgForkConfig` flags (`allow_ping`,
-  `update_main_session`). See
-  [Permissions](/core-usage/permissions#background-forks) for details.
+Background forks have limited tool access for safety — the agent can
+only use a set of default tools plus any you explicitly add.
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `allowed-tools` | Default bg tools | Additional tools merged with default bg tools. |
+| `allowed-tools` | Default tools | Additional tools merged with the defaults |
 
-<Note>
-Every background fork always receives **DEFAULT_BG_TOOLS** — read-only
-context access and CLI helpers:
+### Default tools
+
+Every background fork can read documentation files and run `ollim-bot`
+CLI commands. These tools are always available:
 
 - `Bash(ollim-bot help)`
 - `Bash(ollim-bot tasks *)`
@@ -162,18 +156,17 @@ context access and CLI helpers:
 - `Glob(./**.md)`
 - `Grep(./**.md)`
 
-Discord MCP tools (`ping_user`, `discord_embed`, `report_updates`,
-`follow_up_chain`) are **not** in the static list — they are dynamically
-gated at runtime based on the job's `allow-ping` and
-`update-main-session` flags.
+Pinging and reporting tools (`ping_user`, `discord_embed`,
+`report_updates`, `follow_up_chain`) are controlled separately by the
+job's `allow-ping` and `update-main-session` flags — see
+[Communication](#communication) above and
+[Permissions](/core-usage/permissions#background-forks) for details.
 
-When you set `allowed-tools`, your tools are **merged in** on top of
-these defaults. Duplicates are dropped, so listing a default tool
-explicitly has no effect.
-</Note>
+### Adding tools
 
-Tool names use the SDK format. You only need to list tools beyond the
-defaults:
+List additional tools in `allowed-tools` using the same format as the
+defaults above. You only need to list tools beyond the defaults —
+anything already in the default list is ignored:
 
 ```yaml title="routines/email-check.md"
 ---
@@ -190,25 +183,22 @@ Check Gmail for unread messages from today.
 Send an embed summary if anything needs attention.
 ```
 
-Tool restrictions are inherited by chain reminders — `follow_up_chain`
+Chain reminders inherit tool restrictions — `follow_up_chain`
 propagates `allowed-tools` and `skills` to child reminders automatically.
 
-### Tool pattern validation
+### Pattern validation
 
-`tool_policy.py` validates `allowed-tools` patterns both at startup
-(via `scan_all`) and at **dispatch time** (via `validate_dispatch`).
-Dispatch-time validation catches routines created after startup.
-Dangerous patterns are rejected:
+The bot validates `allowed-tools` patterns at startup and again when
+each job fires. Unsafe patterns are rejected and the job is skipped:
 
 | Pattern | Result |
 |---------|--------|
 | `Bash(*)` | Error — too broad, specify a command prefix |
-| `Bash(ollim-bot gmail * ; rm -rf /)` | Error — chaining operators (`;`, `&`, `\|`) blocked |
+| `Bash(ollim-bot gmail * ; rm -rf /)` | Error — command chaining blocked |
 | `Edit(**)` | Error — matches paths inside the protected `state/` directory |
 
-If a pattern fails validation with an error, the job is **skipped** —
-it will not dispatch. The bot logs the error so you can fix the
-pattern.
+If a pattern fails validation, the bot logs the error so you can fix
+it.
 
 ## Configuration
 
@@ -223,7 +213,7 @@ frontmatter:
 | `thinking` | `bool` | `true` | Extended thinking override |
 | `update-main-session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
-| `allowed-tools` | `list[string]` | — | Additional tools merged with default bg tools (SDK format) |
+| `allowed-tools` | `list[string]` | — | Additional tools merged with [default tools](#default-tools) |
 | `skills` | `list[string]` | — | [Skills](/extending/skills) to load at fire time |
 
 ## Examples
