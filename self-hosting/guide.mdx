@@ -170,6 +170,8 @@ RestartSec=10
 WantedBy=default.target
 ```
 
+Reload the service configuration and start the bot:
+
 ```bash
 systemctl --user daemon-reload
 systemctl --user enable --now ollim-bot
