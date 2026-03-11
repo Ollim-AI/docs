@@ -20,7 +20,7 @@ The agent can create and manage them conversationally through file access.
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `WEBHOOK_PORT` | Yes | — | Port for the HTTP server (e.g. `8420`) |
-| `WEBHOOK_SECRET` | Yes | — | Bearer token for authenticating requests |
+| `WEBHOOK_SECRET` | Yes | — | Secret token for authenticating requests |
 
 <Note>
   If `WEBHOOK_PORT` is set but `WEBHOOK_SECRET` is missing, the server
@@ -46,7 +46,7 @@ The agent can create and manage them conversationally through file access.
   <Step title="Write a webhook spec">
     Create a markdown file in `~/.ollim-bot/webhooks/`. The filename
     is arbitrary — the `id` field in the frontmatter determines the
-    URL slug.
+    URL path.
 
     ```yaml title="~/.ollim-bot/webhooks/github-ci.md"
     ---
@@ -85,7 +85,7 @@ The agent can create and manage them conversationally through file access.
     ```
   </Step>
   <Step title="Restart the bot">
-    The webhook server starts during `on_ready`, after the scheduler.
+    The webhook server starts automatically when the bot launches.
     You'll see in the logs:
 
     ```text
@@ -116,8 +116,8 @@ YAML frontmatter and a markdown body.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `string` | — | URL slug — requests go to `/hook/{id}` |
-| `fields` | `object` | — | JSON Schema (Draft 7) for the payload |
+| `id` | `string` | — | URL path — requests go to `/hook/{id}` |
+| `fields` | `object` | — | Validation rules for the payload (JSON Schema) |
 | `isolated` | `bool` | `false` | Run the fork in isolated mode |
 | `model` | `string` | `null` | Override the model (e.g. `haiku`) |
 | `thinking` | `bool` | `true` | Enable extended thinking |
@@ -143,18 +143,21 @@ construction — even if the payload passes JSON Schema validation.
 
 ### Fields schema
 
-The `fields` value is a JSON Schema object (Draft 7). Best practices
-for spec authoring:
+The `fields` value is a set of validation rules using JSON Schema.
+It defines which fields the webhook accepts, their types, and any
+constraints.
 
+<Accordion title="Schema authoring tips">
 - Use `enum` over free `string` wherever values are known
 - Use `integer` / `boolean` over `string` for non-text data
 - Always set `maxLength` on string fields (default 500 if omitted)
 - Always set `additionalProperties: false`
+</Accordion>
 
 ## How requests are processed
 
-When an HTTP request hits `/hook/{slug}`, the bot authenticates it,
-validates the payload against the spec's JSON Schema, and fires a
+When an HTTP request hits `/hook/{id}`, the bot authenticates it,
+validates the payload against the spec's field rules, and fires a
 [background fork](/scheduling/background-forks) with the validated
 data. The caller receives `202 Accepted` immediately — the bot
 processes the webhook asynchronously.
@@ -164,43 +167,40 @@ Invalid requests are rejected with descriptive errors:
 | Condition | Status | Response body |
 |-----------|--------|---------------|
 | Bad or missing Bearer token | `401` | `{"error": "unauthorized"}` |
-| Unknown webhook slug | `404` | `{"error": "webhook not found: <slug>"}` |
+| Unknown webhook path | `404` | `{"error": "webhook not found: <slug>"}` |
 | Invalid JSON body | `400` | `{"error": "invalid json"}` |
 | Schema validation failure | `400` | `{"error": "validation failed", "details": [...]}` |
 | Template field mismatch | `400` | `{"error": "payload missing fields referenced in template: [...]"}` |
 
 <AccordionGroup>
   <Accordion title="Request processing pipeline">
-    1. **Auth check** — Bearer token compared against `WEBHOOK_SECRET`.
-    2. **Spec lookup** — matches the URL slug to a spec's `id` field.
-    3. **JSON parse** — reads request body as JSON.
-    4. **Schema validation** — validates payload against `fields` schema.
+    1. **Auth check** — verifies the secret token in the request header.
+    2. **Spec lookup** — matches the URL path to a spec's `id` field.
+    3. **JSON parse** — reads the request body as JSON.
+    4. **Schema validation** — validates the payload against the spec's `fields` rules.
     5. **Template validation** — checks that all `{field_name}` placeholders in the body have matching keys in the payload. Missing fields return a 400 error before prompt construction.
-    6. **Prompt construction** — payload data fills the template. The
-       prompt separates untrusted webhook data from the spec's
-       instructions.
+    6. **Prompt construction** — the bot builds a prompt from your template and the validated data, keeping webhook data clearly separated from instructions.
     7. **202 Accepted** — response sent immediately.
-    8. **Haiku screening** — free-form string fields are screened for
-       prompt injection patterns. Flagged payloads are skipped silently.
+    8. **Injection screening** — free-form text fields are checked for attempts to trick the bot. Flagged payloads are skipped and logged.
     9. **Dispatch** — a background fork runs with the spec's
        configuration.
   </Accordion>
 
   <Accordion title="Input security layers">
     Webhooks accept external input, so four layers of defense prevent
-    prompt injection:
+    outside data from tricking the bot:
 
     | Layer | What it catches |
     |-------|----------------|
-    | **JSON Schema** | Wrong types, undeclared fields, oversized strings |
-    | **Content fencing** | Naive injection — data is labeled as untrusted in the prompt |
-    | **Haiku screening** | Sophisticated injection in free-form strings |
-    | **Operational limits** | 10KB payload cap, 500-char strings, 20 properties max |
+    | **Schema validation** | Wrong types, undeclared fields, oversized strings |
+    | **Data labeling** | Webhook data is clearly separated from bot instructions |
+    | **Injection screening** | Free-form text checked for attempts to trick the bot |
+    | **Size limits** | 10 KB payload cap, 500-character strings, 20 properties max |
 
     <Warning>
-      Haiku screening fails open — if the screening call itself errors,
-      the webhook is processed normally. This prevents screening
-      failures from blocking legitimate webhooks.
+      If the injection screening check itself fails (e.g. a network
+      error), the webhook is processed normally rather than blocked.
+      This prevents screening outages from blocking legitimate webhooks.
     </Warning>
   </Accordion>
 </AccordionGroup>
@@ -215,17 +215,17 @@ Invalid requests are rejected with descriptive errors:
   </Accordion>
   <Accordion title="Getting 401 Unauthorized">
     Verify your `Authorization` header matches
-    `Bearer <WEBHOOK_SECRET>` exactly. The comparison is
-    constant-time — there's no partial-match feedback.
+    `Bearer <WEBHOOK_SECRET>` exactly.
   </Accordion>
-  <Accordion title="Getting 404 for a webhook slug">
-    Specs are loaded from disk on every request (no caching). Verify
-    the file exists in `~/.ollim-bot/webhooks/` and that the `id`
-    field in the YAML frontmatter matches the slug in your URL.
+  <Accordion title="Getting 404 for a webhook path">
+    Specs are re-read each time a request arrives, so changes take
+    effect immediately without restarting. Verify the file exists in
+    `~/.ollim-bot/webhooks/` and that the `id` field in the frontmatter
+    matches the path in your URL.
   </Accordion>
   <Accordion title="Webhook accepted but no bot action">
-    The Haiku screening layer may have flagged a field value as a
-    prompt injection attempt. Check the bot logs for lines like
+    The injection screening layer may have flagged a field value as
+    an attempt to trick the bot. Check the bot logs for lines like
     `Webhook <slug>: flagged fields [...], skipping dispatch`.
   </Accordion>
 </AccordionGroup>
