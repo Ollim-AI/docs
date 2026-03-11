@@ -1,11 +1,11 @@
 ---
-title: "MCP tools"
-description: "Reference all seven MCP tools the agent uses for embeds, pings, forks, and chains."
+title: "Discord tools"
+description: "Reference all seven Discord tools the agent uses for embeds, pings, forks, and chains."
 ---
 
-ollim-bot exposes seven MCP tools to the agent via a server named `discord`. These tools let the agent send messages, manage forks, report findings, and schedule follow-ups — all without direct access to the Discord API.
+ollim-bot gives the agent seven Discord tools for sending messages, managing forks, reporting findings, and scheduling follow-ups — all without direct access to the Discord API.
 
-The agent also has access to a second MCP server named `docs` — a remote server at [`docs.ollim.ai/mcp`](https://docs.ollim.ai/mcp) that lets it look up its own documentation and architecture.
+The agent also has access to a docs server — a remote server at [`docs.ollim.ai/mcp`](https://docs.ollim.ai/mcp) that lets it look up its own documentation and architecture.
 
 ## Output tools
 
@@ -50,7 +50,7 @@ Background-fork-only. Send a plain text alert prefixed with `[bg]`.
 **Availability:** Background forks only. Not available in the main session or interactive forks. Subject to the same `allow-ping`, busy check, and ping budget gates as `discord_embed`.
 
 <Note>
-Both output tools call `track_message` so that replies to bot messages in the channel are correctly routed back to the fork that sent them.
+Both output tools register the message so that replies are correctly routed back to the fork that sent them.
 </Note>
 
 ## Fork management tools
@@ -118,7 +118,7 @@ Schedule a follow-up reminder that continues the current chain. Used by [reminde
 |-----------|------|----------|---------|-------------|
 | `minutes_from_now` | integer | Yes | — | Minutes until the next check fires |
 
-The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. The tool forwards all configuration from the current `ChainContext`: `background`, `model`, `thinking`, `isolated`, `update-main-session`, `allow-ping`, `allowed-tools`, and `skills`.
+The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. The tool forwards all configuration from the current chain: `background`, `model`, `thinking`, `isolated`, `update-main-session`, `allow-ping`, `allowed-tools`, and `skills`.
 
 Returns an error if:
 - No active reminder context exists (the tool was called outside a reminder-triggered session)
@@ -132,7 +132,7 @@ If the task is done or no follow-up is needed, don't call `follow_up_chain`. The
 
 ## Background fork enforcement
 
-Background forks use a stop hook (`require_report_hook`) that enforces the `update-main-session` policy before the agent can finish:
+Background forks enforce the `update-main-session` policy before the agent can finish:
 
 | Mode | Behavior |
 |------|----------|
