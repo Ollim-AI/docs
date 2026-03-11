@@ -58,25 +58,20 @@ for details.
 
 ## Profile files
 
-Two markdown files in the data directory root define the bot's identity
-and your context. Both are prepended to the system prompt when the bot
-starts — see [System prompt](/development/system-prompt#profile-section)
-for how they compose into the final prompt.
+Two markdown files in the data directory root customize the bot's
+persona and provide context about you. Both are prepended to the
+system prompt — see
+[System prompt](/development/system-prompt#profile-section) for how
+they compose into the final prompt.
 
-| File | Bootstrapped | Description |
-|------|-------------|-------------|
-| `IDENTITY.md` | Yes — created on first run from a built-in template | Bot persona: tone, personality, communication style, and relationship dynamics. Edit this to change how the bot speaks and behaves. |
-| `USER.md` | No — you create this yourself | Context about you: work patterns, schedule, ADHD specifics, priorities. The bot and its agent can also edit this file. |
+| File | Source | Description |
+|------|--------|-------------|
+| `IDENTITY.md` | `bootstrap_identity()` in `profile.py` — created on first run, skipped if file exists | Bot persona and communication style |
+| `USER.md` | User-created | Context about the user |
 
-`IDENTITY.md` is written by `bootstrap_identity()` in `profile.py` on
-first run. It includes default personality traits (concise, warm,
-ADHD-aware, honest pushback) and communication style guidance. If the
-file already exists, bootstrapping is skipped — your edits persist
-across updates.
-
-`USER.md` is never created automatically. Create it when you want the
-bot to have persistent context about you that survives compaction. The
-agent can read and edit both files at runtime.
+See [Customize personality](/personalizing/personality) and
+[Tell the bot about yourself](/personalizing/user-context) for
+editing guidance and examples.
 
 ## Session files
 

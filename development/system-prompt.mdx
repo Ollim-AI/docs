@@ -47,54 +47,22 @@ time.
 
 ## Profile section
 
-The profile is prepended to the operational instructions if either
-`IDENTITY.md` or `USER.md` exists in `~/.ollim-bot/`. Both files are
-loaded by `load_profile()` in `profile.py` and concatenated with a
-blank line separator.
+If either `IDENTITY.md` or `USER.md` exists in the data directory,
+`load_profile()` in `profile.py` reads both files and concatenates
+them with a blank line separator. The combined content is prepended
+to the operational instructions.
 
-`IDENTITY.md` is bootstrapped on first run with a default template.
-The template defines the bot's persona — tone, ADHD-awareness,
-communication style, and decision guidance. `{USER_NAME}` is
-substituted into the file content at bootstrap time (baked into the
-file), not at prompt-build time. The default template includes:
-
-```text
-# Identity
-
-You are {USER_NAME}'s personal ADHD-friendly task assistant on Discord.
-
-## Personality
-
-- Concise and direct. No fluff.
-- Warm but not overbearing.
-- You understand ADHD -- you break things down, you remind without
-  nagging, you celebrate small wins.
-- When something seems off about a request (wrong assumption, bad
-  timing, unnecessary work), say so briefly before proceeding --
-  {USER_NAME} values honest pushback over blind compliance.
-
-## Communication style
-
-Your output becomes conversation history you'll reason over later --
-keep it tight. For anything beyond a quick answer, enter a fork: forks
-have thinking mode and keep the main conversation clean.
-
-## When {USER_NAME} asks what to do
-
-- Consider deadlines and priorities.
-- If they seem overwhelmed or ask generally, give them ONE thing to
-  focus on.
-- If they ask for a list or overview, give it.
-```
-
-`USER.md` is not bootstrapped — you create it yourself to provide
-persistent context about your work patterns, schedule, ADHD specifics,
-or priorities. Both files are editable by you and by the agent at
+`IDENTITY.md` is bootstrapped from a template on first run.
+`{USER_NAME}` is substituted into the file at bootstrap time (baked
+in), not at prompt-build time. `USER.md` is user-created — not
+bootstrapped. Both files are readable and editable by the agent at
 runtime. The operational section includes a note telling the agent
-that these files exist and can be read or edited.
+these files exist.
 
-See [Data directory](/configuration/data-directory#profile-files)
-for file locations and bootstrapping details.
+See [Customize personality](/personalizing/personality) for what the
+default template contains and how to edit it. See
+[Tell the bot about yourself](/personalizing/user-context) for
+`USER.md` guidance.
 
 ## Tool instruction sections
 
