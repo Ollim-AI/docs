@@ -212,6 +212,7 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 <Tabs>
   <Tab title="View all">
     Run `/config` with no parameters to see all settings and their current values.
+    Each setting that accepts a fixed set of inputs also shows its **valid values** next to the current value — so you never have to look up what a key accepts.
   </Tab>
   <Tab title="View one">
     Provide `key` only to see that setting's current value and default.
@@ -224,18 +225,18 @@ restarts — ollim-bot stores them in `~/.ollim-bot/state/config.json`.
 
 #### Available keys
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `model.main` | model | SDK default | Default model for the main session |
-| `model.fork` | model | Inherits from main | Default model for interactive forks |
-| `thinking.main` | thinking mode | `off` | Extended thinking for the main session |
-| `thinking.fork` | thinking mode | `adaptive` | Extended thinking for interactive forks |
-| `bg_fork_timeout` | integer | `1800` | Max background fork runtime in seconds |
-| `fork_idle_timeout` | integer | `10` | Interactive fork idle timeout in minutes |
-| `permission_mode` | permission mode | `dontAsk` | Default [permission mode](/core-usage/permissions) |
-| `auto_update` | boolean | `off` | Auto-pull, sync both venvs, and restart on new commits |
-| `auto_update_interval` | integer | `60` | Update check interval (minutes) |
-| `auto_update_hour` | hour (0-23) | `6` | Hour of day to apply updates |
+| Key | Type | Default | Valid values | Description |
+|-----|------|---------|--------------|-------------|
+| `model.main` | model | SDK default | `opus / sonnet / haiku / default` | Default model for the main session |
+| `model.fork` | model | Inherits from main | `opus / sonnet / haiku / default` | Default model for interactive forks |
+| `thinking.main` | thinking mode | `off` | `off / adaptive / <budget>` | Extended thinking for the main session |
+| `thinking.fork` | thinking mode | `adaptive` | `off / adaptive / <budget>` | Extended thinking for interactive forks |
+| `bg_fork_timeout` | integer | `1800` | Any integer | Max background fork runtime in seconds |
+| `fork_idle_timeout` | integer | `10` | Any integer | Interactive fork idle timeout in minutes |
+| `permission_mode` | permission mode | `dontAsk` | `dontAsk / default / acceptEdits / bypassPermissions` | Default [permission mode](/core-usage/permissions) |
+| `auto_update` | boolean | `off` | `on / off` | Auto-pull, sync both venvs, and restart on new commits |
+| `auto_update_interval` | integer | `60` | Any integer | Update check interval (minutes) |
+| `auto_update_hour` | hour (0-23) | `6` | `0-23` | Hour of day to apply updates |
 
 Model values: `opus`, `sonnet`, `haiku`, or empty to reset to default.
 Boolean values: `on`/`off`, `yes`/`no`, `true`/`false`.
