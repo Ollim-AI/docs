@@ -61,6 +61,30 @@ formatter strips the prefix generically for all MCP servers, so
 `mcp__discord__discord_embed` renders as `discord_embed` in the
 stream label.
 
+### Nested tool activity
+
+When the agent delegates work to a `Task` or `Agent` subagent, the
+status message surfaces what tool the subagent is currently using —
+instead of showing a static timer with no visibility into subagent work.
+`stream_response()` listens for `TaskProgressMessage` events from the
+SDK, extracts `last_tool_name`, and yields a
+`StreamStatus(kind="task_progress")` signal with a formatted label.
+
+The label format is `Task(description) · tool_name`, for example:
+
+```text
+Task(check calendar for conflicts) · Read... (12s)
+```
+
+The task description is truncated to 40 characters. MCP tool names are
+stripped of the `mcp__<server>__` prefix, matching the convention used
+for top-level tool labels.
+
+On the Discord side, `stream_to_channel()` updates the existing status
+message label without resetting the timer — so the elapsed time reflects
+how long the subagent has been running overall, not how long the current
+tool has been active.
+
 <Note>
 When an `enter_fork` tool fires during streaming, `stream_response()`
 interrupts the SDK client and suppresses remaining
@@ -223,6 +247,45 @@ The flow:
 The annotation stays visible in chat history — the streamer does not
 delete it after compaction finishes. This gives you a clear record of
 when and why context was compacted.
+</Note>
+
+## Context usage warning
+
+Auto-compaction handles context overflow automatically, but a heads-up
+before it triggers lets you compact on your own terms. After each
+response, `stream_response()` checks how much of the 200k context
+window the current `input_tokens` occupy. If context exceeds 60% and no
+auto-compaction just happened, `stream_to_channel()` sends a small
+annotation below the response.
+
+Two tiers of warning:
+
+| Context usage | Annotation |
+|---------------|------------|
+| 60–79% | `-# *context: 67% (134k) — consider /compact*` |
+| 80%+ | `-# *context: 85% (170k) — compaction soon, /compact recommended*` |
+
+The annotation is skipped after auto-compaction — context is freshly
+compressed, so there is nothing to warn about.
+
+The flow:
+
+1. `stream_response()` captures `input_tokens` from the final
+   `ResultMessage.usage`
+2. After all text is yielded, if context exceeds 60% of 200k and the
+   response was not auto-compacted, it yields a
+   `StreamStatus(kind="context_warning")` with `input_tokens` and
+   `context_pct`
+3. `stream_to_channel()` stores the warning signal and — after the final
+   flush — sends the annotation as a small italic message
+4. The warning message is registered via `track_message()` for
+   [fork session tracking](/architecture/context-flow#reply-to-fork-context),
+   so replying to it resumes the correct session
+
+<Note>
+The 80% escalation threshold is defined as `_ESCALATE_PCT` in
+`streamer.py`. The base 60% threshold is `_WARN_PCT` in
+`agent_streaming.py`.
 </Note>
 
 ## Next steps
