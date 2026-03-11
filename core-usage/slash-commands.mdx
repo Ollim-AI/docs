@@ -3,12 +3,13 @@ title: "Slash commands"
 description: "Use slash commands to manage sessions, models, forks, lifecycle, permissions, and runtime configuration."
 ---
 
-Thirteen slash commands for session management, model control, forks, lifecycle, integrations, and configuration — all restricted to the **bot owner** via DMs.
+Fourteen slash commands for setup, session management, model control, forks, lifecycle, integrations, and configuration — all restricted to the **bot owner** via DMs.
 
 ## Quick reference
 
 | Command | Description | Parameters |
 |---------|-------------|------------|
+| `/setup` | Guided setup wizard for names, personality, and user context | None |
 | `/clear` | Clear conversation and start fresh | None |
 | `/compact` | Compact conversation context | `instructions` (optional) |
 | `/cost` | Show token usage for this session | None |
@@ -22,6 +23,23 @@ Thirteen slash commands for session management, model control, forks, lifecycle,
 | `/permissions` | Set permission mode | `mode` (required) |
 | `/ping-budget` | View or set ping budget | `capacity`, `refill_rate` (both optional) |
 | `/config` | View or set runtime configuration | `key` (optional), `value` (optional) |
+
+## Setup
+
+### /setup
+
+A guided wizard that walks you through configuring names, personality (`IDENTITY.md`), and user context (`USER.md`) — all in one conversation. No parameters.
+
+The wizard detects your current state before asking anything:
+
+- **Fresh setup** — offers a choice between a **fast path** (3 questions covering names, about you, and personality tweaks) or a **full walkthrough** (section-by-section `IDENTITY.md` and detailed `USER.md` configuration).
+- **Already configured** — shows a summary of your current setup and asks what you'd like to change, then jumps to the relevant section.
+
+If you change names during setup, the wizard updates `.env` automatically and suggests running `/restart` to apply the new names everywhere.
+
+<Note>
+`/setup` is only invocable as a slash command — the bot won't trigger it automatically. You can run it anytime to reconfigure.
+</Note>
 
 ## Session commands
 
