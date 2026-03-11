@@ -138,6 +138,11 @@ ends, the exit embed title reflects what happened:
   configuration changes.
 </Tip>
 
+The bot will never call `report_updates`, `save_context`, or `exit_fork`
+on its own during an interactive fork — it waits for you to explicitly
+ask to wrap up, save, or leave. Your fork stays open until you decide
+to end it (or the [idle timeout](#idle-timeout) fires).
+
 ## Idle timeout
 
 Interactive forks have an idle timeout to prevent abandoned forks
