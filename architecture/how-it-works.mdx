@@ -14,8 +14,8 @@ Every message you send follows the same path through the system:
 
 <Steps>
   <Step title="Message received">
-    Discord delivers your DM to `bot.py`, which
-    acquires the agent lock to ensure one conversation at a time.
+    Discord delivers your DM to the bot, which
+    acquires a lock to ensure one conversation at a time.
   </Step>
   <Step title="Context prepended">
     Before your message reaches the agent, a timestamp and any
@@ -24,19 +24,18 @@ Every message you send follows the same path through the system:
     peek without clearing.
   </Step>
   <Step title="Agent processes">
-    `agent.py` sends the enriched message to the Claude Agent SDK
-    client. The agent has access to MCP tools (`discord_embed`,
-    `ping_user`, `save_context`, `report_updates`, `enter_fork`,
-    `exit_fork`, `follow_up_chain`) via the `discord` server,
-    a `docs` MCP server for self-referencing documentation,
+    The agent sends the enriched message to Claude. It has access
+    to Discord tools (`discord_embed`, `ping_user`, `save_context`,
+    `report_updates`, `enter_fork`, `exit_fork`, `follow_up_chain`),
+    a docs server for self-referencing documentation,
     Bash commands (`ollim-bot tasks`, `ollim-bot cal`, etc.),
     file operations, web tools, and five subagents (guide, gmail-reader,
     history-reviewer, responsiveness-reviewer, user-proxy).
   </Step>
   <Step title="Response streamed">
-    `streamer.py` streams the agent's response to Discord with
-    throttled edits. Messages exceeding 2000 characters overflow
-    into follow-up messages automatically.
+    The response streams to Discord in real time, with throttled
+    edits to stay within rate limits. Messages exceeding 2000
+    characters overflow into follow-up messages automatically.
   </Step>
 </Steps>
 
@@ -52,13 +51,13 @@ understanding.
 
 ### How sessions work
 
-The Claude Agent SDK assigns a session ID to each conversation.
+Claude assigns a session ID to each conversation.
 ollim-bot persists this ID to `~/.ollim-bot/state/sessions.json` (a
 plain text file containing just the session ID string). On
 restart, the bot resumes from this saved session using
 `resume=session_id`.
 
-When the conversation context grows too large, the SDK
+When the conversation context grows too large, Claude
 auto-compacts it — summarizing older messages while preserving
 meaning. The session ID changes on compaction, and ollim-bot
 detects and logs this automatically.
@@ -71,7 +70,7 @@ Every session state change is logged to
 | Event | Trigger |
 |-------|---------|
 | `created` | First message (no prior session exists) |
-| `compacted` | SDK auto-compaction (session ID changed) |
+| `compacted` | Auto-compaction (session ID changed) |
 | `swapped` | Fork promoted to main via `save_context` |
 | `cleared` | `/clear` command resets conversation |
 | `interactive_fork` | Interactive fork created |
