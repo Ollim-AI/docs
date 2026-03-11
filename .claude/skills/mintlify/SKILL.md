@@ -18,6 +18,13 @@ Build and maintain documentation sites with Mintlify. MDX files with YAML frontm
 3. **Follow this skill's conventions** — these are Mintlify best practices, but the site's established voice wins over generic standards
 4. **Apply general writing best practices**
 
+## ollim-bot conventions
+
+- Verify behavior against `~/ollim-bot/src/ollim_bot/` before documenting — trust code over docstrings
+- Path references use `~/.ollim-bot/` with a one-line `~` explainer per page — no platform tables or OS tabs
+- One authoritative page per behavior — other pages summarize and link, never add new claims
+- Use project terminology: background fork, interactive fork, ping budget, routine, main session, context compaction
+
 ## Workflow
 
 ### 1. Understand the project
