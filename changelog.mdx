@@ -7,7 +7,29 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Note>ollim-bot has been in active development since February 9, 2026 with 340 commits across 18 active development days.</Note>
+<Note>ollim-bot has been in active development since February 9, 2026 with 511 commits across 28 active development days.</Note>
+
+## Mar 9-10, 2026
+
+**Profile files, attachment downloads, and fork permission scoping**
+
+- **Profile files** — bot personality extracted from hardcoded prompts into
+  user-editable [`IDENTITY.md`](/personalizing/personality) and
+  [`USER.md`](/personalizing/user-context) files in `~/.ollim-bot/`.
+  `IDENTITY.md` is bootstrapped on first run with a default persona;
+  `USER.md` provides user context. Both are prepended to the system prompt
+  and editable by the agent at runtime.
+- **Attachment downloads** — non-image Discord attachments (PDFs, text files,
+  etc.) are now saved to `~/.ollim-bot/downloads/` so the agent can read
+  them. Images continue through base64 encoding as before.
+- **/config options display** — each config key now shows its valid options
+  next to the current value, making it easier to see what you can change.
+- **Fork permission scoping** — permission mode changes during a
+  [fork](/core-usage/forks) now stay fork-scoped. Exiting a fork restores
+  the persisted `_dont_ask` setting, and stale denied tool labels are
+  cleared at each new response.
+- **Gender-neutral language** — system prompt and profile module updated to
+  use they/them pronouns throughout.
 
 ## Feb 28, 2026
 
