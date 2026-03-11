@@ -1,6 +1,6 @@
 ---
 title: "Google Calendar"
-description: "Manage Google Calendar events through CLI commands and agent-powered embeds."
+description: "Manage Google Calendar events through commands and Discord embeds."
 ---
 
 ollim-bot provides full read/write access to your primary Google Calendar.
@@ -10,14 +10,12 @@ for one-click removal.
 
 ## Prerequisites
 
-- Google OAuth credentials configured (see [Google integration setup](/getting-started/google-integration))
-- Google account connected via [`/google-auth`](/core-usage/slash-commands#google-auth) — the `calendar.events` scope is included by default
+- Google account connected (see [Google integration setup](/getting-started/google-integration))
+- Authenticated via [`/google-auth`](/core-usage/slash-commands#google-auth)
 
 ## Setup
 
-No additional setup is required beyond the shared Google OAuth flow. The
-`https://www.googleapis.com/auth/calendar.events` scope is part of the default scope
-list in `google/auth.py`. Once you've completed the
+No additional setup is required. Once you've completed the
 [Google integration](/integrations/google-overview) setup, Calendar is ready to use.
 
 ## Usage
@@ -78,7 +76,7 @@ list in `google/auth.py`. Once you've completed the
     | `--end` | Yes | End time in `YYYY-MM-DDTHH:MM` format |
     | `--description` | No | Event description |
 
-    Naive datetimes (without timezone) are treated as the configured timezone (`OLLIM_TIMEZONE`).
+    Times without a timezone are treated as the configured timezone (`OLLIM_TIMEZONE`).
 
     ### Update an event
 
@@ -97,62 +95,56 @@ list in `google/auth.py`. Once you've completed the
     Permanently deletes the event from your primary calendar.
   </Tab>
   <Tab title="Agent">
-    The agent interacts with Google Calendar through two mechanisms.
+    The agent interacts with Google Calendar in two ways.
 
     ### Embed buttons
 
     When the agent presents calendar events in a Discord embed, it can attach
-    a delete button using the `discord_embed` MCP tool:
+    a **Delete** button that permanently removes the event.
 
-    - **Delete** — button action `event_del:<event_id>`, permanently removes the event
-
-    Clicking the button triggers an ephemeral Discord response confirming the
-    action and appends a context update to the session
-    (e.g., `User deleted calendar event "Team lunch"`), so the agent knows what you did.
+    Clicking the button shows a temporary confirmation only you can see,
+    and the agent is informed of what you did so it stays in sync.
 
     ### CLI delegation
 
-    The agent can also run `ollim-bot cal` subcommands directly for
+    The agent can also run calendar commands directly for
     operations like listing upcoming events, showing details, adding new events,
     or updating existing entries.
   </Tab>
 </Tabs>
 
 <Note>
-All operations use your primary calendar (`calendarId: "primary"`). ollim-bot does
+All operations use your primary Google Calendar. ollim-bot does
 not support secondary calendars or calendar selection.
 </Note>
 
-## API helpers
+<Accordion title="Developer reference: API helpers">
+  One function is exported from `google/calendar.py` for use by the button handler in `views.py`:
 
-One function is exported from `google/calendar.py` for use by the Discord button
-handler in `views.py`:
+  | Function | Signature | Returns |
+  |----------|-----------|---------|
+  | `delete_event` | `delete_event(event_id: str) -> str` | Event summary |
 
-| Function | Signature | Returns |
-|----------|-----------|---------|
-| `delete_event` | `delete_event(event_id: str) -> str` | Event summary |
-
-This is called via `asyncio.to_thread` in the button handler to avoid
-blocking the Discord event loop.
+  This is called via `asyncio.to_thread` in the button handler to avoid blocking the event loop.
+</Accordion>
 
 ## Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Calendar commands return an auth error">
-    Your OAuth token may have expired or been revoked. The bot
-    detects revocations automatically and prompts you to reconnect — run
+    Your Google connection may have expired or been revoked. The bot
+    detects this automatically and prompts you to reconnect — run
     `/google-auth` to re-authenticate.
   </Accordion>
   <Accordion title="How do I find an event ID?">
     Event IDs are displayed as the first column in `ollim-bot cal today` and
     `ollim-bot cal upcoming` output. When using embed buttons, the agent
-    encodes the ID into the button action automatically.
+    handles this automatically.
   </Accordion>
   <Accordion title="Times show in the wrong timezone">
-    All datetimes are handled in the configured timezone (`OLLIM_TIMEZONE`,
-    defaults to auto-detected system timezone with a UTC fallback). Naive
-    datetime inputs are assumed to be in this timezone. The Google Calendar
-    API stores and returns timezone-aware values.
+    All times are handled in the configured timezone (`OLLIM_TIMEZONE`,
+    defaults to auto-detected system timezone with a UTC fallback). Times
+    you enter without a timezone are assumed to be in this timezone.
   </Accordion>
 </AccordionGroup>
 
