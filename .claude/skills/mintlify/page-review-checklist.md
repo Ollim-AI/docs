@@ -1,8 +1,15 @@
 # Page review checklist
 
-Deep analysis rules for reviewing Mintlify documentation pages. Run relevant sections based on page content — skip sections that don't apply (e.g., skip media checks if the page has no images or videos).
+Deep analysis rules for reviewing Mintlify documentation pages. Organized into two scopes:
 
-Each rule is sourced from Mintlify's official guides. Source guide noted in section headers.
+- **Page-local checks** — can be evaluated from a single page in isolation. Used by per-page review agents.
+- **Cross-page checks** — require reading multiple pages to detect. Used by cross-cutting review agents.
+
+Skip sections that don't apply (e.g., skip media checks if the page has no images or videos). Each rule is sourced from Mintlify's official guides.
+
+---
+
+# Page-local checks
 
 ## Accessibility (guides/accessibility)
 
@@ -86,16 +93,11 @@ Identify the page's content type, then check against its structural expectations
 - Both basic and advanced usage examples
 - For APIs: response structure with field names, types, descriptions
 
-## Style & tone (guides/style-and-tone, guides/understand-your-audience)
+## Style & tone — page-scoped (guides/style-and-tone, guides/understand-your-audience)
 
 **Voice**
 - Second-person ("you"), active voice, direct language
 - Imperative statements for instructions ("Create a file", not "A file should be created")
-
-**Terminology**
-- Consistent: one term per concept across all pages — don't alternate (e.g., "API key" vs "API token")
-- User-facing language, not internal product terminology
-- No colloquialisms or informal expressions
 
 **Audience**
 - Each page targets one specific audience — "writing for multiple audiences leads to compromises that satisfy no one"
@@ -110,13 +112,13 @@ Identify the page's content type, then check against its structural expectations
 - Filler phrases ("in order to", "it's important to note") — wastes attention
 - Editorializing ("obviously", "simply", "just", "easily") — dismisses difficulty
 - Spelling and grammar errors — "make it less credible and harder to read"
+- Product-centric language — use language users are familiar with, not internal product terminology
+- Colloquialisms or informal expressions
 
-## Linking (guides/linking)
+## Linking — page-scoped (guides/linking)
 
 - Internal links use root-relative paths without file extensions
-- No circular links between the same pages
 - Related content linked naturally within context where valuable
-- When moving/renaming pages: update navigation config, add redirects, search entire docs for old paths, update all references, verify with `mint broken-links`
 
 ## SEO (guides/seo)
 
@@ -134,6 +136,22 @@ Identify the page's content type, then check against its structural expectations
 - GIFs: for short, complex workflows
 - Videos: for abstract concepts and lengthy workflows
 - Evaluate whether updating outdated visuals justifies the effort before including media
+
+---
+
+# Cross-page checks
+
+These require reading multiple pages to detect. Cannot be run by per-page agents.
+
+## Terminology consistency (guides/style-and-tone)
+
+- One term per concept across all pages — don't alternate (e.g., "API key" vs "API token")
+- User-facing language, not internal product terminology
+
+## Linking — cross-page (guides/linking)
+
+- No circular links between the same pages
+- When moving/renaming pages: update navigation config, add redirects, search entire docs for old paths, update all references, verify with `mint broken-links`
 
 ## Maintenance (guides/maintenance)
 
