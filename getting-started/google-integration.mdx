@@ -23,8 +23,8 @@ billing required) and link it to the bot.
     2. Click **New Project**
     3. Enter a name (e.g. `ollim-bot`) and click **Create**
     4. After creation, click the project dropdown again, find your new project
-       in the list, and click it to switch to it — the dropdown at the top
-       should now show your new project name
+       in the list, and double-click it to switch to it — the dropdown at the
+       top should now show your new project name
 
     <Note>
     Google Cloud Console is free for this use case — you will not be charged.
@@ -93,6 +93,11 @@ billing required) and link it to the bot.
     4. In the popup that appears, click **Download JSON**
 
     A file named `client_secret_[...].json` downloads to your computer.
+
+    <Warning>
+    Download the JSON file **before** clicking **OK** — you won't be able to
+    download it again after closing this dialog.
+    </Warning>
 
     <Warning>
     The application type **must** be **Desktop app**. If you select "Web
@@ -187,7 +192,8 @@ with Discord. Check these in order:
 
 <Accordion title="Timestamps are in the wrong timezone">
 ollim-bot auto-detects your system timezone. If timestamps are wrong, set it
-explicitly in the `.env` file at the project root:
+explicitly in the `.env` file in the folder where you cloned ollim-bot (the
+same folder where you run the bot):
 
 ```bash title=".env"
 OLLIM_TIMEZONE=America/New_York
