@@ -89,7 +89,7 @@ All other tools not in the fork's `allowed-tools` list are denied. The
 agent in a background fork cannot trigger approval prompts — see
 [Background forks](/scheduling/background-forks) for details.
 
-### Deny messages
+## Deny messages
 
 The deny message varies by context so the agent understands why a tool
 was blocked:
@@ -124,19 +124,47 @@ Protection is enforced at two layers:
 
 ## Customizing tool sets
 
-You can extend or override the default tool sets by creating a
-`tool-policy.yaml` file in `~/.ollim-bot/`. Changes take effect
-without a restart — the file is re-read when its modification time
-changes.
+Both the main session and background forks start with hard-coded
+default tool sets. You can extend — or, for background forks,
+completely replace — those defaults by creating a `tool-policy.yaml`
+file in `~/.ollim-bot/`.
 
-```yaml title="tool-policy.yaml"
+The file is optional. When it doesn't exist, the built-in defaults
+apply. Changes take effect without a restart — the file is re-read
+when its modification time changes.
+
+### Keys
+
+| Key | Type | Effect |
+|-----|------|--------|
+| `main_session.additional_allowed` | `list[str]` | Merged into the main session's default tools. Duplicates are ignored. |
+| `bg_forks.additional_allowed` | `list[str]` | Merged into the default background fork tools. Duplicates are ignored. |
+| `bg_forks.override` | `list[str]` | **Replaces** the default background fork tools entirely. Takes precedence over `additional_allowed`. |
+
+<Warning>`bg_forks.override` removes all default tools — including read-only
+helpers like `Read(./**.md)`. Use `additional_allowed` unless you need
+full control over the background fork tool set.</Warning>
+
+### Example
+
+A minimal `tool-policy.yaml` that adds `git status` to the main session and calendar access to background forks:
+
+```yaml title="~/.ollim-bot/tool-policy.yaml"
 main_session:
   additional_allowed:
     - "Bash(git status)"
+
 bg_forks:
   additional_allowed:
     - "Bash(ollim-bot cal *)"
 ```
+
+### Agent-managed additions
+
+When the agent creates a routine that needs tools beyond the defaults,
+it can either add `allowed-tools` to the routine's YAML frontmatter
+(scoped to that job) or append to `bg_forks.additional_allowed` in
+`tool-policy.yaml` (applies to all background forks).
 
 See [File formats](/configuration/file-formats#tool-policy-tool-policyyaml)
 for the full key reference.
