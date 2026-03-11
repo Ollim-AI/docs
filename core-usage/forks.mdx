@@ -1,9 +1,9 @@
 ---
 title: "Forks"
-description: "Branch your conversation into an isolated context to explore tangents, do focused work, or run background tasks."
+description: "Branch your conversation to explore tangents, do focused work, or run background tasks — without cluttering your main session."
 ---
 
-Forks let you branch your conversation into an isolated context.
+Forks let you branch your conversation into a separate space.
 Explore a tangent, research something, or do focused work — then
 choose whether to keep the results, report a summary, or discard
 everything. Your main session stays clean either way.
@@ -15,9 +15,9 @@ ollim-bot has two fork types:
 - **Interactive forks** — you enter a branched conversation, talk to
   the agent, and choose how to exit. All messages route to the fork
   until you end it.
-- **Background forks** — the scheduler runs a task on a disposable
-  forked session. Output is discarded by default; the agent uses
-  notifications, embeds, or reporting to surface results.
+- **Background forks** — the bot runs a task separately and
+  discards the conversation by default. Results reach you through
+  notifications or a summary report.
 
 Forks cannot be nested. You can only have one interactive fork at a
 time, though background forks run concurrently without blocking
@@ -44,15 +44,15 @@ Use `/fork` to start an interactive fork with an optional topic:
 ```
 
 If no topic is given, the agent waits for you to lead. The agent can
-also start a fork on its own when it decides a tangent needs isolated
-context.
+also start a fork on its own when it decides a tangent needs its own
+space.
 
-By default, interactive forks use **adaptive** thinking — Claude
-decides whether to think based on query complexity, even when the main
-session has thinking off. You can change this with
-[`/config`](/core-usage/slash-commands#config) — set `thinking.fork`
-to `off` to disable it, or to a token budget like `32000` for a fixed
-thinking allocation.
+By default, interactive forks use **adaptive** thinking — the bot
+decides whether to think step-by-step based on how complex your
+request is, even when the main session has thinking off. You can
+change this with [`/config`](/core-usage/slash-commands#config) —
+set `thinking.fork` to `off` to disable it, or to a number like
+`32000` for a fixed thinking budget.
 
 When a fork starts, the bot sends a purple embed showing the topic
 (or a short description like "branched conversation — changes stay
@@ -64,10 +64,10 @@ separate from main.") along with three buttons for exiting:
 | **Report** | Blurple | Reports summary, discards fork |
 | **Exit Fork** | Red | Discards fork, returns to main |
 
-While inside a fork, all your messages route to the forked session.
-Pending updates from background tasks are peeked (read-only) rather
-than cleared, so the main session still receives them when the fork
-ends.
+While inside a fork, all your messages go to the fork instead of
+the main session. Pending updates from background tasks are previewed
+but not cleared, so the main session still receives them when the
+fork ends.
 
 <Note>
   Replying to a message sent by a background fork starts an
@@ -98,10 +98,9 @@ ends, the exit embed title reflects what happened:
 
 <AccordionGroup>
   <Accordion title="Report updates (default)">
-    Appends a short summary to `~/.ollim-bot/state/pending_updates.json`
-    and discards the fork. The summary is injected into the next
-    main-session message, so you get the findings without the full
-    context.
+    Saves a short summary and discards the fork. The summary is
+    included in the next main-session message, so you get the
+    findings without the full conversation history.
 
     - **Button**: Report (agent is prompted to call
       `report_updates` before exit)
@@ -116,16 +115,16 @@ ends, the exit embed title reflects what happened:
     - **MCP tool**: `exit_fork` (no parameters)
   </Accordion>
   <Accordion title="Save context">
-    Promotes the fork to the main session. The forked client replaces
-    the main client, and the old main session is disconnected. All
-    conversation history from the fork becomes the new main session.
+    Keeps the fork and makes it your new main session. All
+    conversation history from the fork carries forward.
 
     If the save fails (e.g., the fork session was already disconnected),
     the exit embed reflects the actual outcome — "fork discarded (no
     session to save)" — rather than falsely reporting success.
 
     Use only when the main session needs the decisions going forward.
-    Most forks don't qualify — wrong saves permanently bloat context.
+    Most forks don't qualify — unnecessary saves clutter the main
+    session's memory.
 
     - **Button**: Save Context
     - **MCP tool**: `save_context` (no parameters)
@@ -158,13 +157,13 @@ The timeout works in two stages:
 
 ## Background forks
 
-Background forks run routines and reminders on
-disposable forked sessions. They differ from interactive forks in
-several ways:
+Background forks run routines and reminders in separate
+conversations that are discarded when done. They differ from
+interactive forks in several ways:
 
 | Aspect | Interactive | Background |
 |--------|-------------|------------|
-| Started by | You (`/fork`) or the agent | Scheduler (routines/reminders) or webhooks |
+| Started by | You (`/fork`) or the agent | Scheduler (routines/reminders) or external triggers |
 | Output | Streamed to Discord | Discarded (agent notifies or reports) |
 | Timeout | Idle timeout (`fork_idle_timeout`, default 10 min) | Hard timeout (`bg_fork_timeout`, default 30 min) |
 | Save context | Available | Not available |
@@ -182,18 +181,14 @@ overrides, tool restrictions, reporting modes), see
 ## Pending updates
 
 Pending updates are the bridge between forks and the main session —
-when a fork calls `report_updates(message)`, the summary gets
-prepended to the next main session interaction. Updates are capped at
-**10 entries** to prevent context bloat. When the cap is exceeded, the
-oldest entries are dropped and a sentinel is prepended so the agent
-knows omission occurred (e.g., "(3 earlier update(s) omitted — cap
-reached)"). The injected header also varies by context — prompting the
-main session to mention key findings, while marking updates as
-read-only in forks. See
+when a fork reports its findings, the summary is included at the start
+of your next main session message. Updates are capped at **10 entries**
+to keep things manageable. When the cap is exceeded, the oldest entries
+are dropped and the bot notes how many were omitted. See
 [Context flow](/architecture/context-flow#pending-updates) for the full
-pending updates cycle and `update-main-session` modes.
+pending updates cycle.
 
-When pending updates are injected into the main session, the bot sends
+When pending updates are included in the main session, the bot sends
 a visible note — "catching up on background activity..." — so you know
 context from background tasks is being included.
 
