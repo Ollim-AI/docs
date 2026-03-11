@@ -184,6 +184,10 @@ Check Gmail for unread messages from today.
 Send an embed summary if anything needs attention.
 ```
 
+<Warning>
+Don't list Discord tools — `ping_user`, `discord_embed`, `report_updates`, or `follow_up_chain` — in `allowed-tools`. The bot strips them automatically and controls their availability through `allow-ping` and `update-main-session` instead.
+</Warning>
+
 Chain reminders inherit tool restrictions — `follow_up_chain`
 propagates `allowed-tools` and `skills` to child reminders automatically.
 

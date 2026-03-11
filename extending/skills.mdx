@@ -15,6 +15,14 @@ When a routine or reminder references skills, the bot loads their instructions a
 Skills are loaded fresh every time they're invoked. If you update a skill's instructions, the next invocation picks up the changes automatically.
 </Note>
 
+## Bundled skills
+
+The bot ships with a **bundled skill** — `job-config` — that lives in the bot's source code rather than in `~/.ollim-bot/skills/`. It guides tool selection and behavioral configuration when creating background jobs.
+
+The bot invokes `job-config` automatically when you create or edit a routine, reminder, or webhook that needs background config. It determines which tools belong in [`allowed-tools`](/scheduling/background-forks#adding-tools) and which behavioral flags (`allow-ping`, `update-main-session`, `model`) to set — so you don't have to remember the rules yourself.
+
+Bundled skills are always available and don't need to be created manually. They work the same way as user-created skills but are maintained as part of the bot itself.
+
 ## File format
 
 Each skill lives in its own directory: `~/.ollim-bot/skills/<name>/SKILL.md`. The directory name must match the skill's `name` field — lowercase with hyphens.
