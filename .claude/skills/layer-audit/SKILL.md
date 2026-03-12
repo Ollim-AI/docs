@@ -73,19 +73,21 @@ Steps:
    Typical triggers: SDK-specific function names, config options, behavioral claims about how
    another layer works, or ambiguous delegation descriptions.
 
-   a. **Discover**: Call WebFetch to find which doc page covers the claim.
+   a. **Discover**: Call WebFetch to get the full URL index, then pick the relevant URL yourself.
 
       For SDK claims:
       WebFetch(
         url: "https://platform.claude.com/llms.txt",
-        prompt: "Find URLs containing 'agent-sdk' in the path that are about <TOPIC FROM THE CLAIM, e.g. 'hooks', 'sessions', 'permissions'>. Return only the matching URLs, one per line. Ignore any URLs that don't have 'agent-sdk' in the path."
+        prompt: "Return all URLs that contain 'agent-sdk' in the path. One per line, no other text."
       )
 
       For Claude Code claims:
       WebFetch(
         url: "https://docs.anthropic.com/en/docs/claude-code/llms.txt",
-        prompt: "Find URLs for documentation about <TOPIC FROM THE CLAIM>. Return only the matching URLs, one per line."
+        prompt: "Return all URLs. One per line, no other text."
       )
+
+      Then scan the returned URLs and select the one most relevant to the claim.
 
    b. **Verify**: Call WebFetch on the specific doc URL from step (a).
 
