@@ -78,7 +78,7 @@ Steps:
       For SDK claims:
       WebFetch(
         url: "https://platform.claude.com/llms.txt",
-        prompt: "Find URLs for documentation about <TOPIC FROM THE CLAIM, e.g. 'hooks', 'sessions', 'permissions'>. Return only the matching URLs, one per line."
+        prompt: "Find URLs containing 'agent-sdk' in the path that are about <TOPIC FROM THE CLAIM, e.g. 'hooks', 'sessions', 'permissions'>. Return only the matching URLs, one per line. Ignore any URLs that don't have 'agent-sdk' in the path."
       )
 
       For Claude Code claims:
