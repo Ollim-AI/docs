@@ -91,7 +91,7 @@ Steps:
 
       WebFetch(
         url: "<URL returned from step a>",
-        prompt: "The ollim-bot docs claim: '<QUOTE THE EXACT CLAIM FROM THE PAGE>'. Based on this documentation, answer: (1) Does this behavior belong to <CLAIMED LAYER> or a different layer? (2) Is the claim accurate? (3) Does the claim expose internals that a downstream consumer shouldn't document?"
+        prompt: "The ollim-bot docs claim: '<QUOTE THE EXACT CLAIM FROM THE PAGE>'. (1) Quote verbatim the sections of this page that are relevant to the claim. (2) Based on those sections: does this behavior belong to <CLAIMED LAYER> or a different layer? (3) Is the claim accurate? (4) Does the claim expose internals that a downstream consumer shouldn't document?"
       )
 
 4. For Rule 5, calibrate strictness based on audience:
