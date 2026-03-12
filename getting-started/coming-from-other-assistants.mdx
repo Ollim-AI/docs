@@ -40,19 +40,18 @@ intentional — not everything needs an equivalent.
 | **Email** | Multi-provider | [Gmail integration](/integrations/google-gmail) |
 | **Calendar** | Multi-provider | [Google Calendar integration](/integrations/google-calendar) |
 | **Tasks** | Various providers | [Google Tasks integration](/integrations/google-tasks) |
-| **Shell access** | Direct host access by default (sandboxing optional) | Full SDK capabilities, [permission-gated](/core-usage/permissions) per session |
-| **Web browsing** | Built-in | Available via [Discord tools](/extending/mcp-tools) |
-| **Plugin marketplace** | Large community ecosystems | No marketplace — [Discord tools](/extending/mcp-tools) and [subagents](/extending/subagents) you configure yourself |
+| **Shell access** | Direct host access by default (sandboxing optional) | Available through the Agent SDK, [permission-gated](/core-usage/permissions) per session |
+| **Web browsing** | Built-in | Available through the Agent SDK (`WebSearch`, `WebFetch`), [permission-gated](/core-usage/permissions) |
+| **Plugin marketplace** | Large community ecosystems | No marketplace — [subagents](/extending/subagents), [skills](/extending/skills), [hooks](/extending/hooks), and [webhooks](/integrations/webhooks) you configure yourself |
 | **Multi-user** | Yes | Single-user only — [by design](/architecture/design-philosophy#single-user-on-purpose) |
 | **Data storage** | Varies — Markdown + SQLite (OpenClaw), proprietary (commercial tools) | [Markdown + JSONL files](/configuration/file-formats) — no database dependency, git-trackable |
-| **Extensibility** | Plugin SDKs, community skills | [Discord tools](/extending/mcp-tools), [subagents](/extending/subagents), [system prompt](/development/system-prompt) |
+| **Extensibility** | Plugin SDKs, community skills | [Subagents](/extending/subagents), [skills](/extending/skills), [hooks](/extending/hooks), [Discord tools](/extending/mcp-tools), [system prompt](/development/system-prompt) |
 
 ## What you gain
 
-**Context that persists and compounds.** ollim-bot runs a single persistent session — one
-long conversation that picks up where you left off, days later, without re-explaining.
-Background tasks [fork from the main context](/core-usage/forks) rather than starting
-fresh, so they inherit what's already been discussed.
+**Context that persists and compounds.** ollim-bot maintains a single persistent session that
+picks up where you left off across restarts. As context grows, [compaction](/architecture/session-management#compaction) summarizes older history to free space — so the bot retains the important
+parts without hitting context limits. Background tasks [fork from the main context](/core-usage/forks) rather than starting fresh, so they inherit what's already been discussed.
 
 **Proactive check-ins, not just reactive responses.** Most AI assistants wait for you to
 start a conversation. ollim-bot messages you on schedule — morning briefings, end-of-day
@@ -65,8 +64,7 @@ messages. The bot decides what's worth pinging you about and what can wait.
 
 **Transparent, auditable data.** Routines and reminders are markdown files with YAML
 frontmatter — open one in any editor and see exactly what it does. Session logs are
-append-only JSONL. Everything lives in `~/.ollim-bot/` and can be git-tracked for full
-version history. No database indexes to rebuild, no migrations to run.
+append-only JSONL. All data lives in `~/.ollim-bot/`, and most files are [auto-committed to git](/configuration/data-directory#git-tracking) for version history. No database indexes to rebuild, no migrations to run.
 
 **Smaller attack surface.** Tools with large plugin marketplaces and permissive defaults
 have a larger attack surface. ollim-bot's tools are permission-gated, actions are visible
@@ -78,11 +76,10 @@ Be clear-eyed about what ollim-bot doesn't do:
 
 - **Platform choice.** Discord only. No WhatsApp, Telegram, Slack, or SMS. If Discord
   isn't where you spend your day, this isn't the right tool.
-- **Broad automation.** No unrestricted shell access, no browser automation, no
-  "do anything" capabilities. ollim-bot is a personal assistant, not an autonomous agent
-  platform.
-- **Plugin ecosystems.** No marketplace, no community skills repository. You extend it
-  with [Discord tools](/extending/mcp-tools) and [subagents](/extending/subagents), which means more control but more setup.
+- **Broad automation.** Shell, web search, and file tools exist but are [permission-gated](/core-usage/permissions) and denied by default. No browser automation, no "do anything" defaults.
+  ollim-bot is a personal assistant, not an autonomous agent platform.
+- **Plugin ecosystems.** No marketplace, no community repository. You extend it
+  with [subagents](/extending/subagents), [skills](/extending/skills), [hooks](/extending/hooks), and [webhooks](/integrations/webhooks) — more control but more setup.
 - **Multi-provider integrations.** Email, calendar, and tasks are Google-only. If you're
   on Outlook or another provider, those integrations don't exist yet.
 - **Multi-user support.** One bot, one person. If you need a team assistant or shared
@@ -98,14 +95,14 @@ automations, or set up new integrations.
 <AccordionGroup>
   <Accordion title="Import your context">
     If your previous assistant stored memory as Markdown files (OpenClaw's `MEMORY.md`,
-    daily logs, etc.), drop them into `~/.ollim-bot/imports/`. Then ask the bot to read
-    through them:
+    daily logs, etc.), drop them anywhere in `~/.ollim-bot/` (the bot's
+    [data directory](/configuration/data-directory)) and ask the bot to read through them:
 
-    > "I put some files from my previous assistant in the imports folder. Read through
+    > "I put some files from my previous assistant in the data directory. Read through
     > them, then check your docs to see what you can actually do with what you find —
     > routines, reminders, integrations, whatever fits."
 
-    The bot reads your imported files, cross-references them against its own documentation,
+    The bot reads your files, cross-references them against its own documentation,
     and suggests what it can set up for you. This isn't a memory import — it's a
     conversation where the bot gets to know you faster by reading what your last assistant
     learned and connecting it to what it can do.
@@ -151,7 +148,7 @@ MCP tool configurations. If you build something that follows the
 
 <Columns cols={2}>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Get the bot running in 6 steps.
+    Get the bot running in 7 steps.
   </Card>
   <Card title="Design philosophy" icon="lightbulb" href="/architecture/design-philosophy">
     The full reasoning behind these tradeoffs.
