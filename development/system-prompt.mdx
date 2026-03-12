@@ -4,28 +4,36 @@ description: "How the system prompt is structured and what context the bot recei
 ---
 
 The system prompt defines how the bot behaves — its personality, what
-tools it knows about, and the rules it follows. It combines two layers:
-your editable profile files (`IDENTITY.md` and `USER.md`) plus
-operational instructions covering behavior rules and documentation for
-every tool. Additional context — timestamps, pending background updates,
-and background preambles — is added before each message.
+tools it knows about, and the rules it follows. It uses the `claude_code`
+preset as a base — preserving Claude Code's built-in tool usage guidelines,
+safety instructions, and environment context — then appends ollim-bot's
+operational instructions on top. Those instructions combine your editable
+profile files (`IDENTITY.md` and `USER.md`) with behavior rules and
+documentation for every tool. Additional context — timestamps, pending
+background updates, and background preambles — is added before each
+message.
 
 <Accordion title="Developer reference: prompt construction">
-  The prompt is built dynamically by `build_system_prompt()` in `prompts.py`
-  and passed to `ClaudeAgentOptions` in `agent.py`. The profile section is
-  loaded by `load_profile()` in `profile.py`.
+  The prompt uses a **preset-with-append** pattern. In `agent.py`, the
+  `system_prompt` option is a dict with `"type": "preset"`,
+  `"preset": "claude_code"`, and `"append"` set to the output of
+  `build_system_prompt()` from `prompts.py`. This preserves Claude Code's
+  full built-in prompt while adding ollim-bot's instructions after it.
+  The profile section is loaded by `load_profile()` in `profile.py`.
 </Accordion>
 
 ## Prompt structure
 
-The prompt combines two sections in order:
+The `claude_code` preset provides the base prompt — tool usage guidelines,
+safety instructions, and environment context. The appended ollim-bot
+instructions combine two sections in order:
 
 | Section | Purpose |
 |---------|---------|
 | Profile | From `IDENTITY.md` + `USER.md` — persona, user context |
 | Task capture | When and how to capture tasks |
 | Output guidance | One-thing-at-a-time vs full lists |
-| Configuration notes | CLI style, timestamps, prompt tags, tool whitelisting |
+| Configuration notes | CLI style, timestamps, prompt tags |
 | Skills | Skill format, interactive use via SDK `Skill` tool, spec-file reference |
 | Google Tasks | Commands, conventions |
 | Google Calendar | Commands, timezone |
@@ -66,9 +74,9 @@ default template contains and how to edit it. See
 ## Tool instruction sections
 
 Each tool section follows the same pattern: a heading, a command table,
-and behavioral rules. The bot is restricted to only the tools documented
-in the prompt — it is told not to make up tools that don't exist (like
-Notion, Slack, or Trello).
+and behavioral rules. Tool safety — not hallucinating tools that don't
+exist — is handled by the `claude_code` preset rather than a custom
+instruction in the appended prompt.
 
 <Tabs>
   <Tab title="Google Tasks">
