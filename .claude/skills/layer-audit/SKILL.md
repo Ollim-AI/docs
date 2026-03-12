@@ -30,15 +30,9 @@ Turn the user's input into a list of MDX file paths:
 
 If the resolved set is empty, stop and tell the user.
 
-## 2. Read the checklist and docs reference
+## 2. Read the checklist
 
-Read three files:
-
-1. `.claude/skills/layer-audit/layer-boundary-checklist.md` — the 5 rules, what counts as a layer, cross-page checks
-2. `.claude/skills/layer-audit/agent-sdk-docs.md` — URL lookup table for Agent SDK documentation (Layer B)
-3. `.claude/skills/layer-audit/claude-code-docs.md` — URL lookup table for Claude Code documentation (Layer A)
-
-The docs references are tables of canonical URLs for the SDK and Claude Code. When a per-page agent encounters a claim about SDK or Claude Code behavior and isn't sure whether it's accurate or which layer owns it, it should fetch the relevant URL to verify. This grounds the audit in official documentation rather than assumptions.
+Read `.claude/skills/layer-audit/layer-boundary-checklist.md` — the 5 rules, what counts as a layer, cross-page checks.
 
 ## 3. Classify page audience
 
@@ -62,8 +56,6 @@ Audit this documentation page for layer boundary violations.
 
 Page path: <absolute-path-to-mdx-file>
 Checklist path: <absolute-path-to-layer-boundary-checklist.md>
-SDK docs reference: <absolute-path-to-agent-sdk-docs.md>
-Claude Code docs reference: <absolute-path-to-claude-code-docs.md>
 Page audience: <user-facing|developer-facing>
 
 The three layers:
@@ -73,15 +65,29 @@ The three layers:
 
 Steps:
 1. Read the page and the checklist
-2. Read both docs references (URL lookup tables for SDK and Claude Code)
-3. For each rule, determine if it applies (skip rules about layers the page doesn't mention)
-4. When the page makes a claim about SDK or Claude Code behavior (e.g., "the SDK handles X", "Claude Code provides Y"),
-   fetch the relevant URL from the appropriate lookup table to verify the claim is accurate and correctly attributed.
-   Only fetch when genuinely uncertain — don't fetch for every mention.
-5. For Rule 5, calibrate strictness based on audience:
+2. For each rule, determine if it applies (skip rules about layers the page doesn't mention)
+3. Verify claims against official docs — when the page attributes behavior to the SDK or Claude Code
+   and you're not sure the attribution is correct, use WebFetch to ground your judgment:
+
+   a. **Discover relevant URLs**: Fetch the appropriate llms.txt index to find doc pages related to the claim:
+      - SDK claims → fetch https://platform.claude.com/llms.txt
+      - Claude Code claims → fetch https://docs.anthropic.com/en/docs/claude-code/llms.txt
+      Search the index for keywords from the claim (e.g., "hooks", "sessions", "permissions")
+      to identify which doc URL is most relevant.
+
+   b. **Fetch and verify**: Fetch the specific doc page URL you found. Read the content to determine:
+      - Does this behavior actually belong to the layer the page claims?
+      - Is the description accurate, or does it describe internals the page shouldn't expose?
+
+   Only fetch when genuinely uncertain about a claim — don't fetch for every layer mention.
+   Typical triggers: SDK-specific function names, config options, behavioral claims about how
+   another layer works, or ambiguous delegation descriptions.
+
+4. For Rule 5, calibrate strictness based on audience:
    - User-facing: any SDK/Claude Code internals are violations
-   - Developer-facing: SDK interface details (function signatures, config options) are acceptable; SDK implementation details are still violations
-6. Output ONLY a findings table — no preamble, no summary
+   - Developer-facing: SDK interface details (function signatures, config options) are acceptable;
+     SDK implementation details are still violations
+5. Output ONLY a findings table — no preamble, no summary
 
 If no violations found, output: "No violations found."
 
@@ -91,7 +97,7 @@ Output format (one row per violation):
 - Rule: which rule number and short name (e.g., "Rule 5: cross-layer internals")
 - Location: heading name or line content where the violation occurs
 - Violation: what's wrong — quote the problematic text
-- Verified against: SDK doc URL fetched to confirm, or "checklist only" if no fetch needed
+- Verified against: URL fetched to confirm, or "checklist only" if no fetch needed
 - Suggested fix: how to rewrite it to respect the layer boundary
 ```
 
