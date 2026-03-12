@@ -91,7 +91,7 @@ Steps:
 
       WebFetch(
         url: "<URL returned from step a>",
-        prompt: "The ollim-bot docs claim: '<QUOTE THE EXACT CLAIM FROM THE PAGE>'. (1) Quote verbatim the sections of this page that are relevant to the claim. (2) Based on those sections: does this behavior belong to <CLAIMED LAYER> or a different layer? (3) Is the claim accurate? (4) Does the claim expose internals that a downstream consumer shouldn't document?"
+        prompt: "Quote verbatim all sections relevant to: <TOPIC FROM THE CLAIM, e.g. 'hooks', 'session persistence', 'setting_sources'>. Include headings for context. Return only the quoted sections, no commentary."
       )
 
 4. For Rule 5, calibrate strictness based on audience:
