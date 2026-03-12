@@ -27,8 +27,18 @@ chronological order.
   bot no longer calls `report_updates`, `save_context`, or `exit_fork` on
   its own. It waits for you to explicitly ask to wrap up or leave.
   See [Forks](/core-usage/forks).
+- **Background fork permission hardening** —
+  [background forks](/scheduling/background-forks) now always use
+  `permission_mode="default"` regardless of the main session's setting.
+  This prevents `bypassPermissions` from leaking into background forks,
+  ensuring tool gating and [ping budget](/scheduling/ping-budget)
+  enforcement are never skipped.
 - Internal: `--foreground`/`--background` mutual exclusivity in reminder
   CLI, isolated reminder label format updated to `[bg,isolated]`.
+- Internal: switched from a custom
+  [system prompt](/development/system-prompt) string to the `claude_code`
+  preset with appended ollim-bot instructions — preserves Claude Code's
+  built-in tool usage guidelines and safety instructions.
 
 ## Mar 10-11, 2026
 
