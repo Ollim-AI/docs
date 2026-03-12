@@ -69,9 +69,12 @@ Steps:
 3. Verify claims against official docs — when the page attributes behavior to the SDK or Claude Code
    and you're not sure the attribution is correct, use the WebFetch tool to ground your judgment.
 
-   Only fetch when genuinely uncertain about a claim — don't fetch for every layer mention.
-   Typical triggers: SDK-specific function names, config options, behavioral claims about how
-   another layer works, or ambiguous delegation descriptions.
+   If the page mentions the SDK or Claude Code by name, you MUST:
+   - Run discovery (step 3a) once per layer mentioned
+   - Run verify (step 3b) for at least the strongest behavioral claim about that layer
+
+   Skip verification ONLY for generic references with no behavioral assertion
+   (e.g., "ollim-bot uses the Agent SDK" — no claim about what the SDK does).
 
    a. **Discover**: Call WebFetch to get the full URL index, then pick the relevant URL yourself.
 
@@ -116,7 +119,9 @@ Output format (one row per violation):
 
 ## 5. Spawn cross-cutting agent
 
-In the same message as the per-page agents (or the first batch), spawn one background Explore agent for cross-page checks.
+If the target set is 1 page, skip the cross-cutting agent — cross-page checks require ≥2 pages.
+
+Otherwise, in the same message as the per-page agents (or the first batch), spawn one background Explore agent for cross-page checks.
 
 ```
 Check these documentation pages for layer attribution consistency.
@@ -194,6 +199,28 @@ If the user passed `--fix`, after presenting the report:
 1. Present the full report first — the user sees what will change before anything is modified
 2. Ask which findings to fix (all, specific pages, specific rules)
 3. For each page with approved fixes, load the /mintlify skill and apply corrections
-4. Re-run the per-page agent on modified pages to verify fixes didn't introduce new violations
+4. Verify fixes by spawning a per-page Explore agent with context about what changed:
+
+```
+Verify that fixes were applied correctly to this documentation page.
+
+Page path: <absolute-path-to-mdx-file>
+Checklist path: <absolute-path-to-layer-boundary-checklist.md>
+Page audience: <user-facing|developer-facing>
+
+Original findings that were fixed:
+<paste the findings table for this page>
+
+Fixes applied:
+<paste the edits made>
+
+Steps:
+1. Read the page and the checklist
+2. For each original finding, confirm the fix resolves it without introducing a new violation
+3. Check that the fix didn't break surrounding context (e.g., dangling references, inconsistent terminology)
+4. Output ONLY a findings table of NEW violations introduced by the fixes — not re-reports of pre-existing issues
+
+If all fixes are clean, output: "All fixes verified."
+```
 
 Do not fix cross-page inconsistencies automatically — they require judgment about which page is authoritative. Present them for the user to decide.
