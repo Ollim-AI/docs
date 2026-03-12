@@ -33,7 +33,7 @@ intentional — not everything needs an equivalent.
 | Capability | OpenClaw / others | ollim-bot |
 |---|---|---|
 | **Messaging platforms** | WhatsApp, Telegram, Slack, Discord, 50+ | Discord DMs only |
-| **Persistent memory** | Markdown files + database indexes, session-independent | [Persistent sessions](/architecture/session-management) — one continuous conversation |
+| **Persistent memory** | Markdown files + database indexes, session-independent | [Persistent sessions](/architecture/session-management) with [compaction](/architecture/session-management#compaction) |
 | **Scheduling** | Cron jobs + periodic heartbeats | [Routines](/scheduling/routines) (contextual check-ins) + [reminders](/scheduling/reminders) with follow-ups |
 | **Background work** | Autonomous execution | [Background forks](/scheduling/background-forks) with [ping budget](/scheduling/ping-budget) |
 | **Proactive outreach** | Varies by tool | Core feature — the bot reaches out to you on schedule |
@@ -125,10 +125,10 @@ automations, or set up new integrations.
   </Accordion>
 
   <Accordion title="Add new integrations">
-    ollim-bot already has shell access, file tools, and code execution through the Claude
-    Agent SDK — but the [permission system](/core-usage/permissions) restricts tools to an
-    explicit allowlist per session. New integrations (Google services, webhook endpoints,
-    structured tool APIs) follow established patterns in the codebase.
+    ollim-bot already has shell access, file tools, web search, and code execution
+    through the Claude Agent SDK — but the [permission system](/core-usage/permissions)
+    denies unapproved tools by default. New integrations (Google services, webhook
+    endpoints, structured tool APIs) follow established patterns in the codebase.
 
     > "I want to connect a new service. Check the extending docs and walk me through
     > what's possible — integrations, subagents, webhooks."
