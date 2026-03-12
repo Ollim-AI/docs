@@ -26,7 +26,7 @@ If the resolved set is empty, stop and tell the user — don't spawn agents with
 
 Read `.claude/skills/mintlify/page-review-checklist.md`. It has two sections:
 
-- **Page-local checks** — accessibility, content type structure, style & tone (page-scoped), SEO, media. Each per-page agent runs these.
+- **Page-local checks** — accessibility, content type structure, style & tone (page-scoped), media. Each per-page agent runs these.
 - **Cross-page checks** — terminology consistency, cross-page linking, maintenance. The cross-cutting agent runs these.
 
 ## 3. Spawn per-page agents

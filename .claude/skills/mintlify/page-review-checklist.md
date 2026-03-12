@@ -120,14 +120,6 @@ Identify the page's content type, then check against its structural expectations
 - Internal links use root-relative paths without file extensions
 - Related content linked naturally within context where valuable
 
-## SEO (guides/seo)
-
-- Title: 50–60 characters
-- Meta description: 150–160 characters
-- Keywords integrated naturally into headings and body text — no keyword stuffing
-- Image alt text includes relevant keywords
-- Sequential meaningful headers
-
 ## Media (guides/media)
 
 - Media is supplementary — never the sole source of information
