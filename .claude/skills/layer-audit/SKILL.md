@@ -2,7 +2,7 @@
 name: layer-audit
 description: Audit documentation pages for layer boundary violations across the three-layer composition chain (Claude Code → Agent SDK → ollim-bot). Use when reviewing layer attribution, delegation documentation, or boundary-crossing behavior. Also use when the user says "audit layers", "check layer boundaries", "layer violations", "check layer docs", or wants to verify that docs correctly describe which layer handles what.
 argument-hint: <glob, section name, or page list> [--fix]
-allowed-tools: Read, Glob, Grep, Bash, Agent, AskUserQuestion
+allowed-tools: Read, Glob, Grep, Bash, Agent, AskUserQuestion, WebFetch
 ---
 
 # Layer audit
@@ -30,13 +30,14 @@ Turn the user's input into a list of MDX file paths:
 
 If the resolved set is empty, stop and tell the user.
 
-## 2. Read the checklist
+## 2. Read the checklist and docs reference
 
-Read `.claude/skills/layer-audit/layer-boundary-checklist.md`. It contains:
+Read two files:
 
-- **The three layers** — what counts as a layer and what doesn't (Python stdlib, discord.py, etc. are infrastructure, not layers)
-- **5 rules** — purpose statements, seam documentation, delegation attribution, boundary-crossing data, and no cross-layer internals
-- **Cross-page checks** — layer attribution consistency and delegation consistency
+1. `.claude/skills/layer-audit/layer-boundary-checklist.md` — the 5 rules, what counts as a layer, cross-page checks
+2. `.claude/skills/layer-audit/agent-sdk-docs.md` — URL lookup table for Agent SDK documentation
+
+The docs reference is a table of canonical Agent SDK URLs. When a per-page agent encounters a claim about SDK behavior and isn't sure whether it's accurate or which layer owns it, it should fetch the relevant URL to verify. This grounds the audit in official documentation rather than assumptions.
 
 ## 3. Classify page audience
 
@@ -60,6 +61,7 @@ Audit this documentation page for layer boundary violations.
 
 Page path: <absolute-path-to-mdx-file>
 Checklist path: <absolute-path-to-layer-boundary-checklist.md>
+SDK docs reference: <absolute-path-to-agent-sdk-docs.md>
 Page audience: <user-facing|developer-facing>
 
 The three layers:
@@ -69,20 +71,25 @@ The three layers:
 
 Steps:
 1. Read the page and the checklist
-2. For each rule, determine if it applies (skip rules about layers the page doesn't mention)
-3. For Rule 5, calibrate strictness based on audience:
+2. Read the SDK docs reference (URL lookup table)
+3. For each rule, determine if it applies (skip rules about layers the page doesn't mention)
+4. When the page makes a claim about SDK behavior (e.g., "the SDK handles X", "setting_sources controls Y"),
+   fetch the relevant URL from the lookup table to verify the claim is accurate and correctly attributed.
+   Only fetch when genuinely uncertain — don't fetch for every mention.
+5. For Rule 5, calibrate strictness based on audience:
    - User-facing: any SDK/Claude Code internals are violations
    - Developer-facing: SDK interface details (function signatures, config options) are acceptable; SDK implementation details are still violations
-4. Output ONLY a findings table — no preamble, no summary
+6. Output ONLY a findings table — no preamble, no summary
 
 If no violations found, output: "No violations found."
 
 Output format (one row per violation):
-| Rule | Location | Violation | Suggested fix |
+| Rule | Location | Violation | Verified against | Suggested fix |
 
 - Rule: which rule number and short name (e.g., "Rule 5: cross-layer internals")
 - Location: heading name or line content where the violation occurs
 - Violation: what's wrong — quote the problematic text
+- Verified against: SDK doc URL fetched to confirm, or "checklist only" if no fetch needed
 - Suggested fix: how to rewrite it to respect the layer boundary
 ```
 
