@@ -7,6 +7,11 @@ ollim-bot is structured so that new integrations follow established patterns. Th
 
 Each section walks through the full procedure, referencing the conventions used by existing integrations.
 
+## Prerequisites
+
+- Development environment set up per the [development guide](/development/guide)
+- Familiarity with the existing integration patterns (read one integration module before starting)
+
 ## Adding a Google service
 
 Existing services (Tasks, Calendar, Gmail) all follow the same structure: a scope in `google/auth.py`, a module under `google/`, a CLI subcommand in `main.py`, and documentation in `prompts.py`.
