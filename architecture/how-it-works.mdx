@@ -26,7 +26,8 @@ Every message you send follows the same path through the system:
   <Step title="Agent processes">
     The agent sends the enriched message to Claude. It has access
     to Discord tools (`discord_embed`, `ping_user`, `save_context`,
-    `report_updates`, `enter_fork`, `exit_fork`, `follow_up_chain`),
+    `report_updates`, `enter_fork`, `exit_fork`, `follow_up_chain`,
+    `update_names`),
     a docs server for self-referencing documentation,
     Bash commands (`ollim-bot tasks`, `ollim-bot cal`, etc.),
     file operations, web tools, and five subagents (guide, gmail-reader,
@@ -51,13 +52,13 @@ understanding.
 
 ### How sessions work
 
-Claude assigns a session ID to each conversation.
+The Claude Agent SDK assigns a session ID to each conversation.
 ollim-bot persists this ID to `~/.ollim-bot/state/sessions.json` (a
 plain text file containing just the session ID string). On
 restart, the bot resumes from this saved session using
 `resume=session_id`.
 
-When the conversation context grows too large, Claude
+When the conversation context grows too large, the SDK
 auto-compacts it — summarizing older messages while preserving
 meaning. The session ID changes on compaction, and ollim-bot
 detects and logs this automatically.
@@ -76,6 +77,7 @@ Every session state change is logged to
 | `interactive_fork` | Interactive fork created |
 | `bg_fork` | Background fork created |
 | `isolated_bg` | Isolated background fork (no history) |
+| `restarting` | Bot is restarting (recorded before exit) |
 
 Each event records a timestamp and parent session ID, creating a
 traceable lineage of conversation branches.

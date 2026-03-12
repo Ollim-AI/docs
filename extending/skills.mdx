@@ -160,7 +160,7 @@ For **per-job injection** (routines and reminders), the scheduler loads the refe
 </Accordion>
 
 <Accordion title="Tool permissions">
-When a scheduled job references a skill, the skill's `allowed-tools` are automatically merged into the background fork's tool set. The bot handles deduplication — declaring a tool that's already in the defaults has no effect. Tool permissions from skill-level `allowed-tools` are enforced before the bot's own tool policy, so skill-level denials take priority.
+When a scheduled job references a skill, the skill's `allowed-tools` are automatically merged into the background fork's tool set. The bot handles deduplication — declaring a tool that's already in the defaults has no effect. Skills can only grant additional tool permissions, not restrict them — if a tool is in the base set, it remains available regardless of skill configuration.
 </Accordion>
 
 <Accordion title="Chain propagation">

@@ -15,9 +15,10 @@ chronological order.
 
 - **Job-config skill** — new bundled [skill](/extending/skills) that guides
   tool selection and behavioral configuration when creating background jobs
-  (routines, reminders, webhooks). The bot invokes it automatically during
-  job setup.
-- **Discord tools stripped from allowed-tools** — Discord MCP tools are now
+  (routines, reminders, webhooks). The agent is instructed to invoke it when creating or editing
+  background jobs.
+- **Discord tools stripped from allowed-tools** — Discord tools
+  (`ping_user`, `discord_embed`, `report_updates`, `follow_up_chain`) are now
   automatically removed from `allowed-tools` in
   [background forks](/scheduling/background-forks). They're gated by
   `allow-ping` and `update-main-session` flags instead, preventing bypass

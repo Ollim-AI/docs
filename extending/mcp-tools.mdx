@@ -1,9 +1,9 @@
 ---
 title: "Discord tools"
-description: "Reference all seven Discord tools the agent uses for embeds, pings, forks, and chains."
+description: "Reference all eight Discord tools the agent uses for embeds, pings, forks, and chains."
 ---
 
-ollim-bot gives the agent seven Discord tools for sending messages, managing forks, reporting findings, and scheduling follow-ups — all without direct access to the Discord API.
+ollim-bot gives the agent eight Discord tools for sending messages, managing forks, reporting findings, and scheduling follow-ups — all without direct access to the Discord API.
 
 The agent also has access to a docs server — a remote server at [`docs.ollim.ai/mcp`](https://docs.ollim.ai/mcp) that lets it look up its own documentation and architecture.
 
@@ -129,6 +129,21 @@ Returns an error if:
 <Tip>
 If the task is done or no follow-up is needed, don't call `follow_up_chain`. The chain ends naturally.
 </Tip>
+
+## Configuration tool
+
+### `update_names`
+
+Update the bot and user display names. Writes to `.env` and takes effect after `/restart`.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `user_name` | string | Yes | — | User's display name |
+| `bot_name` | string | Yes | — | Bot's display name |
+
+Returns an error if either name is empty.
+
+**Availability:** Main session only. Returns an error in interactive forks and background forks.
 
 ## Background fork enforcement
 

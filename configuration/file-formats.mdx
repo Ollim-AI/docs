@@ -61,7 +61,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `id` | `str` | auto-generated | 8-character hex UUID |
 | `run-at` | `str` | — | ISO 8601 datetime with timezone (e.g., `2026-02-24T15:30:00-08:00`) |
 | `description` | `str` | `""` | Human-readable description |
-| `background` | `bool` | `false` | Run as background fork |
+| `background` | `bool` | `true` | Run as background fork |
 | `chain-depth` | `int` | `0` | Current position in a follow-up chain (0 = root) |
 | `max-chain` | `int` | `0` | Maximum chain depth (0 = no chaining) |
 | `chain-parent` | `str \| null` | `null` | ID of chain root (auto-set to own `id` when `max-chain > 0`) |
