@@ -67,21 +67,32 @@ Steps:
 1. Read the page and the checklist
 2. For each rule, determine if it applies (skip rules about layers the page doesn't mention)
 3. Verify claims against official docs — when the page attributes behavior to the SDK or Claude Code
-   and you're not sure the attribution is correct, use WebFetch to ground your judgment:
-
-   a. **Discover relevant URLs**: Fetch the appropriate llms.txt index to find doc pages related to the claim:
-      - SDK claims → fetch https://platform.claude.com/llms.txt
-      - Claude Code claims → fetch https://docs.anthropic.com/en/docs/claude-code/llms.txt
-      Search the index for keywords from the claim (e.g., "hooks", "sessions", "permissions")
-      to identify which doc URL is most relevant.
-
-   b. **Fetch and verify**: Fetch the specific doc page URL you found. Read the content to determine:
-      - Does this behavior actually belong to the layer the page claims?
-      - Is the description accurate, or does it describe internals the page shouldn't expose?
+   and you're not sure the attribution is correct, use the WebFetch tool to ground your judgment.
 
    Only fetch when genuinely uncertain about a claim — don't fetch for every layer mention.
    Typical triggers: SDK-specific function names, config options, behavioral claims about how
    another layer works, or ambiguous delegation descriptions.
+
+   a. **Discover**: Call WebFetch to find which doc page covers the claim.
+
+      For SDK claims:
+      WebFetch(
+        url: "https://platform.claude.com/llms.txt",
+        prompt: "Find URLs for documentation about <TOPIC FROM THE CLAIM, e.g. 'hooks', 'sessions', 'permissions'>. Return only the matching URLs, one per line."
+      )
+
+      For Claude Code claims:
+      WebFetch(
+        url: "https://docs.anthropic.com/en/docs/claude-code/llms.txt",
+        prompt: "Find URLs for documentation about <TOPIC FROM THE CLAIM>. Return only the matching URLs, one per line."
+      )
+
+   b. **Verify**: Call WebFetch on the specific doc URL from step (a).
+
+      WebFetch(
+        url: "<URL returned from step a>",
+        prompt: "The ollim-bot docs claim: '<QUOTE THE EXACT CLAIM FROM THE PAGE>'. Based on this documentation, answer: (1) Does this behavior belong to <CLAIMED LAYER> or a different layer? (2) Is the claim accurate? (3) Does the claim expose internals that a downstream consumer shouldn't document?"
+      )
 
 4. For Rule 5, calibrate strictness based on audience:
    - User-facing: any SDK/Claude Code internals are violations
