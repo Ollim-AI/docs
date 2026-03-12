@@ -171,6 +171,7 @@ interactive forks in several ways:
 | Started by | You (`/fork`) or the agent | Scheduler (routines/reminders) or external triggers |
 | Output | Streamed to Discord | Discarded (agent notifies or reports) |
 | Timeout | Idle timeout (`fork_idle_timeout`, default 10 min) | Hard timeout (`bg_fork_timeout`, default 30 min) |
+| Permission mode | Inherits from main session | Always `default` — never inherits |
 | Save context | Available | Not available |
 | Report to main session | Available | Available |
 | Blocks conversation | Yes (one at a time) | No (multiple run concurrently) |

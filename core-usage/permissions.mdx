@@ -77,8 +77,14 @@ in `dontAsk` mode.
 
 ## Background forks
 
-Background forks have their own tool restrictions based on the job's
-YAML configuration:
+Background forks always run with `permission_mode="default"` —
+regardless of your main session's setting. Even if you've set
+`bypassPermissions` or `acceptEdits`, background forks don't inherit
+that mode. This ensures tool gating and **ping budget** enforcement
+are always active for background tasks.
+
+Beyond permission mode, background forks have their own tool
+restrictions based on the job's YAML configuration:
 
 - **Ping tools** (`ping_user`, `discord_embed`) — allowed only when
   `allow-ping` is `true` in the job's YAML

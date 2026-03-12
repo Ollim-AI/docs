@@ -137,6 +137,16 @@ directly on Discord for time-sensitive items. This combination is useful
 for tasks that should notify the user when needed but don't need to feed
 context back to the main session.
 
+## Permission mode
+
+Background forks always run with `permission_mode="default"` — they
+never inherit the main session's permission mode. Even if you've set
+`bypassPermissions` or `acceptEdits` on the main session, background
+forks are unaffected. This ensures tool gating and **ping budget**
+enforcement can't be bypassed by background tasks. See
+[Permissions](/core-usage/permissions#background-forks) for the full
+permission model.
+
 ## Tool restrictions
 
 Background forks have limited tool access for safety — the agent can
