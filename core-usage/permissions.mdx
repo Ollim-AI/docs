@@ -16,8 +16,8 @@ with [`/config permission_mode`](/core-usage/slash-commands#config).
 |------|----------|
 | `dontAsk` | Silent denial of tools not in the session-allowed set. No prompt. **Default.** |
 | `default` | Discord message with reaction buttons for each tool use. |
-| `acceptEdits` | File-edit tools auto-approved, others prompt. |
-| `bypassPermissions` | All tools auto-approved, no prompts. |
+| `acceptEdits` | File edits and filesystem commands (`mkdir`, `touch`, `rm`, `mv`, `cp`) auto-approved, others prompt. |
+| `bypassPermissions` | All tools auto-approved in the main session, no prompts. Background forks still use their own [tool restrictions](#background-forks). |
 
 ### Persistence
 
@@ -34,9 +34,9 @@ restored when you exit the fork.
 ## Approval flow
 
 In `default` mode, unapproved tool use triggers an interactive approval
-prompt in your Discord DM. (`acceptEdits` auto-approves file-edit tools,
-and `bypassPermissions` approves everything — neither triggers the
-approval flow below.)
+prompt in your Discord DM. (`acceptEdits` auto-approves file edits and
+filesystem commands, and `bypassPermissions` approves everything in the
+main session — neither triggers the approval flow below.)
 
 <Steps>
   <Step title="Agent requests a tool">
@@ -178,7 +178,7 @@ shows with strikethrough text:
 | Outcome | Rendering |
 |---------|-----------|
 | Approved/executed | `-# *Read(reminders/foo.md)*` |
-| Denied | `-# *~~Read(reminders/foo.md)~~ — denied (use /permissions ask to approve)*` |
+| Denied | `-# *~~Read(reminders/foo.md)~~ — denied (use /permissions default to approve)*` |
 
 In `dontAsk` mode, the stream shows denied tools with strikethrough so
 you see what the agent tried without receiving approval prompts.
@@ -229,7 +229,7 @@ Cancelled prompts are deleted to avoid orphaned messages in the channel.
     /permissions bypassPermissions
     ```
 
-    <Warning>This mode gives the agent unrestricted tool access. Use with caution.</Warning>
+    <Warning>This mode gives the agent unrestricted tool access. All [subagents](/extending/subagents) inherit this mode and it cannot be overridden per-subagent. Use with caution.</Warning>
   </Tab>
 </Tabs>
 
