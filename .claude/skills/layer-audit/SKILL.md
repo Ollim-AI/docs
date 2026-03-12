@@ -32,12 +32,13 @@ If the resolved set is empty, stop and tell the user.
 
 ## 2. Read the checklist and docs reference
 
-Read two files:
+Read three files:
 
 1. `.claude/skills/layer-audit/layer-boundary-checklist.md` — the 5 rules, what counts as a layer, cross-page checks
-2. `.claude/skills/layer-audit/agent-sdk-docs.md` — URL lookup table for Agent SDK documentation
+2. `.claude/skills/layer-audit/agent-sdk-docs.md` — URL lookup table for Agent SDK documentation (Layer B)
+3. `.claude/skills/layer-audit/claude-code-docs.md` — URL lookup table for Claude Code documentation (Layer A)
 
-The docs reference is a table of canonical Agent SDK URLs. When a per-page agent encounters a claim about SDK behavior and isn't sure whether it's accurate or which layer owns it, it should fetch the relevant URL to verify. This grounds the audit in official documentation rather than assumptions.
+The docs references are tables of canonical URLs for the SDK and Claude Code. When a per-page agent encounters a claim about SDK or Claude Code behavior and isn't sure whether it's accurate or which layer owns it, it should fetch the relevant URL to verify. This grounds the audit in official documentation rather than assumptions.
 
 ## 3. Classify page audience
 
@@ -62,6 +63,7 @@ Audit this documentation page for layer boundary violations.
 Page path: <absolute-path-to-mdx-file>
 Checklist path: <absolute-path-to-layer-boundary-checklist.md>
 SDK docs reference: <absolute-path-to-agent-sdk-docs.md>
+Claude Code docs reference: <absolute-path-to-claude-code-docs.md>
 Page audience: <user-facing|developer-facing>
 
 The three layers:
@@ -71,10 +73,10 @@ The three layers:
 
 Steps:
 1. Read the page and the checklist
-2. Read the SDK docs reference (URL lookup table)
+2. Read both docs references (URL lookup tables for SDK and Claude Code)
 3. For each rule, determine if it applies (skip rules about layers the page doesn't mention)
-4. When the page makes a claim about SDK behavior (e.g., "the SDK handles X", "setting_sources controls Y"),
-   fetch the relevant URL from the lookup table to verify the claim is accurate and correctly attributed.
+4. When the page makes a claim about SDK or Claude Code behavior (e.g., "the SDK handles X", "Claude Code provides Y"),
+   fetch the relevant URL from the appropriate lookup table to verify the claim is accurate and correctly attributed.
    Only fetch when genuinely uncertain — don't fetch for every mention.
 5. For Rule 5, calibrate strictness based on audience:
    - User-facing: any SDK/Claude Code internals are violations
