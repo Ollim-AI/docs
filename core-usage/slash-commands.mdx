@@ -14,13 +14,13 @@ Fourteen slash commands for setup, session management, model control, forks, lif
 | `/compact` | Compact conversation context | `instructions` (optional) |
 | `/cost` | Show token usage for this session | None |
 | `/fork` | Start a forked conversation | `topic` (optional) |
-| `/model` | Switch the AI model | `name` (required) |
-| `/thinking` | Set thinking mode | `mode` (required) |
+| `/model` | View or switch the AI model | `name` (optional) |
+| `/thinking` | View or set thinking mode | `mode` (optional) |
 | `/interrupt` | Stop the current response | None |
 | `/google-auth` | Connect Google account via OAuth | None |
 | `/update` | Check for updates and apply immediately | None |
 | `/restart` | Restart the bot process | None |
-| `/permissions` | Set permission mode | `mode` (required) |
+| `/permissions` | View or set permission mode | `mode` (optional) |
 | `/ping-budget` | View or set ping budget | `capacity`, `refill_rate` (both optional) |
 | `/config` | View or set runtime configuration | `key` (optional), `value` (optional) |
 
@@ -87,13 +87,16 @@ Returns the cumulative token usage and cost for the current session in USD.
 
 ### /model
 
-Switches the AI model for subsequent messages. The change applies to both the main session and any active fork.
+Views or switches the AI model. Call with no argument to see the current
+model; provide a name to switch.
 
 | Parameter | Type | Required | Choices |
 |-----------|------|----------|---------|
-| `name` | choice | Yes | `opus`, `sonnet`, `haiku` |
+| `name` | choice | No | `opus`, `sonnet`, `haiku` |
 
-The change takes effect immediately — the next message uses the new model.
+When you provide a name, the change takes effect immediately — the next
+message uses the new model. The change applies to both the main session
+and any active fork.
 
 <Warning>
   `/model` is blocked during interactive forks — exit the fork first. Switching the model mid-fork would silently kill the fork client.
@@ -101,12 +104,13 @@ The change takes effect immediately — the next message uses the new model.
 
 ### /thinking
 
-Sets the extended thinking mode — controls whether Claude uses
-chain-of-thought reasoning and how many tokens it can spend on it.
+Views or sets the extended thinking mode — controls whether Claude uses
+chain-of-thought reasoning and how many tokens it can spend on it. Call
+with no argument to see the current setting.
 
 | Parameter | Type | Required | Choices |
 |-----------|------|----------|---------|
-| `mode` | choice | Yes | `off`, `adaptive`, `8k budget`, `32k budget`, `64k budget` |
+| `mode` | choice | No | `off`, `adaptive`, `8k budget`, `32k budget`, `64k budget` |
 
 | Mode | Behavior |
 |------|----------|
@@ -178,11 +182,13 @@ Restarts the bot process without checking for updates. Useful when you've made l
 
 ### /permissions
 
-Sets the [permission mode](/core-usage/permissions) that controls how the agent requests tool approval.
+Views or sets the [permission mode](/core-usage/permissions) that controls
+how the agent requests tool approval. Call with no argument to see the
+current mode.
 
 | Parameter | Type | Required | Choices |
 |-----------|------|----------|---------|
-| `mode` | choice | Yes | `dontAsk`, `default`, `acceptEdits`, `bypassPermissions` |
+| `mode` | choice | No | `dontAsk`, `default`, `acceptEdits`, `bypassPermissions` |
 
 | Mode | Behavior |
 |------|----------|
