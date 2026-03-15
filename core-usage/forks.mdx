@@ -70,10 +70,15 @@ but not cleared, so the main session still receives them when the
 fork ends.
 
 <Note>
-  Replying to a message sent by a background fork starts an
-  interactive fork that resumes from that background fork's session.
-  This lets you pick up where a background task left off and continue
-  the conversation interactively.
+  Replying to any message sent by a fork — background or interactive —
+  starts an interactive fork that resumes from that fork's session.
+  This lets you pick up where a task left off and continue the
+  conversation interactively.
+
+  Resumed forks receive a **staleness notice** telling the agent how
+  old the fork is and that `save_context` is unavailable. The agent
+  is guided to use `report_updates` instead, since the main session
+  has diverged.
 
   If the fork session has expired (past the 7-day TTL), the bot tells
   you with a small note — "this session has expired — starting fresh
@@ -118,9 +123,24 @@ ends, the exit embed title reflects what happened:
     Keeps the fork and makes it your new main session. All
     conversation history from the fork carries forward.
 
-    If the save fails (e.g., the fork session was already disconnected),
-    the exit embed reflects the actual outcome — "fork discarded (no
-    session to save)" — rather than falsely reporting success.
+    `save_context` is blocked in three situations:
+
+    - **Main session has diverged** — the main session received new
+      messages after the fork was created, so promoting would discard
+      that history.
+    - **New background updates arrived** — background forks appended
+      updates after the fork was created, so promoting would lose them.
+    - **Resumed fork** — the fork was resumed from a prior background
+      session (via reply or button), so the main session has already
+      moved on.
+
+    In all three cases the agent is guided to use `report_updates`
+    instead.
+
+    If the save fails for other reasons (e.g., the fork session was
+    already disconnected), the exit embed reflects the actual outcome —
+    "fork discarded (no session to save)" — rather than falsely
+    reporting success.
 
     Use only when the main session needs the decisions going forward.
     Most forks don't qualify — unnecessary saves clutter the main
@@ -142,6 +162,12 @@ The bot will never call `report_updates`, `save_context`, or `exit_fork`
 on its own during an interactive fork — it waits for you to explicitly
 ask to wrap up, save, or leave. Your fork stays open until you decide
 to end it (or the [idle timeout](#idle-timeout) fires).
+
+Exit tools also require at least one user turn before they can be
+called. The initial topic prompt counts as turn 0 — once you send
+your first reply, `exit_fork` and `report_updates` become available.
+This prevents the agent from immediately exiting before you've had a
+chance to interact.
 
 ## Idle timeout
 
@@ -172,7 +198,7 @@ interactive forks in several ways:
 | Output | Streamed to Discord | Discarded (agent notifies or reports) |
 | Timeout | Idle timeout (`fork_idle_timeout`, default 10 min) | Hard timeout (`bg_fork_timeout`, default 30 min) |
 | Permission mode | Inherits from main session | Always `default` — never inherits |
-| Save context | Available | Not available |
+| Save context | [Conditional](#exit-strategies) | Not available |
 | Report to main session | Available | Available |
 | Blocks conversation | Yes (one at a time) | No (multiple run concurrently) |
 
