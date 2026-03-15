@@ -1,9 +1,9 @@
 ---
 title: "Discord tools"
-description: "Reference all eight Discord tools the agent uses for embeds, pings, forks, and chains."
+description: "Reference all eleven Discord tools the agent uses for embeds, pings, forks, reminders, and chains."
 ---
 
-ollim-bot gives the agent eight Discord tools for sending messages, managing forks, reporting findings, and scheduling follow-ups — all without direct access to the Discord API.
+ollim-bot gives the agent eleven Discord tools for sending messages, managing forks, reporting findings, scheduling reminders, and scheduling follow-ups — all without direct access to the Discord API.
 
 The agent also has access to a docs server — a remote server at [`docs.ollim.ai/mcp`](https://docs.ollim.ai/mcp) that lets it look up its own documentation and architecture.
 
@@ -108,6 +108,41 @@ Takes no parameters.
 
 **Availability:** Interactive forks only. Returns an error in background forks or the main session.
 
+## Reminder tools
+
+These tools manage [reminders](/scheduling/reminders) — one-shot time-based prompts. Available in the main session, interactive forks, and background forks.
+
+### `add_reminder`
+
+Schedule a one-shot reminder. Provide either `delay_minutes` or `run_at` — not both.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `prompt` | string | Yes | — | Instructions for the agent at fire time |
+| `delay_minutes` | integer | No | — | Fire in N minutes from now |
+| `run_at` | string | No | — | ISO datetime (e.g. `2026-03-13T15:00`). Uses bot timezone if no offset. |
+| `description` | string | No | `""` | Short summary shown in the reminder list |
+| `foreground` | boolean | No | `false` | Use only when the user wants to watch tool actions stream. Background with `ping_user` handles notifications. |
+| `max_chain` | integer | No | `0` | Max follow-up chain depth (0 = plain one-shot) |
+
+**Availability:** Main session, interactive forks, and background forks. Reminder tools are not gated by `allow-ping` — they are data operations, not output operations.
+
+### `list_reminders`
+
+List all pending reminders with their IDs, scheduled times, modes, and descriptions. Takes no parameters.
+
+**Availability:** Main session, interactive forks, and background forks.
+
+### `cancel_reminder`
+
+Cancel a pending reminder by ID.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `reminder_id` | string | Yes | — | Reminder ID to cancel |
+
+**Availability:** Main session, interactive forks, and background forks.
+
 ## Chain tool
 
 ### `follow_up_chain`
@@ -118,7 +153,7 @@ Schedule a follow-up reminder that continues the current chain. Used by [reminde
 |-----------|------|----------|---------|-------------|
 | `minutes_from_now` | integer | Yes | — | Minutes until the next check fires |
 
-The tool creates a new reminder via `ollim-bot reminder add` with the chain depth incremented by one. The tool forwards all configuration from the current chain: `background`, `model`, `thinking`, `isolated`, `update-main-session`, `allow-ping`, `allowed-tools`, and `skills`.
+The tool creates a new reminder with the chain depth incremented by one. The tool forwards all configuration from the current chain: `background`, `model`, `thinking`, `isolated`, `update-main-session`, `allow-ping`, `allowed-tools`, and `skills`.
 
 Returns an error if:
 - No active reminder context exists (the tool was called outside a reminder-triggered session)

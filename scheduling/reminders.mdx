@@ -12,8 +12,8 @@ multiple steps.
 ## Overview
 
 A reminder tells ollim-bot to run a prompt at a specific future time. When
-created, you specify a delay in minutes and the scheduler computes the
-absolute fire time. Like routines, reminders can run in the foreground
+created, you specify either a delay in minutes or an absolute time, and the
+scheduler computes when to fire. Like routines, reminders can run in the foreground
 (sending you a DM) or in the background (running silently in a fork).
 Reminders default to background mode.
 
@@ -21,8 +21,9 @@ Reminders are stored as markdown files in `~/.ollim-bot/reminders/`. The
 scheduler polls this directory every 10 seconds. After a reminder fires,
 it is removed automatically (unless it chains into a follow-up).
 
-The agent has direct file access to create and manage reminders — you can
-ask it in conversation, or use the CLI. After creating or modifying a
+The agent manages reminders through three MCP tools — `add_reminder`,
+`list_reminders`, and `cancel_reminder`. You can also ask the agent in
+natural conversation and it calls the right tool. After creating a
 reminder, the agent confirms the scheduled time in one line (e.g.
 "reminder set for 3:00 PM").
 
@@ -76,74 +77,21 @@ Filenames are slugified from the message text (lowercase, hyphens, max
 
 ## Managing reminders
 
-<Tabs>
-  <Tab title="CLI">
-    The `ollim-bot reminder` subcommand manages reminders from the
-    terminal.
+The agent uses three [MCP tools](/extending/mcp-tools) to manage reminders. You
+interact through natural conversation — the agent picks the right tool.
 
-    **Add a reminder:**
+- "Remind me in 30 minutes to check on the deployment"
+- "Set a reminder for 3pm to check my email"
+- "What reminders do I have?"
+- "Cancel the deployment reminder"
 
-    ```bash
-    ollim-bot reminder add \
-      --message "Check if the deployment completed successfully" \
-      --delay 30 \
-      --description "Check deployment status"
-    ```
+| Tool | What it does |
+|------|-------------|
+| [`add_reminder`](/extending/mcp-tools#add_reminder) | Schedule a reminder by delay (`delay_minutes`) or absolute time (`run_at`) |
+| [`list_reminders`](/extending/mcp-tools#list_reminders) | Show all pending reminders with IDs, times, and descriptions |
+| [`cancel_reminder`](/extending/mcp-tools#cancel_reminder) | Cancel a pending reminder by ID |
 
-    Reminders run in the background by default. These flags configure background behavior:
-
-    | Flag | Description |
-    |------|-------------|
-    | `--foreground` | Run in the foreground instead of a background fork |
-    | `--model <model>` | Model override |
-    | `--no-thinking` | Disable extended thinking |
-    | `--isolated` | Run with fresh context |
-    | `--update-main-session <mode>` | `always`, `on_ping`, `freely`, or `blocked` |
-    | `--no-ping` | Disable `ping_user` and `discord_embed` |
-    | `--allowed-tools <tool> ...` | MCP tool allowlist |
-    | `--skills <skill> ...` | [Skills](/extending/skills) to load when firing |
-
-    For chainable reminders, add `--max-chain`:
-
-    ```bash
-    ollim-bot reminder add \
-      --message "Check for a response to my email" \
-      --delay 60 \
-      --max-chain 3
-    ```
-
-    **List pending reminders:**
-
-    ```bash
-    ollim-bot reminder list
-    ```
-
-    Output:
-
-    ```text
-      f4a9c1e2  at 2026-02-24T15:30  Check deployment status
-      b7d3e8a1  at 2026-02-24T16:00  (chain 1/3)  Check for email response
-    ```
-
-    **Cancel a reminder:**
-
-    ```bash
-    ollim-bot reminder cancel f4a9c1e2
-    ```
-  </Tab>
-  <Tab title="Agent">
-    The agent has direct file access to `~/.ollim-bot/reminders/`
-    and can create, edit, or delete reminder files. You can ask the
-    agent in conversation:
-
-    - "Remind me in 30 minutes to check on the deployment"
-    - "Set a background reminder to check my email in an hour"
-    - "Cancel the deployment reminder"
-
-    The agent writes the markdown file directly. Changes are picked
-    up by the scheduler within 10 seconds.
-  </Tab>
-</Tabs>
+See the [Discord tools reference](/extending/mcp-tools#reminder-tools) for full parameter details.
 
 ## Follow-up chains
 
@@ -200,9 +148,12 @@ By default, reminders run in the **background** — silently in a
 disposable fork. Text output is discarded — the agent must use
 `ping_user` or `discord_embed` to reach you.
 
-Set `background: false` (or pass `--foreground` via CLI) to run the
-reminder in the foreground instead. The agent sends you a DM with its
-response, just like a normal conversation.
+Set `foreground: true` when calling `add_reminder` (or `background: false`
+in the YAML file) to run the reminder in the foreground instead. Use
+foreground only when you want to watch the agent's tool actions stream in
+real time. For notifications, alerts, and nudges, background with
+`ping_user` is the right choice — replying to a background ping starts an
+interactive fork if you want to discuss the result.
 
 <Tabs>
   <Tab title="Background (default)">
