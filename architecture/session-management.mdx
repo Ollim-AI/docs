@@ -112,10 +112,10 @@ When you run `/clear`, the bot executes the following sequence:
 
 ## Fork session tracking
 
-When a background fork sends messages to Discord, the bot tracks which fork
-sent which message. This enables the reply-to-fork feature — replying to a
-background fork's message resumes that fork's conversation as an
-interactive fork.
+When a fork sends messages to Discord, the bot tracks which fork sent
+which message. Both background and interactive fork messages are
+tracked. This enables the reply-to-fork feature — replying to any
+fork message resumes that fork's conversation as an interactive fork.
 
 When you reply to a fork message, the bot looks up the message and returns
 one of three outcomes:

@@ -47,7 +47,7 @@ The one exception is during [auto-compaction](/architecture/streaming#auto-compa
 
 Replying to a previous message gives the bot additional context:
 
-- **Reply to a fork message** — the bot opens an [interactive fork](/core-usage/forks) that resumes from that conversation, so you can pick up where a background task left off. If the fork session has expired (past the 7-day TTL), the bot signals this and falls back to quoting the message content instead. If you're already in a fork, the reply is added as context to the current fork rather than opening a new one.
+- **Reply to a fork message** — the bot opens an [interactive fork](/core-usage/forks) that resumes from that fork's session, whether it was a background or interactive fork. If the fork session has expired (past the 7-day TTL), the bot signals this and falls back to quoting the message content instead. If you're already in a fork, the reply is added as context to the current fork rather than opening a new one.
 - **Reply to a regular message** — the bot includes the quoted text for context alongside your new message.
 
 ## Images
