@@ -109,6 +109,29 @@ the webhook server. The owner is automatically the Discord account that
 created the application — this error usually means the application was
 created by a team with no members.
 
+### Discord API outage (503)
+
+Transient Discord API outages return a `DiscordServerError` (HTTP 503).
+The bot retries automatically up to 5 times with exponential backoff —
+5s, 10s, 20s, 40s, 80s between attempts. During retries, the console
+shows:
+
+```text
+Discord API error (503 Service Unavailable) — retrying in 10s (attempt 2/5)
+```
+
+If all 5 retries fail, the bot gives up and exits with code 1:
+
+```text
+Discord API error (503 Service Unavailable) — giving up after 5 retries.
+Check https://discordstatus.com for outages.
+```
+
+If you see persistent 503 errors, check
+[discordstatus.com](https://discordstatus.com) for ongoing incidents.
+With `Restart=on-failure` in a systemd service, the bot restarts and
+tries again automatically.
+
 ### Unexpected shutdown
 
 The bot sends a DM before exiting on crash, SIGINT, or SIGTERM:
@@ -390,6 +413,30 @@ its commit. Use `git log` inside the directory to review the change history.
     reaction-based approval. The prompt has a 60-second timeout — if you
     miss it, the tool is auto-denied. Check that you are in a mode that
     sends prompts (`default` or `acceptEdits`, not `dontAsk`).
+  </Accordion>
+</AccordionGroup>
+
+## Windows platform issues
+
+<AccordionGroup>
+  <Accordion title="Garbled Unicode output in CLI commands">
+    Windows defaults to the system codepage (e.g., cp1252) which can
+    corrupt Unicode characters in CLI output. The bot forces UTF-8
+    encoding on `stdout` and `stderr` before running any subcommand, so
+    all CLI paths (`ollim-bot`, `ollim-bot routine`, `ollim-bot reminder`,
+    etc.) produce correct output.
+
+    If you still see garbled text, verify your terminal supports UTF-8.
+    In PowerShell, run `chcp 65001` to switch to UTF-8 manually.
+  </Accordion>
+
+  <Accordion title="Auto-updater fails to restart on Windows">
+    When installed via `uv tool install`, the entry point on Windows is an
+    `.exe` file — not a Python script. The auto-updater uses `sys.argv`
+    directly to restart, which handles both `.exe` entry points and Python
+    script invocations correctly. If the bot fails to restart after an
+    update, verify that `ollim-bot` is on your `PATH` and was installed
+    with `uv tool install --editable .`.
   </Accordion>
 </AccordionGroup>
 

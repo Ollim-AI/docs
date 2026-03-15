@@ -49,12 +49,14 @@ phase transitions like thinking, tool use, and compaction).
 | `content_block_stop` for tool use | Emits a `StreamStatus(kind="tool_start")` signal with a formatted label |
 | `content_block_start` with `thinking` | Emits a `StreamStatus(kind="thinking_start")` signal |
 
-Tool labels are rendered as subdued text in Discord (using the `-# `
-markdown small-text prefix) when the next text block arrives or the
-stream ends. `StreamParser._drain()` converts deferred labels into
-`-# *{label}*` text — or `-# *~~{label}~~ — denied (use /permissions ask to approve)*` if the tool was
-denied by the permission system. This shows the user what the agent is
-doing during pauses.
+Tool labels are rendered progressively as subdued text in Discord (using
+the `-# ` markdown small-text prefix). Each label flushes when the next
+tool starts or when text arrives — rather than batching all labels until
+text appears. This eliminates visual jumps when multiple tools complete
+before the agent writes text. `StreamParser._drain()` converts deferred
+labels into `-# *{label}*` text — or
+`-# *~~{label}~~ — denied (use /permissions ask to approve)*` if the
+tool was denied by the permission system.
 
 MCP tool names are displayed without the `mcp__<server>__` prefix — the
 formatter strips the prefix generically for all MCP servers, so
@@ -63,20 +65,21 @@ stream label.
 
 ### Nested tool activity
 
-When the agent delegates work to a `Task` or `Agent` subagent, the
-status message surfaces what tool the subagent is currently using —
-instead of showing a static timer with no visibility into subagent work.
-`stream_response()` listens for `TaskProgressMessage` events from the
-SDK, extracts `last_tool_name`, and yields a
-`StreamStatus(kind="task_progress")` signal with a formatted label.
+When the agent delegates work to a subagent (the `Agent` tool in Claude
+Code CLI 2.1+), the status message surfaces what tool the subagent is
+currently using — instead of showing a static timer with no visibility
+into subagent work. `stream_response()` listens for
+`TaskProgressMessage` events from the SDK, extracts `last_tool_name`,
+and yields a `StreamStatus(kind="task_progress")` signal with a
+formatted label.
 
-The label format is `Task(description) · tool_name`, for example:
+The label format is `agent_name(description) · tool_name`, for example:
 
 ```text
-Task(check calendar for conflicts) · Read... (12s)
+guide(search for docs) · Read... (12s)
 ```
 
-The task description is truncated to 40 characters. MCP tool names are
+The description is truncated to 40 characters. MCP tool names are
 stripped of the `mcp__<server>__` prefix, matching the convention used
 for top-level tool labels.
 
