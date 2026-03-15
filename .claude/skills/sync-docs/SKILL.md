@@ -23,19 +23,23 @@ Spawn one background agent per unit — `isolation: "worktree"`, `run_in_backgro
 Each worker prompt must include:
 - The overall sync goal and the worker's specific assignment (commits, what changed, source diffs)
 - Docs codebase conventions (from CLAUDE.md)
-- Instruction to load /mintlify and /simplify skills
+- Instruction to load /mintlify and /revise skills
 - The source repo path for verification reads
 
 ### Worktree path constraint
 
 Workers run in an isolated worktree at a path like `<repo>/.claude/worktrees/<id>/`. All Read and Edit calls must use **absolute paths within the worktree**, not the main repo. Workers should check their cwd on startup and use it as the base for all doc file paths.
 
+### Background agent behavior
+
+You will be automatically notified when each background agent completes — do NOT sleep, poll, or spawn agents to check on progress. Continue rendering status updates as notifications arrive.
+
 ### Worker steps
 
 1. Load /mintlify skill. Read assigned source commits in `$ARGUMENTS` to verify understanding.
 2. Read relevant docs pages (using worktree-absolute paths) to determine what to update.
 3. Edit docs to reflect the source changes. Verify edits match the goal of the assigned commits.
-4. Re-read updated files. Invoke /simplify. Commit.
+4. Re-read updated files. Invoke /revise. Commit.
 5. Write `REPORT.md` (git-untracked) in the worktree root:
    - **Assignment**: task description and source commits
    - **Changes**: files modified and what changed
@@ -44,7 +48,7 @@ Workers run in an isolated worktree at a path like `<repo>/.claude/worktrees/<id
 
 ## Phase 3: Review
 
-As each worker completes, spawn a reviewer agent (foreground) with the REPORT.md path and worktree branch.
+As each worker completes (you receive an automatic notification), spawn a reviewer agent (foreground) with the REPORT.md path and worktree branch.
 
 ### Reviewer steps
 
@@ -58,7 +62,7 @@ As each worker completes, spawn a reviewer agent (foreground) with the REPORT.md
 
 - **Worker fails or makes no changes**: Stop it. Do the work directly or re-delegate with more specific instructions (include file paths and exact edits needed).
 - **Worker completes but reviewer finds major issues**: Reviewer escalates. Orchestrator decides whether to fix directly or re-delegate.
-- **Skill not available** (/mintlify, /simplify): Worker continues without it — these improve quality but are not blocking.
+- **Skill not available** (/mintlify, /revise): Worker continues without it — these improve quality but are not blocking.
 
 ## Phase 4: Merge
 
