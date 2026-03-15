@@ -9,6 +9,45 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 531 commits across 29 active development days.</Note>
 
+## Mar 12-15, 2026
+
+**Reminder MCP tools, fork resilience, and platform fixes**
+
+- **Reminder MCP tools** — reminders are now managed through
+  `add_reminder`, `list_reminders`, and `cancel_reminder`
+  [MCP tools](/architecture/mcp-tools) instead of CLI commands. The
+  `add_reminder` tool accepts `delay_minutes` or `run_at` for scheduling,
+  plus a `foreground` flag for the rare case where you want to watch tool
+  execution stream live. Reminders remain background by default.
+- **Reply-to-fork resume** — replying to an **interactive fork** message
+  now correctly resumes that fork session, matching the existing behavior
+  for [background forks](/scheduling/background-forks).
+- **Staleness notice on fork resume** — when resuming a
+  **background fork** as interactive (via reply or button), the agent sees
+  a notice that the **main session** has diverged. `save_context` is
+  hard-blocked for resumed forks to prevent silent history loss.
+- **Fork exit guard** — `report_updates`, `save_context`, and `exit_fork`
+  now require at least one user turn before they can be called, preventing
+  premature exits on fork entry.
+- **Stale-fork save protection** — `save_context` is blocked when a fork
+  is stale or pending updates exist, avoiding silent overwrites of
+  **main session** history.
+- **Discord 503 retry** — transient Discord API outages now retry up to
+  5 times with exponential backoff (5s to 80s) instead of crashing.
+- **Progressive tool labels** — tool activity labels render incrementally
+  during streaming instead of waiting for the tool call to finish.
+- **CLI 2.1.x compatibility** — handles the `Task` to `Agent` tool rename
+  in Claude CLI 2.1.x.
+- **Slash command current values** — `/permissions`, `/model`, and
+  `/thinking` now display their current value when called without
+  arguments.
+- **Windows fixes** — `sys.argv` used directly for restart (fixes
+  path-quoting issues) and UTF-8 encoding forced on the Windows console
+  for all CLI commands.
+- Internal: consolidated `stream_to_channel` calls through `_dispatch`,
+  extracted `GATED_TOOLS` constant for **background fork** tool stripping,
+  removed redundant `uv sync` from auto-updater.
+
 ## Mar 11, 2026
 
 **Job-config skill, safety gating, and fork exit controls**
