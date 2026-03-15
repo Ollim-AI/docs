@@ -66,7 +66,7 @@ Routines and reminders can run in two modes:
 <Tabs>
   <Tab title="Foreground">
     The default for routines when `background` is not set or `false`.
-    For reminders, foreground requires `background: false` or `--foreground`.
+    For reminders, foreground requires `foreground: true` via the `add_reminder` tool or `background: false` in the YAML file.
     The bot sends you a DM with the agent's response, just like a normal
     conversation.
 
@@ -100,7 +100,7 @@ Routines and reminders can run in two modes:
 | **Recurrence** | Fires indefinitely | Fires once, self-removes |
 | **Chaining** | No | `max-chain` enables follow-ups |
 | **Storage** | `routines/<slug>.md` | `reminders/<slug>.md` |
-| **Created by** | Agent or `ollim-bot routine` | Agent or `ollim-bot reminder` |
+| **Created by** | Agent or `ollim-bot routine` | Agent via `add_reminder` MCP tool |
 | **Background** | Optional (`background: true`) | Default (`background: true`) |
 
 ## Find what you need
