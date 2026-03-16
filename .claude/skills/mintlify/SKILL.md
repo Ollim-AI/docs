@@ -348,3 +348,5 @@ If migrating to Mintlify from ReadMe or Docusaurus, use the [@mintlify/scraping]
 - The navigation pattern is already established in `docs.json` — match it
 - The task is clearly a new page in an existing section
 - The question is about component choice or formatting — proceed with reasonable defaults
+
+ultrathink
