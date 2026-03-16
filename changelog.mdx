@@ -7,7 +7,26 @@ ollim-bot is developed continuously without formal version releases.
 This changelog tracks major features and milestones in reverse
 chronological order.
 
-<Note>ollim-bot has been in active development since February 9, 2026 with 531 commits across 29 active development days.</Note>
+<Note>ollim-bot has been in active development since February 9, 2026 with 549 commits across 33 active development days.</Note>
+
+## Mar 16, 2026
+
+**Diagnostic CLI and test coverage**
+
+- **`ollim-bot doctor`** — new diagnostic command that checks every layer of
+  the routine execution pipeline: environment variables, data directory,
+  timezone, routines, reminders, tool policy, state files, Claude CLI, and
+  authentication. Reports **PASS**/**WARN**/**FAIL** with actionable messages.
+  See [CLI reference](/development/cli-reference) and
+  [Troubleshooting](/development/troubleshooting).
+- **Scheduler self-notification** — corrupt routine/reminder files and failed
+  cron registrations now surface to the agent via pending updates, enabling
+  self-correction on the next interaction.
+- **Defensive file I/O** — `safe_json_load()` utility and explicit UTF-8
+  encoding on all data file operations.
+- Internal: 1,371 lines of new tests across 5 modules — fork state, agent
+  state transitions, agent context, reminder tools, and system prompts
+  (135 total test cases added).
 
 ## Mar 12-15, 2026
 
