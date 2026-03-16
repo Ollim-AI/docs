@@ -31,37 +31,17 @@ Read `.claude/skills/mintlify/page-review-checklist.md`. It has two sections:
 
 ## 3. Spawn per-page agents
 
-Spawn one background Explore agent per target page. If the target set is >15 pages, chunk into batches of 10–15 and wait for each batch to complete before starting the next. All agents in a batch launch in a single message.
+Spawn one background `page-reviewer` agent per target page. If the target set is >15 pages, chunk into batches of 10–15 and wait for each batch to complete before starting the next. All agents in a batch launch in a single message.
 
-Each agent's prompt:
+Each agent's prompt — keep it compact; the agent definition has the methodology:
 
 ```
-Review this documentation page against the page-local checks in the checklist.
-
-Page path: <absolute-path-to-mdx-file>
-Checklist path: <absolute-path-to-page-review-checklist.md>
-
-Steps:
-1. Read the page
-2. Read the "Page-local checks" section of the checklist
-3. Determine the page's content type (how-to, tutorial, explanation, reference)
-4. Run every applicable check. Skip sections that don't apply (e.g., skip media checks if no images)
-5. Output ONLY a findings table — no preamble, no summary
-
-If no violations found, output: "No violations found."
-
-Output format (one row per violation):
-| Category | Location | Violation | Checklist rule |
-
-- Category: the checklist section (e.g., "Accessibility", "Content type structure")
-- Location: heading name, line content, or element description where the violation occurs
-- Violation: what's wrong
-- Checklist rule: the specific rule from the checklist that's violated (quote it)
+Page: <absolute-path-to-mdx-file>
 ```
 
 ## 4. Spawn cross-cutting agent
 
-In the same message as the per-page agents (or the first batch), spawn one background Explore agent for cross-page checks. It reads ALL target pages.
+In the same message as the per-page agents (or the first batch), spawn one background general-purpose agent for cross-page checks. It reads ALL target pages.
 
 ```
 Review these documentation pages for cross-page issues using the cross-page checks in the checklist.

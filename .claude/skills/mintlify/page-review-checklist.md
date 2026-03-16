@@ -115,6 +115,29 @@ Identify the page's content type, then check against its structural expectations
 - Product-centric language — use language users are familiar with, not internal product terminology
 - Colloquialisms or informal expressions
 
+## Prose quality (revise anti-patterns)
+
+Test each sentence: could it describe a different product with no changes? If yes, it carries no specific information. Flag it.
+
+**Content — does every sentence carry specific information?**
+- **1a. Significance inflation** — sentence claims importance without stating the specific impact. The language sounds meaningful but swaps in for any subject.
+- **1b. Superficial analysis** — sentence ends with an "-ing" clause that editorializes rather than analyzes. If the analysis is real, it should be a specific claim.
+- **1c. Promotional tone** — sentence describes how impressive something is rather than what it does. Emphasis words that add feeling but not fact.
+- **1d. Vague attribution** — claim attributed to unnamed sources. Name the source or cut the claim.
+- **1e. Challenge-and-prospect** — paragraph sets up a positive, introduces challenges, ends with vague optimism. No specific resolution.
+- **1f. Gap speculation** — text discusses why information is absent rather than providing information. Silence is better than meta-commentary about gaps.
+
+**Language — is the language plain and direct?**
+- **2a. Copula avoidance** — complex verb phrase where "is" or "has" would work. The simplest verb is usually the right one.
+- **2b. Elegant variation** — forced synonyms cycling to avoid repeating a word. Repetition is natural; variation that obscures is not.
+- **2e. Inflating vocabulary** — words that add importance without adding meaning. One in a long text is fine; clusters are the problem. Test: does this word add meaning a plainer word wouldn't?
+
+**Structure — does formatting serve the content?**
+- **3a. Em dashes** — count them. One or two per page is fine. Five or more means overuse; most should be commas, parentheses, or colons.
+- **3d. Section summaries** — sentence at the end of a section restating what was just said. The reader just read it.
+- **3e. Didactic disclaimers** — sentence that frames a fact as important rather than stating the fact. The framing adds no information.
+- **3g. Inline-header lists** — bold-term-colon-description format used mechanically. Only appropriate for genuinely parallel definitions.
+
 ## Linking — page-scoped (guides/linking)
 
 - Internal links use root-relative paths without file extensions
