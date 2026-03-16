@@ -151,6 +151,37 @@ ollim-bot tasks list
 ollim-bot tasks list --all
 ```
 
+Output format:
+
+```text
+  abc123  2026-03-01    [ ]  Buy groceries [+]
+  def456  (no due)      [ ]  Call dentist
+```
+
+Tasks with notes display a **[+]** marker after the title.
+
+### `tasks show`
+
+Show full details for a specific task — title, status, due date, notes, and ID.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | positional | Yes | Task ID (shown in `tasks list`) |
+
+```bash
+ollim-bot tasks show abc123
+```
+
+Example output:
+
+```text
+title:     Buy groceries
+status:    needs action
+due:       2026-03-01
+notes:     Milk, eggs, bread
+id:        abc123
+```
+
 ### `tasks add`
 
 Create a new task.
@@ -484,6 +515,7 @@ these options are always available since reminders run in the background by defa
     # Tasks
     ollim-bot tasks add "Review PR" --due 2026-02-25
     ollim-bot tasks list
+    ollim-bot tasks show abc123
     ollim-bot tasks done abc123
 
     # Calendar

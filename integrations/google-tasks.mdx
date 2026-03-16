@@ -23,7 +23,7 @@ No additional setup is required beyond the shared Google OAuth flow. The
 
 <Tabs>
   <Tab title="CLI">
-    The `ollim-bot tasks` subcommand provides five operations.
+    The `ollim-bot tasks` subcommand provides six operations.
 
     ### List tasks
 
@@ -35,14 +35,32 @@ No additional setup is required beyond the shared Google OAuth flow. The
     task ID, due date, status checkbox, and title:
 
     ```text
-      abc123  2026-03-01    [ ]  Buy groceries
+      abc123  2026-03-01    [ ]  Buy groceries [+]
       def456  (no due)      [ ]  Call dentist
     ```
+
+    Tasks with notes display a **[+]** marker after the title.
 
     To include completed and hidden tasks:
 
     ```bash
     ollim-bot tasks list --all
+    ```
+
+    ### Show task details
+
+    ```bash
+    ollim-bot tasks show <task_id>
+    ```
+
+    Displays full details for a task — title, status, due date, notes, and ID:
+
+    ```text
+    title:     Buy groceries
+    status:    needs action
+    due:       2026-03-01
+    notes:     Milk, eggs, bread
+    id:        abc123
     ```
 
     ### Add a task
