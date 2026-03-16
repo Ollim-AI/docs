@@ -8,6 +8,13 @@ through the categorized issues. Most problems trace back to missing
 environment variables, stale PID files, or corrupt data files — all
 recoverable.
 
+<Tip>
+Before diving into manual troubleshooting, run `ollim-bot doctor` — it checks
+environment variables, data directory, timezone, routines, reminders, tool
+policy, state files, and Claude authentication in one pass. See the
+[`doctor` CLI reference](/development/cli-reference#doctor) for details.
+</Tip>
+
 ## Startup failures
 
 These are the most common blockers when launching `ollim-bot`.
@@ -442,7 +449,10 @@ its commit. Use `git log` inside the directory to review the change history.
 
 ## Diagnostic files
 
-Quick reference for where to look when debugging.
+Quick reference for where to look when debugging. Run
+[`ollim-bot doctor`](/development/cli-reference#doctor) first — it validates
+most of these files automatically and reports **PASS**, **WARN**, or **FAIL**
+for each.
 
 | File | What it tells you |
 |------|-------------------|

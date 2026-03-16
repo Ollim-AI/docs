@@ -23,6 +23,7 @@ ollim-bot [command] [subcommand] [options]
 | `ollim-bot cal` | Manage Google Calendar events |
 | `ollim-bot gmail` | Read and search Gmail |
 | `ollim-bot auth` | Manage Claude Code authentication |
+| `ollim-bot doctor` | Run diagnostic checks on your installation |
 | `ollim-bot help` | Show help message |
 
 ## `routine`
@@ -347,6 +348,70 @@ Log out from your Anthropic account. No arguments.
 ```bash
 ollim-bot auth logout
 ```
+
+## `doctor`
+
+Run diagnostic checks across every layer of your installation — environment
+variables, data directory, timezone, routines, reminders, tool policy, state
+files, Claude CLI, and authentication. Each check reports **PASS**, **WARN**,
+or **FAIL** with an actionable message so you know exactly what to fix.
+
+```bash
+ollim-bot doctor
+```
+
+No subcommands or flags. The command loads your `.env`, runs all checks, prints
+results grouped by section, and exits with code 0 if everything passes or
+code 1 if any checks fail.
+
+Example output:
+
+```text
+ENVIRONMENT
+  PASS  DISCORD_TOKEN: set
+  PASS  OLLIM_USER_NAME: set
+  PASS  OLLIM_BOT_NAME: set
+
+DATA DIRECTORY
+  PASS  DATA_DIR: /home/user/.ollim-bot
+  PASS  DATA_DIR writable: yes
+  PASS  DATA_DIR git: initialized
+
+TIMEZONE & SCHEDULING
+  PASS  timezone: America/Los_Angeles
+  PASS  APScheduler timezone: accepted
+
+ROUTINES
+  PASS  routine files: 3 loaded
+  PASS  morning-briefing: next fire 9:00 AM (in 2h 30m)
+
+REMINDERS
+  PASS  reminders: none pending
+
+TOOL POLICY
+  PASS  tool policy: no background items to validate
+
+STATE FILES
+  PASS  pending_updates.json: valid JSON
+  PASS  config.json: not present (will use defaults)
+  PASS  ping_budget.json: valid JSON
+  PASS  fork_messages.json: valid JSON
+  PASS  inquiries.json: not present (will use defaults)
+
+CLAUDE CLI
+  PASS  Claude CLI: /path/to/claude
+
+CLAUDE AUTH
+  PASS  Claude auth: logged in
+
+SUMMARY: 19 passed, 0 warnings, 0 failures
+```
+
+<Tip>
+Run `ollim-bot doctor` after initial setup or whenever something feels off.
+It catches the most common issues — missing env vars, corrupt state files,
+invalid cron expressions — before they surface as confusing runtime errors.
+</Tip>
 
 ## Background mode options
 
