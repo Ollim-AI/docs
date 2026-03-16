@@ -50,12 +50,12 @@ Summarize what's on my plate and flag anything urgent.
 | `cron` | `str` | — | 5-field cron expression |
 | `description` | `str` | `""` | Short summary for `routine list` |
 | `background` | `bool` | `false` | Run in a background fork |
-| `model` | `str` | `null` | Model override (bg only) |
-| `thinking` | `bool` | `true` | Extended thinking (bg only) |
-| `isolated` | `bool` | `false` | Fresh context, not forked (bg only) |
+| `model` | `str` | `null` | Model override (background only) |
+| `thinking` | `bool` | `true` | Extended thinking (background only) |
+| `isolated` | `bool` | `false` | Fresh context, not forked (background only) |
 | `update-main-session` | `str` | `"on_ping"` | Sync mode: `always` / `on_ping` / `freely` / `blocked` |
-| `allow-ping` | `bool` | `true` | Allow pings and embeds (bg only) |
-| `allowed-tools` | `list[str]` | `null` | Additional tools merged with default bg tools (bg only) |
+| `allow-ping` | `bool` | `true` | Allow pings and embeds (background only) |
+| `allowed-tools` | `list[str]` | `null` | Additional tools merged with default background tools (background only) |
 | `skills` | `list[str]` | `null` | [Skills](/extending/skills) to load at fire time |
 
 ### File naming

@@ -32,7 +32,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `isolated` | `bool` | `false` | Run in isolated session (no conversation history) |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default bg tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default background tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 The markdown body after the closing `---` becomes the routine's task message.
@@ -70,7 +70,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `isolated` | `bool` | `false` | Run in isolated session |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow `ping_user` and `discord_embed` tools |
-| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default bg tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default background tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 
 ```yaml title="reminders/pick-up-groceries.md"
@@ -107,7 +107,7 @@ Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `allow-ping` | `bool` | `true` | Allow notification tools |
 | `update-main-session` | `str` | `"on_ping"` | When to report: `always`, `on_ping`, `freely`, `blocked` |
-| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default bg tools |
+| `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default background tools |
 
 The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
 
@@ -188,7 +188,7 @@ bg_forks:
 ```
 
 <Note>
-If `bg_forks.override` is set, it completely replaces the default bg tools — use with care. The `additional_allowed` key is safer for most use cases.
+If `bg_forks.override` is set, it completely replaces the default background tools — use with care. The `additional_allowed` key is safer for most use cases.
 </Note>
 
 ## Shared markdown conventions
