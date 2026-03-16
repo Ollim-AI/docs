@@ -39,8 +39,8 @@ You will be automatically notified when each background agent completes — do N
 1. Load /mintlify skill. Read assigned source commits in `$ARGUMENTS` to verify understanding.
 2. Read relevant docs pages (using worktree-absolute paths) to determine what to update.
 3. Edit docs to reflect the source changes. Verify edits match the goal of the assigned commits.
-4. Re-read updated files. Invoke /revise. Commit.
-5. Write `REPORT.md` (git-untracked) in the worktree root:
+4. Re-read updated files. Invoke /revise. Stage edited files by name — do NOT use `git add .` or `git add -A`. Commit.
+5. Write `REPORT.md` in the worktree root (after the commit — REPORT.md is git-excluded and must never be staged):
    - **Assignment**: task description and source commits
    - **Changes**: files modified and what changed
    - **Rationale**: why each change was made
