@@ -63,13 +63,12 @@ integrations can expand over time, but only when the complexity is justified.
 
 ## The agent model
 
-The Claude Agent SDK is a wrapper around Claude Code. It's the best framework for turning a user
-prompt into real action — existing tools plus bash make it extremely versatile, and file-based workflows keep
+The Claude Agent SDK is a wrapper around Claude Code. It turns a user
+prompt into real action — existing tools plus bash cover most use cases, and file-based workflows keep
 things simple. No DSL to learn, no workflow engine to configure — code as tools (MCP or CLI-based bash).
 
 This matters because framework lock-in is one of the traps this project avoids. Other agent frameworks impose
-complex workflow patterns, abstract away the agent loop behind proprietary concepts, and make debugging feel
-like spelunking. The Agent SDK is a thin layer: it handles the agent loop, persistent sessions, compaction,
+complex workflow patterns, abstract away the agent loop behind proprietary concepts, and make debugging difficult. The Agent SDK is a thin layer: it handles the agent loop, persistent sessions, compaction,
 and streaming, but everything else is Python and bash. What the agent does is visible, debuggable, and
 changeable without learning a framework-specific language.
 
