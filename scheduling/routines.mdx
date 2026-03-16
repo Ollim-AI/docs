@@ -189,8 +189,7 @@ Routines use standard 5-field cron syntax:
 | `0 */4 * * *` | Every 4 hours |
 | `0 9,13 * * 1-5` | 9:00 AM and 1:00 PM on weekdays |
 
-The CLI validates that cron expressions contain exactly 5 fields. The
-scheduler converts them to APScheduler `CronTrigger` internally.
+The CLI validates that cron expressions contain exactly 5 fields.
 
 ## Examples
 
