@@ -105,9 +105,13 @@ When using components you haven't used recently in this session, fetch the [comp
 | `<Warning>` | Potentially destructive actions |
 | `<Check>` | Success confirmation |
 
-### 7. Write content
+### 7. Write or edit content
 
-Using the **audience statement** from step 3, the **style notes** from step 4, and the **content type template** from step 5, write the page.
+Determine the task type, then execute the matching action:
+
+- **New page** → Write the page from scratch using the **audience statement**, **style notes**, and **content type template** from earlier steps.
+- **New section on existing page** → Edit the existing file to add the section. Re-read the file after editing to confirm the change is in place.
+- **Review / fix existing page** → Edit the existing file to apply fixes. Every fix must be applied with `Edit` — do not just report violations without changing the file. Re-read after editing to confirm changes landed. Then produce a summary of what was changed and why.
 
 **Frontmatter** — every page requires `title`. Include `description` for SEO and navigation. Keep titles under 60 characters and descriptions under 160 characters for search engine display:
 
