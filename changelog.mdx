@@ -26,8 +26,9 @@ chronological order.
   (`~~Tool(args)~~ — error`), matching the existing denied-tool styling.
   Interrupted tool failures are skipped. See
   [Visual feedback](/core-usage/permissions#visual-feedback).
-- **Async event loop fixes** — 9 synchronous `subprocess` and git calls
-  wrapped in `asyncio.to_thread()` to prevent blocking the event loop.
+- **Async event loop fixes** — synchronous I/O calls (file writes,
+  JSONL appends, subprocess invocations) wrapped in
+  `asyncio.to_thread()` to prevent blocking the event loop.
 - **Background fork model forwarding** — `model` parameter now forwarded
   to `create_forked_client()` in non-isolated background forks, so
   per-job model overrides take effect.
@@ -38,6 +39,9 @@ chronological order.
   JSONL lines are logged and skipped instead of crashing.
 - **Embed fallback defaults** — invalid `color` or `style` values from
   the agent now fall back to defaults instead of raising errors.
+- **`format_error` type handling** — `format_error()` in `updater.py`
+  now handles both `str` and `bytes` stderr to prevent `AttributeError`
+  when `.decode()` was called on a string.
 - **Redundant status suppression** — duplicate status messages suppressed
   once a text message already exists in the stream.
 - **`save_context` gating** — `save_context` now requires an explicit
