@@ -27,9 +27,11 @@ to persist the mode across restarts.
 
 ### Fork scoping
 
-All permission modes are **fork-scoped** — changing the mode inside an
-interactive fork leaves the main session unchanged. The original mode is
-restored when you exit the fork.
+Permission modes are **fork-scoped** — changing the mode inside an
+interactive fork leaves the main session unchanged once the fork exits.
+Note that `dontAsk` uses a module-level flag, so switching to or from
+`dontAsk` in a fork temporarily affects the main session during the fork.
+The original mode is restored when you exit the fork.
 
 ## Approval flow
 

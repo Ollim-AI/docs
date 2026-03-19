@@ -85,7 +85,7 @@ startup — safe to share because it never changes.
 The bot maintains a single `ClaudeSDKClient` with a session ID
 persisted to `~/.ollim-bot/state/sessions.json`. On restart, it resumes the
 existing session. All session lifecycle events (created, compacted,
-swapped, cleared, interactive_fork, bg_fork, isolated_bg) are logged to `session_history.jsonl`.
+swapped, cleared, interactive_fork, bg_fork, isolated_bg, restarting) are logged to `session_history.jsonl`.
 
 ### Contextvar isolation
 
@@ -128,9 +128,9 @@ agent-generated button prompts to disk with a 7-day TTL.
 
 ## Module map
 
-The codebase has 37 modules organized into five layers.
+The codebase has 42 modules organized into five layers.
 
-<Accordion title="Full module map (37 modules)">
+<Accordion title="Full module map (42 modules)">
 
 ### Core loop
 
@@ -149,6 +149,9 @@ The main path from a Discord message to a streamed response.
 | `subagents.py` | Bundled agent installation (`install_agents`) and tool-set extraction (`load_agent_tool_sets`) for policy validation |
 | `subagents/` | Subagent specs as markdown files (ollim-bot-guide, gmail-reader, history-reviewer, responsiveness-reviewer, user-proxy) |
 | `channel.py` | DM channel reference — set once at startup, read everywhere |
+| `profile.py` | User profile files: IDENTITY.md (bot persona) and USER.md (user context), bootstrap and loading |
+| `updater.py` | Git-based auto-update: fetch, compare, pull (`--ff-only`), `uv tool upgrade`, restart via `os.execv` |
+| `doctor.py` | Health diagnostics — checks data dir, SDK layout, credentials, and reports issues |
 
 ### Tool system
 
@@ -158,6 +161,8 @@ Discord and the outside world.
 | Module | Role |
 |--------|------|
 | `agent_tools.py` | MCP tools for Discord embeds, pings, forks, and chains |
+| `reminder_tools.py` | MCP tool implementations for reminder management (add, list, cancel) |
+| `hooks.py` | Agent SDK hooks: `state_dir_guard` (blocks writes to `state/`) and `auto_commit_hook` (auto-commits `.md` changes) |
 | `webhook.py` | HTTP server for external triggers — auth, validation, Haiku screening |
 | `fork_state.py` | Fork state — contextvars, dataclasses (`BgForkTracking`, `BgForkConfig`), interactive fork globals |
 | `forks.py` | Pending updates I/O and background fork execution (`run_agent_background`) |

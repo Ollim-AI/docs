@@ -132,14 +132,11 @@ YAML frontmatter and a markdown body.
 
 ### Markdown body
 
-The body is a prompt template. Use `{field_name}` placeholders that
-correspond to properties in the `fields` schema. These are filled from
-the validated payload data when the webhook fires.
-
-Every `{field_name}` placeholder in the template must have a matching
-key in the validated payload. If any template fields are missing from
-the payload, the request is rejected with a `400` error before prompt
-construction — even if the payload passes JSON Schema validation.
+The body is a prompt template — instructions for what the agent should
+do with the incoming data. The validated JSON payload is passed to the
+agent separately (as a fenced data block in the prompt), so you don't
+need placeholders. Just describe the task and reference field names
+naturally.
 
 ### Fields schema
 
@@ -170,7 +167,6 @@ Invalid requests are rejected with descriptive errors:
 | Unknown webhook path | `404` | `{"error": "webhook not found: <slug>"}` |
 | Invalid JSON body | `400` | `{"error": "invalid json"}` |
 | Schema validation failure | `400` | `{"error": "validation failed", "details": [...]}` |
-| Template field mismatch | `400` | `{"error": "payload missing fields referenced in template: [...]"}` |
 
 <AccordionGroup>
   <Accordion title="Request processing pipeline">
@@ -178,11 +174,10 @@ Invalid requests are rejected with descriptive errors:
     2. **Spec lookup** — matches the URL path to a spec's `id` field.
     3. **JSON parse** — reads the request body as JSON.
     4. **Schema validation** — validates the payload against the spec's `fields` rules.
-    5. **Template validation** — checks that all `{field_name}` placeholders in the body have matching keys in the payload. Missing fields return a 400 error before prompt construction.
-    6. **Prompt construction** — the bot builds a prompt from your template and the validated data, keeping webhook data clearly separated from instructions.
-    7. **202 Accepted** — response sent immediately.
-    8. **Injection screening** — free-form text fields are checked for attempts to trick the bot. Flagged payloads are skipped and logged.
-    9. **Dispatch** — a background fork runs with the spec's
+    5. **Prompt construction** — the bot builds a prompt combining the task instructions (markdown body) with the validated JSON payload as a fenced data block, keeping webhook data clearly separated from instructions.
+    6. **202 Accepted** — response sent immediately.
+    7. **Injection screening** — free-form text fields are checked for attempts to trick the bot. Flagged payloads are skipped and logged.
+    8. **Dispatch** — a background fork runs with the spec's
        configuration.
   </Accordion>
 

@@ -48,7 +48,7 @@ Adding new MCP tools, Google services, or CLI commands requires modifying the Py
 
 <Columns cols={2}>
   <Card title="Discord tools" icon="wrench" href="/extending/mcp-tools">
-    Reference for the seven built-in tools — embeds, pings, forks, and chains.
+    Reference for all eleven built-in tools — embeds, pings, forks, reminders, and chains.
   </Card>
   <Card title="Adding integrations" icon="plug" href="/development/adding-integrations">
     How to add Google services, MCP tools, CLI commands, and webhook specs.
@@ -138,7 +138,7 @@ Routines, reminders, and webhooks share these YAML frontmatter fields for backgr
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `background` | boolean | `false` | Run in a background fork instead of the main session (routines and reminders only — webhooks are always background) |
+| `background` | boolean | `false` (routines), `true` (reminders) | Run in a background fork instead of the main session (routines and reminders only — webhooks are always background) |
 | `model` | string | — | Override the default model (`haiku`, `sonnet`, `opus`) |
 | `thinking` | boolean | `true` | Enable extended thinking |
 | `isolated` | boolean | `false` | Run without main session history or fork state |

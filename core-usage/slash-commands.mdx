@@ -95,8 +95,7 @@ model; provide a name to switch.
 | `name` | choice | No | `opus`, `sonnet`, `haiku` |
 
 When you provide a name, the change takes effect immediately — the next
-message uses the new model. The change applies to both the main session
-and any active fork.
+message uses the new model.
 
 <Warning>
   `/model` is blocked during interactive forks — exit the fork first. Switching the model mid-fork would silently kill the fork client.
@@ -172,7 +171,7 @@ If your Google token is revoked (password change, manual revocation in Google se
 
 ### /update
 
-Checks for upstream updates and applies them immediately — bypasses the `auto_update_hour` window. If updates are found, the bot pulls the latest code (`git pull --ff-only`), syncs the project venv (`uv sync`), syncs the global tool venv (`uv tool install --editable .`), logs a "restarting" event to session history, and restarts the process. If already up to date, confirms with a message.
+Checks for upstream updates and applies them immediately — bypasses the `auto_update_hour` window. If updates are found, the bot pulls the latest code (`git pull --ff-only`), upgrades the tool install (`uv tool upgrade ollim-bot`), logs a "restarting" event to session history, and restarts the process. If already up to date, confirms with a message.
 
 ### /restart
 

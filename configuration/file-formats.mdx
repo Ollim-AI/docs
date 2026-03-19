@@ -231,6 +231,7 @@ Event types:
 | `interactive_fork` | Interactive fork created |
 | `bg_fork` | Background fork created |
 | `isolated_bg` | Isolated background fork created |
+| `restarting` | Bot is restarting (recorded before exit) |
 
 ```json title="session_history.jsonl"
 {"session_id": "sess_abc", "event": "created",
@@ -322,6 +323,9 @@ JSON object storing persistent settings you configure via the [`/config`](/core-
 | `bg_fork_timeout` | `int` | `1800` | Max background fork runtime (seconds) |
 | `fork_idle_timeout` | `int` | `10` | Interactive fork idle timeout (minutes) |
 | `permission_mode` | `str` | `"dontAsk"` | Default permission mode |
+| `auto_update` | `bool` | `false` | Auto-pull, upgrade tool install, and restart on new commits |
+| `auto_update_interval` | `int` | `60` | Update check interval (minutes) |
+| `auto_update_hour` | `int` | `6` | Hour of day (0-23) to apply updates |
 
 ```json title="config.json"
 {

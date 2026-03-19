@@ -17,7 +17,7 @@ Skills are loaded fresh every time they're invoked. If you update a skill's inst
 
 ## Bundled skills
 
-The bot ships with a **bundled skill** — `job-config` — that lives in the bot's source code rather than in `~/.ollim-bot/skills/`. It guides tool selection and behavioral configuration when creating background jobs.
+The bot ships with **two bundled skills** — `job-config` and `setup` — that live in the bot's source code rather than in `~/.ollim-bot/skills/`. `job-config` guides tool selection and behavioral configuration when creating background jobs. `setup` guides initial bot setup and configuration.
 
 The bot invokes `job-config` automatically when you create or edit a routine, reminder, or webhook that needs background config. It determines which tools belong in [`allowed-tools`](/scheduling/background-forks#adding-tools) and which behavioral flags (`allow-ping`, `update-main-session`, `model`) to set — so you don't have to remember the rules yourself.
 

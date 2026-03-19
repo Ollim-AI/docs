@@ -245,8 +245,8 @@ All persistent state lives in `~/.ollim-bot/`. See the
 
   <Accordion title="Corrupt JSONL files">
     `read_jsonl()` skips blank lines and lines that do not start with `{`.
-    Lines that start with `{` but contain invalid JSON raise `json.JSONDecodeError`
-    and are not silently dropped — they crash the read. It also filters fields
+    Lines that start with `{` but contain invalid JSON are logged as warnings
+    and skipped — they do not crash the read. It also filters fields
     to only those known to the target dataclass, providing forward compatibility.
 
     If a JSONL file is entirely corrupted, delete it. The bot recreates these
