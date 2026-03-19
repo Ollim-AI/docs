@@ -2,7 +2,7 @@
 name: accuracy
 description: Scan documentation for accuracy issues by cross-referencing claims against source code. Use when the user says "check accuracy", "find accuracy issues", "verify docs against source", or wants to ensure documentation matches the implementation.
 argument-hint: <glob, section name, or "all"> [--fix]
-allowed-tools: Agent, Read, Glob, Grep, Bash, Edit, AskUserQuestion
+allowed-tools: Agent, Read, Glob, Grep, Bash, Edit
 ---
 
 # Accuracy scanner
@@ -39,29 +39,51 @@ Spawn **3 scanner agents** simultaneously (single message, all `run_in_backgroun
 3. Its specific checklist below
 4. The output format
 
-For >15 target pages: chunk pages across multiple instances per dimension (10-15 pages each). The cross-reference scanner always gets ALL pages (chunk with 5-page overlap if >30).
+For >15 target pages: chunk by architectural subsystem, not arbitrary page ranges. Use `docs.json` nav groups to keep related pages together (pages that cross-reference each other must be in the same chunk). Aim for 8-12 pages per chunk — smaller chunks mean more thorough per-page examination. The cross-reference scanner always gets ALL pages (chunk with 5-page overlap if >30).
 
 ### Scanner specializations
 
 **Code-claims scanner** — checks literal values against source
 
-Every concrete claim: default values, parameter names, env var names, file paths, command syntax, tool names, argument lists, numerical constants.
+Systematically verify every concrete claim by type:
+
+| Claim type | What to check | Where to look in source |
+|-----------|---------------|------------------------|
+| Numerical counts | "N modules", "N tools", "N events" | Count actual items in source (list lengths, enum members, registered handlers) |
+| Default values | "default is X", "defaults to X" | Find the variable/parameter definition, check its default |
+| Parameter/field names | `` `param_name` ``, table columns listing fields | Find the actual parameter in function signatures, dataclass fields, YAML schemas |
+| File paths | `` `~/.ollim-bot/foo` ``, "stored in X" | Check filesystem layout in source, path constants |
+| Command syntax | `` `/command arg` ``, CLI examples | Find command registration, argument parsing |
+| Enum/list membership | "one of: A, B, C", event type tables | Find the Literal type, enum class, or list constant |
+| Tool names/counts | "N tools", tool name references | Count registered tools in MCP server setup |
 
 For each claim:
-1. Find the specific assertion in the doc (e.g., "default is 5", "the parameter is called `capacity`")
-2. Search source code for the actual value
-3. If they don't match, report it
+1. Classify it by type from the table above
+2. Find the specific assertion in the doc (quote it)
+3. Search source code for the actual value — use the "where to look" column to guide your search
+4. If they don't match, report it
 
 FP guidance: only flag when the doc states a specific value/name and the source disagrees. Do NOT flag omissions, style, or vague descriptions.
 
 **Behavior-claims scanner** — checks logic descriptions against implementation
 
-Behavioral claims: "when X happens, Y occurs", "the bot does X before Y", "if X is set, behavior changes to Y". Trace each claim through the actual code logic.
+Systematically verify behavioral claims by type:
+
+| Claim type | What to check | Verification approach |
+|-----------|---------------|----------------------|
+| Conditional behavior | "if X is set, Y happens" | Find the condition in source, trace both branches |
+| Sequence ordering | "X happens before Y", "first X, then Y" | Find both operations, verify call order |
+| State transitions | "when X, state changes to Y" | Find the state variable, trace all transitions |
+| Config-dependent behavior | "when config X is true, behavior changes to Y" | Find where config is read, trace the conditional path |
+| Restriction/constraint claims | "X only works when Y", "X is limited to Y" | Find the guard/check in source, verify it exists |
+| Fallback/recovery | "if X fails, falls back to Y" | Find the error handler, verify fallback logic |
 
 For each claim:
-1. Identify the behavioral assertion
-2. Find the source code that implements it
-3. Walk the code path — does the described behavior match?
+1. Classify it by type from the table above
+2. Identify the behavioral assertion (quote it)
+3. Find the source code that implements it
+4. Walk the code path using the verification approach — read surrounding context (comments, related functions, config loading) to understand the full behavior
+5. Only flag if the described behavior genuinely differs from implementation
 
 FP guidance: only flag when the doc describes a specific sequence or condition and the code does something different. Do NOT flag simplified explanations that are technically correct but omit edge cases.
 
@@ -103,20 +125,34 @@ Rules:
 - Do NOT report simplified explanations that are technically correct
 - If you find zero issues, say so — do not invent findings
 
-End with a summary table: | # | Doc file:line | Claim summary | Severity |
+End with TWO tables:
+
+1. Per-page attestation (REQUIRED — one row per assigned page, no exceptions):
+| Page | Claims checked | Findings |
+For pages with 0 findings, briefly note what you checked (e.g., "verified 3 numerical counts, 2 defaults — all correct").
+
+2. Findings summary: | # | Doc file:line | Claim summary | Severity |
 ```
 
 ## 4. Triage results
 
+**WAIT for ALL scanner agents to complete before starting triage.** Do not begin verifying, reporting, or fixing based on partial results — a scanner that finishes later may find issues that change your triage decisions. Only proceed once every launched agent has returned.
+
 After all agents complete:
 
-1. **Verify every finding** — read the cited doc line AND the cited source line yourself. Scanners misread code or miss context. For each finding:
+1. **Coverage check** — review each scanner's per-page attestation table. If any scanner skipped a page (no attestation row) or reported 0 claims checked on a page, read that page yourself and spot-check its top 3-5 verifiable claims against source. Scanners under-examine "quiet" pages when grouped with pages that have obvious issues.
+2. **Verify every finding** — read the cited doc line AND the cited source line yourself. Scanners misread code or miss context. For each finding:
    - Confirm the doc actually says what the scanner claims
    - Confirm the source actually says something different
    - Check if surrounding context (comments, related functions) resolves the apparent mismatch
-2. **Deduplicate** — code-claims and behavior scanners may flag the same issue from different angles. Note convergence (high confidence).
-3. **Filter** — discard findings where the scanner misread the code, missed context, or where the doc is a valid simplification.
-4. **Rank** — order by severity: wrong > outdated > contradiction.
+3. **Re-verify numerical claims independently** — for any finding that changes a count, list, or enumeration (e.g., "N modules", "N tools"), do NOT trust the scanner's number. Miscounts are the most common scanner-introduced inaccuracy. Follow this exact procedure:
+   1. Use Grep or Glob to list the actual items in source (e.g., `Glob("*.py")` for module counts, `Grep` for registered tools)
+   2. Paste the full enumerated list in your reasoning
+   3. Count the pasted list — this is your verified number
+   4. If your count differs from the scanner's, use yours. If you cannot enumerate the items, flag the finding as unverified rather than guessing.
+4. **Deduplicate** — code-claims and behavior scanners may flag the same issue from different angles. Note convergence (high confidence).
+5. **Filter** — discard findings where the scanner misread the code, missed context, or where the doc is a valid simplification.
+6. **Rank** — order by severity: wrong > outdated > contradiction.
 
 ## 5. Report
 
@@ -145,13 +181,17 @@ Present the triaged findings:
 [list each discarded finding with one-line reason]
 ```
 
-## 6. Fix (if `--fix` passed or user approves)
+## 6. Fix
 
-After presenting the report:
+**When `--fix` is passed**: apply all confirmed findings automatically after presenting the report. Do not ask for approval — the flag is the approval.
 
-1. Ask which findings to fix (all, specific numbers, skip)
-2. For each approved fix, apply the correction with the Edit tool
-3. Read the edited line to confirm the fix reads naturally in context
-4. Summarize what was changed
+**When `--fix` is NOT passed**: present the report and stop. The user will decide which findings to fix.
 
-Do NOT auto-fix without approval — accuracy fixes change meaning, not just style.
+For each fix:
+1. Apply the correction with the Edit tool
+2. Read the edited line AND its surrounding paragraph to confirm:
+   - The fix reads naturally in context
+   - The new value matches what you verified in source during triage (step 4) — not what the scanner reported
+   - The fix doesn't introduce a new inaccuracy (e.g., changing a count to the scanner's number without independent verification)
+3. **Ripple check** — after fixing a claim, scan the same page for other claims affected by the same underlying change. Example: fixing a tool count from 7 to 11 should also trigger checking prose paragraphs, bullet lists, and tables on the same page that reference those tools or their names. A single source change (e.g., new tools added) often affects multiple claims on the same page.
+4. After all fixes, summarize what was changed
