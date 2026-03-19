@@ -185,11 +185,13 @@ shows with strikethrough text:
 |---------|-----------|
 | Approved/executed | `-# *Read(reminders/foo.md)*` |
 | Denied | `-# *~~Read(reminders/foo.md)~~ — denied (use /permissions default to approve)*` |
+| Errored | `-# *~~Read(reminders/foo.md)~~ — error*` |
 
 In `dontAsk` mode, the stream shows denied tools with strikethrough so
 you see what the agent tried without receiving approval prompts.
 In `default` mode, tools you reject via the ❌ reaction also appear
-struck through.
+struck through. Tools that fail during execution also render with
+strikethrough and an " — error" suffix.
 
 ## Cancellation
 

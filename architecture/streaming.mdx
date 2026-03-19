@@ -54,9 +54,11 @@ the `-# ` markdown small-text prefix). Each label flushes when the next
 tool starts or when text arrives — rather than batching all labels until
 text appears. This eliminates visual jumps when multiple tools complete
 before the agent writes text. `StreamParser._drain()` converts deferred
-labels into `-# *{label}*` text — or
+labels into `-# *{label}*` text,
 `-# *~~{label}~~ — denied (use /permissions ask to approve)*` if the
-tool was denied by the permission system.
+tool was denied by the permission system, or
+`-# *~~{label}~~ — error*` if the tool returned an error or failed
+during execution (interrupted failures are skipped).
 
 MCP tool names are displayed without the `mcp__<server>__` prefix — the
 formatter strips the prefix generically for all MCP servers, so

@@ -17,6 +17,36 @@ chronological order.
 - **Improved prompt** — the rewritten prompt adds explicit source priority tiers (docs, then user config, then CLI, then flagged inference), a docs discovery step via the `llms.txt` index, a richer uncertainty protocol (covering ambiguous docs, conflicting sources, and wrong assumptions in questions), proactive related feature suggestions, and graceful scope boundary handling that redirects runtime debugging questions.
 - **Better trigger description** — the subagent description now addresses the decision-maker directly, enumerates domain categories, and includes a self-use trigger for when the main agent itself needs docs knowledge.
 
+## Mar 17-18, 2026
+
+**Tool error display, bug fixes, and code quality**
+
+- **Tool error labels** — tools that fail during execution now show with
+  strikethrough and an " — error" suffix in the stream
+  (`~~Tool(args)~~ — error`), matching the existing denied-tool styling.
+  Interrupted tool failures are skipped. See
+  [Visual feedback](/core-usage/permissions#visual-feedback).
+- **Async event loop fixes** — 9 synchronous `subprocess` and git calls
+  wrapped in `asyncio.to_thread()` to prevent blocking the event loop.
+- **Background fork model forwarding** — `model` parameter now forwarded
+  to `create_forked_client()` in non-isolated background forks, so
+  per-job model overrides take effect.
+- **Cron field validation** — `IndexError` from malformed cron fields
+  handled in the scheduler and preamble instead of crashing.
+- **Storage serialization fixes** — `_yaml_escape()` now escapes quotes
+  and backslashes, `isinstance` type comparison corrected, and corrupt
+  JSONL lines are logged and skipped instead of crashing.
+- **Embed fallback defaults** — invalid `color` or `style` values from
+  the agent now fall back to defaults instead of raising errors.
+- **Redundant status suppression** — duplicate status messages suppressed
+  once a text message already exists in the stream.
+- **`save_context` gating** — `save_context` now requires an explicit
+  user request and is no longer called proactively by the agent.
+- Internal: `_check_and_consume` helper extracted in `permissions.py` to
+  eliminate duplication between denied and errored label checks.
+- Internal: python-principles audit trimmed redundant docstrings across
+  20+ files.
+
 ## Mar 16, 2026
 
 **Diagnostic CLI and test coverage**
