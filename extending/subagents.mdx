@@ -11,21 +11,21 @@ ollim-bot has five built-in subagents. The bot never handles subagent work itsel
 
 | Subagent | Purpose | Model | Access |
 |----------|---------|-------|--------|
-| `guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | Documentation site, local config files, `ollim-bot help` commands |
+| `ollim-bot-guide` | Setup and usage help — surfaces relevant documentation verbatim | `haiku` | Documentation site, local config files, `ollim-bot help` commands |
 | `gmail-reader` | Email triage — surfaces actionable emails, discards noise | `sonnet` | Gmail commands only |
 | `history-reviewer` | Session review — finds loose threads in recent sessions | `sonnet` | Session history commands only |
 | `responsiveness-reviewer` | Engagement analysis — measures reminder/routine effectiveness | `sonnet` | Session history, routine, and reminder commands |
 | `user-proxy` | Preference proxy — answers "what would the user do?" during background forks | `haiku` | Local config files and session history (read-only) |
 
 <Note>
-Each subagent is restricted to only the tools it needs — the guide and gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
+Each subagent is restricted to only the tools it needs — the ollim-bot-guide and gmail-reader cannot access session history, the history-reviewer cannot read email, and the user-proxy has read-only access.
 </Note>
 
-## guide
+## ollim-bot-guide
 
-The guide answers setup, configuration, and usage questions by searching the ollim-bot documentation at docs.ollim.ai and cross-referencing local config files. It shows docs text verbatim rather than paraphrasing — paraphrasing introduces subtle errors that cascade into bad configuration.
+The ollim-bot-guide answers setup, configuration, and usage questions by searching the ollim-bot documentation at docs.ollim.ai and cross-referencing local config files. It shows docs text verbatim rather than paraphrasing — paraphrasing introduces subtle errors that cascade into bad configuration.
 
-**Triggered by:** The main agent always delegates to the guide when the answer depends on ollim-bot documentation — setup, configuration, usage, YAML format, or feature behavior. This includes the user's own questions and when the agent itself needs docs knowledge (building a routine, checking webhook format, verifying how a feature works before using it).
+**Triggered by:** The main agent always delegates to the ollim-bot-guide when the answer depends on ollim-bot documentation — setup, configuration, usage, YAML format, or feature behavior. This includes the user's own questions and when the agent itself needs docs knowledge (building a routine, checking webhook format, verifying how a feature works before using it).
 
 **What it does:**
 - Searches the documentation site using the approach that fits the question — targeted lookup for specific fields and settings, full-page fetch for broader topics
@@ -37,7 +37,7 @@ The guide answers setup, configuration, and usage questions by searching the oll
 - Setup and configuration: "How do I set up...", "What's the YAML format for..."
 - Usage questions: "How does X work?"
 - Config validation: "Is my routine configured correctly?"
-- NOT runtime debugging ("what happened last night?", "why did the bot miss my ping?") — those require session transcripts the guide doesn't have access to
+- NOT runtime debugging ("what happened last night?", "why did the bot miss my ping?") — those require session transcripts the ollim-bot-guide doesn't have access to
 
 **Commands available:**
 
@@ -47,10 +47,10 @@ The guide answers setup, configuration, and usage questions by searching the oll
 | `ollim-bot routine list` | All active routines with cron schedules and IDs |
 | `ollim-bot reminder list` | Currently pending reminders |
 
-The guide can also search and read your local config files to cross-check against the docs.
+The ollim-bot-guide can also search and read your local config files to cross-check against the docs.
 
 <Note>
-The guide is read-only — it never creates or modifies files. It uses a lighter model (`haiku`) since its job is looking things up, not complex reasoning.
+The ollim-bot-guide is read-only — it never creates or modifies files. It uses a lighter model (`haiku`) since its job is looking things up, not complex reasoning.
 </Note>
 
 ## gmail-reader
@@ -227,23 +227,26 @@ Confidence: HIGH | MEDIUM | LOW — <why this level>
 ```
 
 <Note>
-The user-proxy and guide use a lighter model (`haiku`) — the other three use a more capable model (`sonnet`). The user-proxy is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
+The user-proxy and ollim-bot-guide use a lighter model (`haiku`) — the other three use a more capable model (`sonnet`). The user-proxy is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
 </Note>
 
 ## Developer reference
 
 <AccordionGroup>
 <Accordion title="File-based subagent specs">
-Each `.md` file in `src/ollim_bot/subagents/` defines one subagent: YAML frontmatter for metadata, markdown body for the prompt. Here is the guide subagent as an example:
+Each `.md` file in `src/ollim_bot/subagents/` defines one subagent: YAML frontmatter for metadata, markdown body for the prompt. Here is the ollim-bot-guide subagent as an example:
 
 ```yaml
 ---
-name: guide
+name: ollim-bot-guide
 description: >-
-  Answer 'how do I...', 'what's the format for...', and 'is my config
-  correct?' questions about ollim-bot setup, configuration, and usage.
-  Searches docs.ollim.ai and checks configuration files. Shows full docs
-  text verbatim — never paraphrases.
+  Delegate to this subagent when the answer depends on ollim-bot
+  documentation — including when YOU need docs knowledge (building a
+  routine, checking webhook format, verifying feature behavior). Covers:
+  setup and configuration (YAML format, fields, syntax), feature behavior
+  (routines, reminders, webhooks, forks, permissions, ping budget), and
+  config validation (is my routine/reminder/webhook correct?). Also use
+  for 'how does X work' questions about ollim-bot architecture.
 model: haiku
 tools:
   - mcp__docs__*
@@ -301,9 +304,9 @@ The main agent's system prompt in `prompts.py` contains explicit delegation inst
 
 <Tabs>
   <Tab title="Guide">
-    The main agent always delegates to the guide when the answer depends on docs:
+    The main agent always delegates to the ollim-bot-guide when the answer depends on docs:
 
-    > Always delegate to the guide subagent (via the Task tool) when the answer depends on ollim-bot documentation — setup, configuration, usage, YAML format, or feature behavior. This includes answering the user's questions AND when you need docs knowledge yourself (e.g. building a routine, checking webhook format, verifying how a feature works before using it). Never answer docs questions from memory — paraphrasing introduces subtle errors. If the guide finds nothing, you can answer from code.
+    > Always delegate to the ollim-bot-guide subagent (via the Task tool) when the answer depends on ollim-bot documentation — setup, configuration, usage, YAML format, or feature behavior. This includes answering the user's questions AND when you need docs knowledge yourself (e.g. building a routine, checking webhook format, verifying how a feature works before using it). Never answer docs questions from memory — paraphrasing introduces subtle errors. If the guide finds nothing, you can answer from code.
   </Tab>
   <Tab title="Gmail">
     The system prompt instructs the main agent to always delegate email reading to the gmail-reader:
