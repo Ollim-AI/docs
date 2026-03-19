@@ -56,7 +56,7 @@ agent session is created.
   </Tab>
   <Tab title="Isolated">
     Setting `isolated: true` starts a fresh session with no
-    conversation history. This also unlocks model overrides.
+    conversation history.
 
     ```yaml title="routines/email-triage.md"
     ---
@@ -82,7 +82,7 @@ agent session is created.
 | Field | Default | Description |
 |-------|---------|-------------|
 | `isolated` | `false` | No conversation history instead of forking |
-| `model` | — | Model override. Isolated mode only |
+| `model` | — | Model override (works in both forked and isolated modes) |
 | `thinking` | `true` | Extended thinking override |
 
 ## Communication
@@ -166,6 +166,9 @@ CLI commands. These tools are always available:
 - `Read(./**.md)`
 - `Glob(./**.md)`
 - `Grep(./**.md)`
+- `mcp__discord__add_reminder`
+- `mcp__discord__list_reminders`
+- `mcp__discord__cancel_reminder`
 
 Pinging and reporting tools (`ping_user`, `discord_embed`,
 `report_updates`, `follow_up_chain`) are controlled separately by the
@@ -222,9 +225,9 @@ frontmatter:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `background` | `bool` | `false` | Run as a background fork |
+| `background` | `bool` | `false` (routines), `true` (reminders) | Run as a background fork |
 | `isolated` | `bool` | `false` | Fresh session, no history |
-| `model` | `string` | — | Model override (isolated only) |
+| `model` | `string` | — | Model override |
 | `thinking` | `bool` | `true` | Extended thinking override |
 | `update-main-session` | `string` | `on_ping` | `always`, `on_ping`, `freely`, `blocked` |
 | `allow-ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |

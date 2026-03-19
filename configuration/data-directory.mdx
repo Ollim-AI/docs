@@ -10,7 +10,7 @@ first use and automatically managed as a git repository — `storage.py`
 auto-commits after most writes.
 
 The root contains agent-facing files (profile files, routines, reminders,
-webhooks, spec symlinks, and the optional `tool-policy.yaml`) that the
+webhooks, and the optional `tool-policy.yaml`) that the
 agent reads and writes directly. Infrastructure state (sessions, credentials, ping
 budget, etc.) lives in the `state/` subdirectory, keeping the agent's
 working directory clean. The `state/` directory is **write-protected**
@@ -23,9 +23,6 @@ for details.
 ~/.ollim-bot/
 ├── IDENTITY.md                         # Bot persona (bootstrapped on first run)
 ├── USER.md                             # User context (user-created, optional)
-├── routine-reminder-spec.md →       # Symlink to docs/routine-reminder-spec.md
-├── webhook-spec.md →                # Symlink to docs/webhook-spec.md
-├── skill-spec.md →                  # Symlink to docs/skill-spec.md
 ├── tool-policy.yaml                 # Optional YAML tool policy overrides
 ├── downloads/                       # Saved non-image Discord attachments
 ├── routines/
@@ -101,7 +98,7 @@ Each line in `session_history.jsonl` contains:
 | Field | Type | Description |
 |-------|------|-------------|
 | `session_id` | `str` | The Agent SDK session ID |
-| `event` | `str` | One of: `created`, `compacted`, `swapped`, `cleared`, `interactive_fork`, `bg_fork`, `isolated_bg` |
+| `event` | `str` | One of: `created`, `compacted`, `swapped`, `cleared`, `interactive_fork`, `bg_fork`, `isolated_bg`, `restarting` |
 | `timestamp` | `str` | ISO 8601 datetime in the configured timezone (`OLLIM_TIMEZONE`) |
 | `parent_session_id` | `str \| null` | Set for `compacted`, `swapped`, and fork events |
 
@@ -298,28 +295,6 @@ check if the process is alive. On Linux, it additionally verifies
 `/proc/<pid>/cmdline` contains `ollim-bot` to avoid false positives from
 recycled PIDs. Corrupted PID files (non-numeric content or read errors) are
 silently overwritten. The file is deleted on exit via `atexit`.
-
-## Spec files
-
-The agent reads format specification files from `~/.ollim-bot/` when
-creating routines, reminders, webhooks, or skills. Because the agent's
-working directory is `~/.ollim-bot/`, it can read them by name without
-hardcoding paths to the source tree.
-
-On startup, `_ensure_sdk_layout()` in `main.py` creates symlinks
-pointing to specification documents in the project's `docs/` directory:
-
-| File | Type | Referenced by |
-|------|------|---------------|
-| `routine-reminder-spec.md` | Symlink → `docs/routine-reminder-spec.md` | System prompt (routines/reminders section) |
-| `webhook-spec.md` | Symlink → `docs/webhook-spec.md` | System prompt (webhooks section) |
-
-Symlinks are only created if the target doesn't already exist — they
-survive bot restarts and are never overwritten.
-
-`skill-spec.md` is a symlink to `docs/skill-spec.md` referenced by the
-system prompt's skills section. It is not managed by
-`_ensure_sdk_layout()` — it must be created manually or by the agent.
 
 ## Git tracking
 

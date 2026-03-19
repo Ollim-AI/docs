@@ -157,6 +157,10 @@ MCP tools are defined in `src/ollim_bot/agent_tools.py` using the `@tool` decora
             report_updates,
             enter_fork,
             exit_fork,
+            update_names,
+            add_reminder,
+            list_reminders_tool,
+            cancel_reminder,
             my_tool,  # add here
         ],
     )
@@ -226,7 +230,6 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
     ```yaml title="~/.ollim-bot/webhooks/deploy-notify.md"
     ---
     id: deploy-notify
-    message: "A deployment just completed. Review the status and notify if there are failures."
     fields:
       type: object
       properties:
@@ -241,6 +244,7 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
           maxLength: 500
       required: [service, status]
     ---
+    A deployment just completed. Review the status and notify if there are failures.
     ```
 
     The `fields` value is a JSON Schema that validates incoming payloads. A `maxLength: 500` default is injected for any string field without an explicit limit.
@@ -251,7 +255,6 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
     | Field | Type | Default | Description |
     |-------|------|---------|-------------|
     | `id` | string | — | Unique webhook identifier (used in the URL path) |
-    | `message` | string | — | Task instruction given to the agent |
     | `fields` | object | — | JSON Schema for payload validation |
     | `isolated` | boolean | `false` | Run in an isolated background fork (no main session context) |
     | `model` | string | `null` | Override the Claude model for this webhook |
@@ -274,7 +277,7 @@ Webhook specs are markdown files with YAML frontmatter, stored in `~/.ollim-bot/
 
     1. **Validation** — the payload is checked against the `fields` JSON Schema. Invalid payloads return `400`.
     2. **Haiku screening** — string fields are screened by a fast Claude Haiku call for prompt injection. If any fields are flagged, the webhook is not dispatched.
-    3. **Prompt construction** — `build_webhook_prompt` combines the scheduling preamble (active routines and reminders) with the webhook's `message` and fenced payload data.
+    3. **Prompt construction** — `build_webhook_prompt` combines the scheduling preamble (active routines and reminders) with the webhook's markdown body and fenced payload data.
     4. **Background fork** — the prompt is dispatched as a background fork with the spec's configured behavior (isolated, model, allow-ping, etc.).
   </Step>
 </Steps>
@@ -287,7 +290,7 @@ Webhook data is fenced with explicit labels in the prompt — `WEBHOOK DATA (unt
 
 <Columns cols={2}>
   <Card title="Discord tools" icon="wrench" href="/extending/mcp-tools">
-    Full reference for all seven built-in Discord tools.
+    Full reference for all eleven built-in Discord tools.
   </Card>
   <Card title="System prompt" icon="scroll" href="/development/system-prompt">
     How the system prompt is structured and where to document new tools.

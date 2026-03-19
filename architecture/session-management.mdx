@@ -62,6 +62,7 @@ Every session transition is recorded in `~/.ollim-bot/state/session_history.json
 | `interactive_fork` | An interactive fork begins receiving responses |
 | `bg_fork` | A background fork session starts |
 | `isolated_bg` | An isolated background fork (no parent session) starts |
+| `restarting` | Bot is restarting (recorded before exit) |
 
 <Accordion title="Developer reference">
 `save_session_id()` automatically detects `created` and `compacted` events
