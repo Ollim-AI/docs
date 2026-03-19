@@ -306,7 +306,7 @@ The main agent's system prompt in `prompts.py` contains explicit delegation inst
   <Tab title="Guide">
     The main agent always delegates to the ollim-bot-guide when the answer depends on docs:
 
-    > Always delegate to the ollim-bot-guide subagent (via the Task tool) when the answer depends on ollim-bot documentation — setup, configuration, usage, YAML format, or feature behavior. This includes answering the user's questions AND when you need docs knowledge yourself (e.g. building a routine, checking webhook format, verifying how a feature works before using it). Never answer docs questions from memory — paraphrasing introduces subtle errors. If the guide finds nothing, you can answer from code.
+    > Always delegate to the ollim-bot-guide subagent (via the Task tool) when the answer depends on ollim-bot documentation — YAML format, configuration syntax, usage instructions, or feature behavior. This includes answering the user's questions AND when you need docs knowledge yourself (e.g. building a routine, checking webhook format, verifying how a feature works before using it). Never answer docs questions from memory — paraphrasing introduces subtle errors. If the guide finds nothing, you can answer from code.
   </Tab>
   <Tab title="Gmail">
     The system prompt instructs the main agent to always delegate email reading to the gmail-reader:
