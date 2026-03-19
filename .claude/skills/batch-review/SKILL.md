@@ -37,6 +37,10 @@ Each agent's prompt — keep it compact; the agent definition has the methodolog
 
 ```
 Page: <absolute-path-to-mdx-file>
+
+In the Violation column, quote the exact problematic text so fixes can target it precisely.
+Check the project CLAUDE.md for canonical terminology — flag any deviations (e.g., wrong term for a concept the project defines).
+Check that the frontmatter `description` is action-oriented (10–30 words) per CLAUDE.md requirements.
 ```
 
 ## 4. Spawn cross-cutting agent
@@ -112,6 +116,15 @@ Once all agents complete, produce the summary report:
 ### Clean pages
 - <list pages with no violations>
 ```
+
+### Fix boundaries
+
+When applying fixes (step 7), these constraints are non-negotiable:
+
+- **Rewrite, never truncate or delete.** If a sentence has a style problem (e.g., wrong voice, jargon), rewrite it to fix the issue while preserving all information. Truncating a paragraph to one sentence or deleting a defining statement loses content readers need.
+- **Never add content that isn't in the source.** Do not insert code comments, annotations, or explanatory text into code blocks unless the source file contains them. Fabricated comments mislead readers about what the real code looks like.
+- **Verify against CLAUDE.md terminology.** The project `CLAUDE.md` defines canonical terms (e.g., "context compaction" not "session compaction", "interactive fork" not "foreground session", "background fork" not "bg fork"). Check each fix against these terms — a terminology fix that uses the wrong term is worse than no fix.
+- **One fix per finding.** Each edit should address exactly one reported violation. Do not combine nearby fixes or make opportunistic changes beyond what was reported.
 
 ## 7. Fix mode (if `--fix` passed)
 

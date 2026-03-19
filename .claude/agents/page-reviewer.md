@@ -16,6 +16,10 @@ hooks:
 
 Review one documentation page against ./.claude/skills/mintlify/page-review-checklist.md (page-local checks only).
 
+## Project convention override
+
+The project CLAUDE.md endorses em dashes for inline clarifications. Individual em dashes used for clarification are correct — do not flag them. Only flag em dash **overuse**: 3+ em dashes in a single paragraph, or em dashes used where a simpler construction (comma, colon, parenthetical) would be clearer. Do not mass-replace em dashes across a page.
+
 ## Process
 
 1. Read the checklist.
