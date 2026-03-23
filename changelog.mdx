@@ -9,12 +9,12 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
-## Mar 18-20, 2026
+## Mar 21, 2026
 
 **Agent core changes — model auto-upgrade, bug fixes, and SDK upgrade**
 
 - **Haiku-to-sonnet auto-upgrade** — when context exceeds haiku's 200k limit at fork creation time, the bot automatically upgrades the [interactive fork](/core-usage/forks#haiku-auto-upgrade) to sonnet. The fork embed shows a warning, and `enter_interactive_fork()` returns a `bool` indicating the upgrade. The threshold is defined in `_CONTEXT_WINDOWS` and checked against `_last_input_tokens` from `ResultMessage.usage`.
-- **`claude-agent-sdk` 0.1.47 to 0.1.50** — bundled CLI 2.1.59 to 2.1.81. Notable improvements: prompt cache fix (up to 12x input token savings), session tagging/info APIs, `RateLimitEvent` type, OAuth token refresh fix, memory leak fixes.
+- **`claude-agent-sdk` 0.1.47 to 0.1.50** — dependency bumped in `pyproject.toml`. See the [SDK changelog](https://github.com/anthropics/claude-agent-sdk/releases) for details.
 - **Model-aware context warnings** — the 60% context usage annotation now uses per-model context windows (`_CONTEXT_WINDOWS` dict) instead of a hardcoded 200k default. Opus and Sonnet correctly report against their 1M window.
 - **Compaction retry guard** — compaction retry after auto-compaction is now skipped when a fork interrupt occurred (`not fork_interrupted`), preventing a wasted API call.
 - **`timestamp()` timezone fix** — `timestamp()` in `agent_context.py` now uses the `%Z` format directive to reflect the configured timezone instead of hardcoding "PT".
