@@ -180,9 +180,10 @@ Invalid requests are rejected with descriptive errors:
     4. **Schema validation** — validates the payload against the spec's `fields` rules.
     5. **Prompt construction** — the bot builds a prompt combining the task instructions (markdown body) with the validated JSON payload as a fenced data block, keeping webhook data clearly separated from instructions.
     6. **202 Accepted** — response sent immediately.
-    7. **Injection screening** — free-form text fields are checked for attempts to trick the bot (30-second timeout — if screening fails, the webhook proceeds). Flagged payloads are skipped and logged.
-    8. **Validation** — if the spec references a `subagent` or `skills`, the bot verifies they exist. Missing references skip dispatch entirely.
-    9. **Dispatch** — a background fork runs with the spec's
+    7. **Subagent validation** — if the spec references a `subagent`, the bot verifies it exists. Unknown subagents skip dispatch entirely.
+    8. **Injection screening** — free-form text fields are checked for attempts to trick the bot (30-second timeout — if screening fails, the webhook proceeds). Flagged payloads are skipped and logged.
+    9. **Skill validation** — if the spec references `skills`, the bot verifies each one exists in `~/.ollim-bot/skills/`. Missing skills skip dispatch entirely.
+    10. **Dispatch** — a background fork runs with the spec's
        configuration.
   </Accordion>
 
