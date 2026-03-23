@@ -22,6 +22,34 @@ chronological order.
 - **`set_thinking()` permission restore** — `set_thinking()` now restores `_dont_ask` from persisted config when tearing down a fork client, matching the existing fork-exit behavior.
 - **Fallback text after compaction** — the `streamed` flag is now reset after compaction, so fallback `ResultMessage` text is no longer silently dropped.
 
+## Mar 20-21, 2026
+
+**ADHD behavior eval system and developer tooling**
+
+- **`ollim-bot eval` CLI** — new subcommand with `run`, `list`, `results`, and
+  `compare` sub-subcommands for running ADHD behavior evals against the real
+  agent. `eval run` plays a Haiku-powered user-proxy against the bot, then
+  scores transcripts with a Sonnet-powered LLM judge. Results persist as JSONL
+  for regression tracking. See [CLI reference](/development/cli-reference#eval).
+- **6 ADHD scenarios** — `overwhelmed-by-tasks`, `vague-routine-request`,
+  `proactive-morning-checkin`, `frustrated-nothing-works`,
+  `reminder-negotiation`, and `context-recovery-after-gap`. Each defines a
+  persona, goal, and ADHD-specific scoring criteria.
+- **UX-grounded judge** — the LLM judge scores against ADHD behavioral
+  anchors (one-thing focus, warm tone, no option dumps, context-awareness)
+  on a 1-5 scale.
+- **`eval compare`** — compares latest vs previous results per scenario,
+  flagging regressions when overall score drops by more than 0.3.
+- **33 ADHD behavior regression tests** — 3 modules (441 lines) protecting
+  prompt content, multi-step interaction flows, and context assembly. These
+  run in the regular `pytest` suite without API calls.
+- **Proxy prompt and goal truncation fix** — strengthened the Haiku
+  user-proxy prompt for more realistic ADHD behavior, fixed qualitative goal
+  truncation in `_print_scores`.
+- **3 SDK docs preload skills** — developer-facing Claude Code skills
+  (`/sdk-docs-ref`, `/sdk-docs-core`, `/sdk-docs-full`) with tiered context
+  depth for working with Claude Agent SDK source code.
+
 ## Mar 17-18, 2026
 
 **Guide subagent renamed to ollim-bot-guide**

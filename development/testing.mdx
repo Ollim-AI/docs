@@ -133,6 +133,83 @@ All tests live in `tests/` as module-level functions — no test classes. Each f
 | `test_tool_policy.py` | `tool_policy.py` |
 | `test_tool_restrictions.py` | `agent_tools.py` |
 | `test_webhook.py` | `webhook.py` |
+| `evals/test_judge.py` | `evals/judge.py` |
+| `evals/test_runner.py` | `evals/runner.py` |
+| `evals/test_scenario.py` | `evals/scenario.py` |
+| `evals/test_eval_cmd.py` | `evals/eval_cmd.py` |
+| `evals/test_results.py` | `evals/results.py` |
+| `test_behavior_prompts.py` | ADHD prompt content regression tests |
+| `test_behavior_scenarios.py` | ADHD multi-step interaction flow regression tests |
+| `test_behavior_context.py` | ADHD context assembly regression tests |
+
+## ADHD behavior evals
+
+The eval system tests whether the bot responds appropriately to simulated ADHD
+users. It runs multi-turn conversations between a Haiku-powered user-proxy
+(playing an overwhelmed ADHD user) and the real bot agent, then scores the
+transcript with a Sonnet-powered LLM judge.
+
+### What it tests
+
+Each scenario defines a **persona** (personality, goal, opening message, max
+turns) and **criteria** the judge scores on a 1-5 scale. Criteria are
+ADHD-specific behavioral anchors — things like whether the bot gives exactly
+one next step instead of an option dump, uses warm tone instead of
+productivity-coach language, and avoids adding cognitive load.
+
+There are 6 scenarios in `src/ollim_bot/evals/cases/`:
+
+| Scenario ID | Goal type | What it tests |
+|-------------|-----------|---------------|
+| `overwhelmed-by-tasks` | `file_created` | Bot gives one clear next step, not a prioritized list |
+| `vague-routine-request` | `file_created` | Bot guides a vague request into a concrete routine |
+| `proactive-morning-checkin` | `qualitative` | Morning check-in feels like care, not noise |
+| `frustrated-nothing-works` | `qualitative` | Bot handles frustration without dismissing or lecturing |
+| `reminder-negotiation` | `qualitative` | Bot negotiates a missed commitment without guilt |
+| `context-recovery-after-gap` | `qualitative` | Bot recovers context after the user left mid-conversation |
+
+Scenarios with `goal_type: file_created` pass when the bot creates a routine
+or reminder file. Scenarios with `goal_type: qualitative` always run to
+`max_turns` and rely entirely on the judge's scoring.
+
+### Running evals
+
+```bash
+# Run all scenarios
+ollim-bot eval run
+
+# Run one scenario with full transcript
+ollim-bot eval run overwhelmed-by-tasks --verbose
+
+# View past results
+ollim-bot eval results
+
+# Compare latest vs previous for regression detection
+ollim-bot eval compare
+```
+
+See [CLI reference](/development/cli-reference#eval) for the full list of
+subcommands and flags.
+
+<Note>
+Evals require Claude authentication and make real API calls — they are not
+part of the fast `pytest` suite. Run them separately when you want to validate
+ADHD behavior quality.
+</Note>
+
+### ADHD behavior regression tests
+
+Three test modules (33 tests, 441 lines) protect ADHD-specific behavior
+without requiring API calls:
+
+- `test_behavior_prompts.py` — verifies prompt content includes required
+  ADHD-specific instructions
+- `test_behavior_scenarios.py` — tests multi-step interaction flows and
+  scenario data model integrity
+- `test_behavior_context.py` — tests context assembly for eval environments
+
+These run as part of the regular `pytest` suite and catch regressions in
+prompt content and scenario definitions.
 
 ## Writing tests
 

@@ -22,6 +22,7 @@ ollim-bot [command] [subcommand] [options]
 | `ollim-bot tasks` | Manage Google Tasks |
 | `ollim-bot cal` | Manage Google Calendar events |
 | `ollim-bot gmail` | Read and search Gmail |
+| `ollim-bot eval` | Run ADHD behavior evals against the real agent |
 | `ollim-bot auth` | Manage Claude Code authentication |
 | `ollim-bot doctor` | Run diagnostic checks on your installation |
 | `ollim-bot help` | Show help message |
@@ -342,6 +343,72 @@ List all Gmail labels. No arguments.
 
 ```bash
 ollim-bot gmail labels
+```
+
+## `eval`
+
+Run ADHD behavior evals that test whether the bot responds appropriately to
+users with ADHD. Each eval plays a simulated ADHD user (Haiku-powered proxy)
+against the real bot agent, then scores the transcript with an LLM judge.
+
+<Warning>
+  `eval run` requires Claude authentication — run `ollim-bot auth login` first.
+</Warning>
+
+### `eval run`
+
+Run scenarios against the real agent. Runs all scenarios by default.
+
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `scenario_id` | positional | No | all | Run a specific scenario by ID |
+| `-v`, `--verbose` | flag | No | `false` | Show full transcript during execution |
+
+```bash
+# Run all scenarios
+ollim-bot eval run
+
+# Run a single scenario with transcript output
+ollim-bot eval run overwhelmed-by-tasks --verbose
+```
+
+Each scenario reports per-criterion scores (1-5 scale), an overall score,
+and a PASS/FAIL status. A scenario passes when the overall score is at least
+3.0 and no individual criterion scores below 2. Results are saved to a JSONL
+history file for regression tracking.
+
+### `eval list`
+
+List available scenarios with their IDs and goals. No arguments.
+
+```bash
+ollim-bot eval list
+```
+
+### `eval results`
+
+Show past eval results from the JSONL history.
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `scenario_id` | positional | No | Filter results by scenario |
+
+```bash
+ollim-bot eval results
+ollim-bot eval results overwhelmed-by-tasks
+```
+
+### `eval compare`
+
+Compare latest vs previous results for regression detection. Flags a
+regression when the overall score drops by more than 0.3.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--last` | int | No | `2` | Compare last N runs |
+
+```bash
+ollim-bot eval compare
 ```
 
 ## `auth`
