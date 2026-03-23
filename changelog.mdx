@@ -9,6 +9,15 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
+## Mar 20-22, 2026
+
+**Onboarding and setup improvements**
+
+- **Welcome button** — the first-run startup DM now includes a **"Get started — 3 questions"** button that triggers the [setup](/getting-started/quickstart#run-first-time-setup) skill, replacing the previous open-ended welcome message.
+- **Setup creates morning check-in** — setup now offers to create a weekday morning check-in [routine](/scheduling/routines) and writes the routine file directly when the user accepts, instead of just suggesting it.
+- **Google integration awareness in setup** — after the routine offer, setup checks Google integration status: skips the mention if already connected, suggests `/google-auth` if credentials exist but aren't authorized, or links to the [setup guide](/getting-started/google-integration) if nothing is configured.
+- **Google status in background preamble** — [background forks](/scheduling/background-forks) now receive a Google status line in their preamble, so routines skip Google commands gracefully when not configured instead of failing silently.
+
 ## Mar 21, 2026
 
 **Agent core changes — model auto-upgrade, bug fixes, and SDK upgrade**

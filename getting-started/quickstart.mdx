@@ -261,7 +261,7 @@ commands from this guide. To run a command, paste it in and press
     Save the file and close the editor.
 
     <Tip>
-    These three env vars are all you need to get started. After the bot is running, try `/setup` in Discord for a guided walkthrough that configures personality and user context interactively.
+    These three env vars are all you need to get started. On first launch, the bot's welcome message includes a **"Get started — 3 questions"** button that walks you through personality and user context interactively. You can also run `/setup` anytime.
     </Tip>
   </Step>
 
@@ -287,20 +287,34 @@ commands from this guide. To run a command, paste it in and press
     </Tip>
   </Step>
 
-  <Step titleSize="h3" title="Send your first message">
-    Reply to the startup DM to start a conversation — responses stream
-    in real time. Try one of these to see the bot in action:
+  <Step titleSize="h3" title="Run first-time setup">
+    The bot's startup DM includes a **"Get started — 3 questions"**
+    button. Click it to walk through guided setup — the bot asks your
+    name, its personality, and context about your work and schedule.
+
+    At the end, setup offers to create a **morning check-in routine**
+    that messages you every weekday at 9 AM with your schedule and
+    priorities. If you accept, the bot writes the routine file
+    immediately — no extra steps needed.
+
+    Setup also checks your Google integration status and points you to
+    the next step if it's not connected yet. See
+    [Google integration](/getting-started/google-integration) for the
+    full walkthrough.
+
+    <Tip>
+    You can skip the button and just start talking — setup is optional.
+    You can always run it later with `/setup`.
+    </Tip>
+
+    Once setup is done (or skipped), try a message to see the bot in
+    action:
 
     > Remind me to take out the trash tomorrow at 10am, and follow up if I haven't done it by noon
 
     The bot creates a reminder and a follow-up chain — at noon it
     checks whether you've confirmed, and only pings you if the task is
     still outstanding.
-
-    > Set up a morning routine that gives me a summary of my day every weekday at 9am
-
-    The bot creates a routine that fires every weekday at 9am, pulls
-    your Google Tasks and Calendar, and sends you a summary DM.
 
     <Note>
     After [setting up Google integration](/getting-started/google-integration), try: "What's on my calendar today?"
