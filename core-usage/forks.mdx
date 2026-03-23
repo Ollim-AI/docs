@@ -64,6 +64,10 @@ separate from main.") along with three buttons for exiting:
 | **Report** | Blurple | Reports summary, discards fork |
 | **Exit Fork** | Red | Discards fork, returns to main |
 
+### Haiku auto-upgrade
+
+Haiku has a 200k context window — smaller than Sonnet and Opus (1M each). If your main session's context exceeds 200k tokens and you're running haiku, the bot automatically upgrades the fork to sonnet. The fork embed shows a warning — "context exceeds haiku limit — using sonnet" — so you know the model changed. This only applies at fork creation time; if context grows past 200k mid-fork, the model stays as-is.
+
 While inside a fork, all your messages go to the fork instead of
 the main session. Pending updates from background tasks are previewed
 but not cleared, so the main session still receives them when the

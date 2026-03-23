@@ -348,6 +348,10 @@ lightweight background routines where speed matters more than depth.
 | Sonnet 4.6 | Daily conversations, routines, most agentic work | Excellent | 59.1% Terminal-Bench | 74.1% GPQA | Fast | $$ |
 | Haiku 4.5 | Background routines, email triage, quick checks | Good | 41.8% Terminal-Bench | — | Fastest | $ |
 
+<Note>
+  Haiku has a 200k context window (vs. 1M for Sonnet and Opus). If your main session exceeds 200k tokens, the bot automatically upgrades [interactive forks](/core-usage/forks#haiku-auto-upgrade) to sonnet to avoid failures. This makes haiku best suited for short-lived background routines rather than long interactive sessions.
+</Note>
+
 <Tip>
   **Sonnet 4.6 is the sweet spot for ollim-bot.** It matches Opus on
   tau2-bench tool calling (91.7% vs 91.9%), beats it on knowledge work
