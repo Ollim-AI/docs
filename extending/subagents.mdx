@@ -230,6 +230,23 @@ Confidence: HIGH | MEDIUM | LOW — <why this level>
 The user-proxy and ollim-bot-guide use a lighter model (`haiku`) — the other three use a more capable model (`sonnet`). The user-proxy is read-only by design and biased toward admitting uncertainty: "a wrong answer is much worse than 'unknown' — it cascades into a decision the user never approved."
 </Note>
 
+## Subagent binding for jobs
+
+Routines, reminders, and webhooks can bind to a subagent via the `subagent` field in their YAML frontmatter. When set, the generated skill includes a `REQUIRED SUBAGENT` instruction telling the bot to delegate the core task to that subagent via the Agent tool. The `Agent(<name> *)` tool pattern is automatically added to the background fork's allowed tools via `BgForkConfig.with_subagent_tools()`.
+
+At fire time, the bot validates that the referenced subagent exists. If it doesn't, execution is skipped entirely — the job does not run in a degraded state. For routines and reminders, a pending update is appended so the bot can surface the issue on the next interaction.
+
+```yaml title="routines/weekly-email-digest.md"
+---
+id: "e1f2a3b4"
+cron: "0 9 * * 1"
+description: "Weekly email digest"
+background: true
+subagent: "gmail-reader"
+---
+Triage the inbox and surface anything that needs attention this week.
+```
+
 ## Developer reference
 
 <AccordionGroup>

@@ -55,6 +55,8 @@ The agent can create and manage them conversationally through file access.
     model: haiku
     allow-ping: true
     update-main-session: on_ping
+    skills:
+      - "repo-status"
     fields:
       type: object
       required: [repo, status]
@@ -123,6 +125,8 @@ YAML frontmatter and a markdown body.
 | `thinking` | `bool` | `true` | Enable extended thinking |
 | `allow-ping` | `bool` | `true` | Allow the fork to ping the user |
 | `update-main-session` | `string` | `on_ping` | When to write back to main session |
+| `skills` | `list[string] \| null` | `null` | [Skill](/extending/skills) names to load at fire time |
+| `subagent` | `string \| null` | `null` | [Subagent](/extending/subagents) to delegate the core task to |
 
 <Tip>
   The `isolated`, `model`, `thinking`, `allow-ping`, and
@@ -176,8 +180,9 @@ Invalid requests are rejected with descriptive errors:
     4. **Schema validation** — validates the payload against the spec's `fields` rules.
     5. **Prompt construction** — the bot builds a prompt combining the task instructions (markdown body) with the validated JSON payload as a fenced data block, keeping webhook data clearly separated from instructions.
     6. **202 Accepted** — response sent immediately.
-    7. **Injection screening** — free-form text fields are checked for attempts to trick the bot. Flagged payloads are skipped and logged.
-    8. **Dispatch** — a background fork runs with the spec's
+    7. **Injection screening** — free-form text fields are checked for attempts to trick the bot (30-second timeout — if screening fails, the webhook proceeds). Flagged payloads are skipped and logged.
+    8. **Validation** — if the spec references a `subagent` or `skills`, the bot verifies they exist. Missing references skip dispatch entirely.
+    9. **Dispatch** — a background fork runs with the spec's
        configuration.
   </Accordion>
 
@@ -219,9 +224,11 @@ Invalid requests are rejected with descriptive errors:
     matches the path in your URL.
   </Accordion>
   <Accordion title="Webhook accepted but no bot action">
-    The injection screening layer may have flagged a field value as
-    an attempt to trick the bot. Check the bot logs for lines like
-    `Webhook <slug>: flagged fields [...], skipping dispatch`.
+    Several things can cause a webhook to be accepted (202) but produce no action:
+
+    - **Injection screening** flagged a field value. Look for `Webhook <slug>: flagged fields [...], skipping dispatch` in the logs.
+    - **Missing skills** — the spec references a skill that doesn't exist in `~/.ollim-bot/skills/`. Look for `Webhook <slug>: unknown skills [...], skipping`.
+    - **Missing subagent** — the spec references a subagent that doesn't exist. Look for `Webhook <slug>: unknown subagent '...', skipping`.
   </Accordion>
 </AccordionGroup>
 

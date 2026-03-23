@@ -50,6 +50,16 @@ chronological order.
   (`/sdk-docs-ref`, `/sdk-docs-core`, `/sdk-docs-full`) with tiered context
   depth for working with Claude Agent SDK source code.
 
+## Mar 20, 2026
+
+**Webhook skills, subagent binding, and fire-time validation**
+
+- **Webhook skills support** — webhooks now accept a `skills` array in YAML frontmatter, matching [routines](/scheduling/routines) and [reminders](/scheduling/reminders). Referenced skill instructions and tools are loaded at fire time. Skill tool merging moved from `scheduler.py` to `BgForkConfig.with_skill_tools()` for consistent ownership across all job types.
+- **Subagent binding** — routines, reminders, and webhooks support a new `subagent` field. When set, the generated skill includes a `REQUIRED SUBAGENT` delegation instruction, and the `Agent(<name> *)` tool pattern is merged into `allowed_tools` via `BgForkConfig.with_subagent_tools()`. Unknown subagents skip execution at fire time.
+- **Skill reference validation** — `validate_skill_refs()` in `skills.py` checks that every skill in a job's `skills` array has a `SKILL.md` in the skills directory. Missing refs block execution entirely — routines and reminders append a pending update with the error; webhooks log a warning and skip dispatch.
+- **Webhook screening timeout** — injection screening now enforces a 30-second timeout (`_SCREENING_TIMEOUT`) via `asyncio.timeout`. If screening times out or fails, the webhook proceeds (fail-open).
+- **User skills in system prompt** — `list_user_skills()` enumerates skills that are neither generated (`routine-*`, `reminder-*`, `webhook-*`) nor bundled, and injects a dynamic "Your custom skills" section into the system prompt with each skill's name and description. Inline `SKILL.md` format instructions replace the previous "search the docs" reference.
+
 ## Mar 17-18, 2026
 
 **Guide subagent renamed to ollim-bot-guide**

@@ -1,15 +1,15 @@
 ---
 title: "Skills"
-description: "Create reusable instruction sets that routines and reminders can reference for repeatable workflows."
+description: "Create reusable instruction sets that routines, reminders, and webhooks can reference for repeatable workflows."
 ---
 
-Routines and reminders that need the same detailed instructions shouldn't duplicate them. **Skills** solve this — reusable instruction sets stored as markdown files under `~/.ollim-bot/skills/<name>/SKILL.md`. Define a skill once, reference it by name, and every job that uses it gets the same instructions loaded at fire time.
+Routines, reminders, and webhooks that need the same detailed instructions shouldn't duplicate them. **Skills** solve this — reusable instruction sets stored as markdown files under `~/.ollim-bot/skills/<name>/SKILL.md`. Define a skill once, reference it by name, and every job that uses it gets the same instructions loaded at fire time.
 
 ## How skills work
 
 The bot discovers skills automatically from `~/.ollim-bot/skills/`. At startup, it scans for skill directories, reads each `SKILL.md`, and registers the skill as available.
 
-When a routine or reminder references skills, the bot loads their instructions and runs them before carrying out the job's own instructions. Any tools the skill declares in its `allowed-tools` field are automatically available during execution.
+When a routine, reminder, or webhook references skills, the bot loads their instructions and runs them before carrying out the job's own instructions. Any tools the skill declares in its `allowed-tools` field are automatically available during execution.
 
 <Note>
 Skills are loaded fresh every time they're invoked. If you update a skill's instructions, the next invocation picks up the changes automatically.
@@ -103,9 +103,9 @@ When the skill loads, the bot replaces each `` !`command` `` with the command's 
 Commands run synchronously and block the skill loading for their duration. Keep commands fast — read-only queries, not long-running processes. The 10-second per-command and 30-second total timeouts are hard caps.
 </Warning>
 
-## Using skills in routines and reminders
+## Using skills in jobs
 
-Reference skills by name in the `skills:` array of a routine or reminder's YAML frontmatter:
+Reference skills by name in the `skills:` array of a routine, reminder, or webhook's YAML frontmatter:
 
 ```yaml title="routines/morning-code-review.md"
 ---
@@ -123,6 +123,31 @@ Ping me if anything needs my attention before standup.
 
 When this routine fires, the bot loads both skills and runs them before carrying out the routine's instructions. Any tools declared in the skills' `allowed-tools` fields are automatically available.
 
+### Webhooks with skills
+
+Webhooks support `skills:` in the same way — referenced skills are loaded when the webhook fires:
+
+```yaml title="webhooks/ci-with-review.md"
+---
+id: "ci-review"
+isolated: true
+skills:
+  - "code-review"
+  - "repo-status"
+fields:
+  type: object
+  required: [repo, status]
+  properties:
+    repo:
+      type: string
+    status:
+      type: string
+      enum: [success, failure]
+  additionalProperties: false
+---
+CI result for {repo}: {status}. If the build failed, review the changes.
+```
+
 ### Reminders with skills
 
 Reminders work the same way. You can also pass skills via the CLI:
@@ -133,6 +158,28 @@ ollim-bot reminder add --delay 60 -m "Check deployment status" \
 ```
 
 For chained reminders, skills carry forward through the entire chain automatically — every follow-up link inherits the same skill set.
+
+## Skill reference validation
+
+When a routine, reminder, or webhook fires, the bot validates that every skill in the `skills:` array exists in `~/.ollim-bot/skills/`. If any referenced skill is missing, execution is blocked entirely — the job is skipped and the bot logs a warning. For routines and reminders, a pending update is also appended so the bot can self-correct on the next interaction.
+
+This matches the behavior for missing [subagents](/extending/subagents) — the bot refuses to run a job that depends on something that doesn't exist, rather than running it in a degraded state.
+
+<Warning>
+Missing skill references block execution, not just warn. If you rename or delete a skill, update all routines, reminders, and webhooks that reference it.
+</Warning>
+
+## User skills in the system prompt
+
+The bot distinguishes between three categories of skills:
+
+| Category | Examples | In system prompt? |
+|----------|---------|-------------------|
+| **User-authored** | Skills you create in `~/.ollim-bot/skills/` | Yes — listed under "Your custom skills" |
+| **Generated** | `routine-*`, `reminder-*`, `webhook-*` (auto-created at fire time) | No |
+| **Bundled** | `job-config`, `setup`, `claude-history` | No |
+
+User-authored skills are automatically surfaced in the system prompt so the bot knows they exist and can invoke them interactively or reference them when creating jobs. The listing includes each skill's name and description.
 
 ## Creating skills
 
@@ -154,9 +201,9 @@ The bot creates the skill directory and writes the `SKILL.md` with appropriate f
 
 <AccordionGroup>
 <Accordion title="Skill discovery">
-The bot scans `~/.ollim-bot/skills/` at startup and registers all valid skills automatically. Each skill's `description` field determines when the bot considers invoking it. Interactive skills are invocable via `/<name>` in Discord.
+The bot scans `~/.ollim-bot/skills/` at startup and registers all valid skills automatically. Each skill's `description` field determines when the bot considers invoking it. Interactive skills are invocable via `/<name>` in Discord. User-authored skills (not generated or bundled) are listed in the system prompt via `list_user_skills()` in `skills.py`.
 
-For **per-job injection** (routines and reminders), the scheduler loads the referenced skills into the prompt and grants the background fork permission to use each skill's tools. Content loading, command expansion, and allowed-tools enforcement all happen automatically.
+For **per-job injection** (routines, reminders, and webhooks), the scheduler loads the referenced skills into the prompt and grants the background fork permission to use each skill's tools via `BgForkConfig.with_skill_tools()`. Content loading, command expansion, and allowed-tools enforcement all happen automatically. At fire time, `validate_skill_refs()` checks that every referenced skill has a `SKILL.md` in the skills directory — missing refs block execution.
 </Accordion>
 
 <Accordion title="Tool permissions">
