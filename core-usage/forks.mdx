@@ -127,6 +127,23 @@ ends, the exit embed title reflects what happened:
     Keeps the fork and makes it your new main session. All
     conversation history from the fork carries forward.
 
+    When the agent calls the `save_context` tool, it sends a yellow
+    confirmation embed instead of saving immediately. The embed has
+    three buttons:
+
+    | Button | Action |
+    |--------|--------|
+    | **Confirm** (green) | Promotes the fork to the main session |
+    | **Report Instead** (blurple) | Switches to report mode |
+    | **Dismiss** (grey) | Deletes the embed and continues the fork |
+
+    The save only happens when you click **Confirm**. This prevents
+    unintended saves when the agent calls the tool proactively.
+
+    The **Save Context** button on the fork enter embed — the purple
+    one at the top of every fork — still saves directly without a
+    confirmation step.
+
     `save_context` is blocked in three situations:
 
     - **Main session has diverged** — the main session received new
@@ -150,8 +167,9 @@ ends, the exit embed title reflects what happened:
     Most forks don't qualify — unnecessary saves clutter the main
     session's memory.
 
-    - **Button**: Save Context
-    - **MCP tool**: `save_context` (no parameters)
+    - **Button**: Save Context (direct save via fork enter embed)
+    - **MCP tool**: `save_context` (no parameters — sends confirmation
+      embed)
   </Accordion>
 </AccordionGroup>
 

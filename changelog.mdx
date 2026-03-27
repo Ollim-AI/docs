@@ -11,10 +11,10 @@ chronological order.
 
 ## Mar 23, 2026
 
-**`send_file` tool**
+**`send_file` tool and save-context confirmation**
 
 - **`send_file` MCP tool** — new [Discord tool](/extending/mcp-tools#send_file) for sending local files as Discord DM attachments. Validates paths via `path.is_file()`, enforces Discord's 25 MB limit, supports tilde expansion, and respects [ping budget](/scheduling/ping-budget) in background forks.
-
+- **`save_context` confirmation embed** — calling `save_context` now sends a yellow confirmation embed with **Confirm**, **Report Instead**, and **Dismiss** buttons instead of promoting the fork immediately. Prevents unintended saves when the agent calls the tool proactively. The **Save Context** button on the fork embed still saves directly.
 
 ## Mar 20-22, 2026
 

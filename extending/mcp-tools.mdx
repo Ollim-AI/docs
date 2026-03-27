@@ -84,7 +84,15 @@ Start an interactive fork branching from the main session.
 
 ### `save_context`
 
-Promote the current interactive fork to the main session. The fork's conversation history replaces the main session, and any pending updates are cleared.
+Request to promote the current interactive fork to the main session. Instead of executing directly, this tool sends a yellow confirmation embed to Discord with three buttons:
+
+| Button | Style | Action |
+|--------|-------|--------|
+| **Confirm** | Green | Promotes the fork to the main session |
+| **Report Instead** | Blurple | Switches to report mode |
+| **Dismiss** | Grey | Deletes the embed and continues the fork |
+
+The save only happens when you click **Confirm** — the agent cannot assume the save succeeded. This prevents unintended saves when the agent calls the tool proactively.
 
 Takes no parameters.
 
