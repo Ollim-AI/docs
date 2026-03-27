@@ -36,6 +36,7 @@ Each worker prompt must include:
 - Instruction to load /mintlify and /revise skills
 - The source repo path (`$ARGUMENTS`) for verification reads
 - The exact doc file paths the worker should read and potentially edit (worktree-absolute)
+- An explicit negative file constraint: the worker may ONLY edit the listed files — no other files should be modified, even if they appear inaccurate or outdated
 
 ### Worktree path constraint
 
@@ -49,7 +50,7 @@ You will be automatically notified when each background agent completes — do N
 
 1. Load /mintlify skill. Read assigned source commits in `$ARGUMENTS` to verify understanding.
 2. Read relevant docs pages (using worktree-absolute paths) to determine what to update.
-3. Edit docs to reflect the source changes. Verify edits match the goal of the assigned commits.
+3. Edit ONLY the assigned doc files listed above — do not modify, delete, or create any other files, even if they appear inaccurate or outdated. Verify edits match the goal of the assigned commits.
    - **No extrapolation** — document only what the source explicitly states or tests. If CI runs on `ubuntu-latest` and `windows-latest`, write "Ubuntu and Windows" — not "Linux" (extrapolation) or "Linux, macOS, and Windows" (fabrication). Every factual claim must trace to a specific source file, test, or config line.
    - **Changelog specificity** — changelog bullets must include specific technical identifiers from the source: function names, format strings, error types, CLI flags. Write `%-I strftime directive` not `encoding and path handling`. Vague summaries lose the detail that makes changelogs useful.
    - **Numeric verification** — for numeric claims (line counts, test counts, file counts), verify with actual commands (`wc -l`, `grep -c "^def test_"`) in the source repo. Do not estimate or count manually.
@@ -67,11 +68,12 @@ As each worker completes (you receive an automatic notification), spawn a review
 ### Reviewer steps
 
 1. Load /mintlify skill. Read `REPORT.md`.
-2. Audit the git diff against the report — do changes match rationale and evidence?
-3. **Source verification** — read the full `git diff` for the worker's branch. Identify every new factual claim: platform names, numeric counts, capability statements, behavioral descriptions. For EACH claim, read the supporting source file in `$ARGUMENTS` to confirm accuracy. Pay special attention to claims that have no cited source — these are the highest fabrication risk. If a claim cannot be traced to a specific source file, line, or test, remove it.
-4. Verify completeness against the **Assignment** section — no assigned changes missed or partially applied.
-5. Fix issues directly, amend onto the worker's commit.
-6. Escalate to the orchestrator only if a fix requires judgment or clarification.
+2. **Scope check** — run `git diff main..HEAD --name-only`. If any changed files are not in the worker's assignment, revert them with `git checkout main -- <file>` and amend the commit before continuing.
+3. Audit the git diff against the report — do changes match rationale and evidence?
+4. **Source verification** — read the full `git diff` for the worker's branch. Identify every new factual claim: platform names, numeric counts, capability statements, behavioral descriptions. For EACH claim, read the supporting source file in `$ARGUMENTS` to confirm accuracy. Pay special attention to claims that have no cited source — these are the highest fabrication risk. If a claim cannot be traced to a specific source file, line, or test, remove it.
+5. Verify completeness against the **Assignment** section — no assigned changes missed or partially applied.
+6. Fix issues directly, amend onto the worker's commit.
+7. Escalate to the orchestrator only if a fix requires judgment or clarification.
 
 ### Failure handling
 
