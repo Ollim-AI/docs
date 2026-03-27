@@ -1,9 +1,9 @@
 ---
 title: "Discord tools"
-description: "Reference all eleven Discord tools the agent uses for embeds, pings, forks, reminders, and chains."
+description: "Reference all twelve Discord tools the agent uses for embeds, pings, file sending, forks, reminders, and chains."
 ---
 
-ollim-bot gives the agent eleven Discord tools for sending messages, managing forks, reporting findings, scheduling reminders, and scheduling follow-ups — all without direct access to the Discord API.
+ollim-bot gives the agent twelve Discord tools for sending messages, sending files, managing forks, reporting findings, scheduling reminders, and scheduling follow-ups — all without direct access to the Discord API.
 
 The agent also has access to a docs server — a remote server at [`docs.ollim.ai/mcp`](https://docs.ollim.ai/mcp) that lets it look up its own documentation and architecture.
 
@@ -49,8 +49,22 @@ Background-fork-only. Send a plain text alert prefixed with `[bg]`.
 
 **Availability:** Background forks only. Not available in the main session or interactive forks. Subject to the same `allow-ping`, busy check, and ping budget gates as `discord_embed`.
 
+### `send_file`
+
+Available in all contexts. Send a file from the local filesystem as a Discord DM attachment — documents, images, logs, or any file you need. Max 25 MB (Discord limit).
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `file_path` | string | Yes | — | Path to the file (absolute or `~/...`) |
+| `message` | string | No | — | Optional message to accompany the file |
+| `critical` | boolean | No | `false` | Set `true` only when the user would be devastated if they missed this |
+
+The tool validates that the path points to an existing regular file via `path.is_file()`, supports tilde expansion, and enforces Discord's 25 MB size limit.
+
+**Availability:** Main session, interactive forks, and background forks. In **background forks**, the tool is blocked if `allow-ping` is `false`, subject to the [ping budget](/scheduling/ping-budget), and prefixes messages with `[bg]`.
+
 <Note>
-Both output tools register the message so that replies are correctly routed back to the fork that sent them.
+All three output tools register the message so that replies are correctly routed back to the fork that sent them.
 </Note>
 
 ## Fork management tools

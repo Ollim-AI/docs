@@ -58,6 +58,8 @@ Non-image attachments — PDFs, text files, spreadsheets, etc. — are saved to 
 
 Filename collisions are handled with numeric suffixes (`report-2.pdf`, `report-3.pdf`).
 
+The bot can also send files back to you using the [`send_file`](/extending/mcp-tools#send_file) tool — any file on the local filesystem up to 25 MB.
+
 ## Streaming responses
 
 Responses stream to Discord progressively — you see text appear in real time as the bot generates it. Long responses that exceed Discord's character limit automatically split across multiple messages.

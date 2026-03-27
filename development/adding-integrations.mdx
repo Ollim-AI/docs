@@ -158,6 +158,7 @@ MCP tools are defined in `src/ollim_bot/agent_tools.py` using the `@tool` decora
             enter_fork,
             exit_fork,
             update_names,
+            send_file,
             add_reminder,
             list_reminders_tool,
             cancel_reminder,
@@ -290,7 +291,7 @@ Webhook data is fenced with explicit labels in the prompt — `WEBHOOK DATA (unt
 
 <Columns cols={2}>
   <Card title="Discord tools" icon="wrench" href="/extending/mcp-tools">
-    Full reference for all eleven built-in Discord tools.
+    Full reference for all twelve built-in Discord tools.
   </Card>
   <Card title="System prompt" icon="scroll" href="/development/system-prompt">
     How the system prompt is structured and where to document new tools.
