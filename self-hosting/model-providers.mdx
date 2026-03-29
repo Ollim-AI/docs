@@ -192,10 +192,29 @@ Run models locally for full data sovereignty — no tokens leave your
 network. As of early 2026, all three major inference backends natively
 support the Anthropic Messages API with tool calling.
 
+All self-hosted setups use the same `.env` pattern:
+
+| Variable | Purpose |
+|----------|---------|
+| `ANTHROPIC_BASE_URL` | Points ollim-bot at your local inference server instead of Anthropic's API |
+| `ANTHROPIC_AUTH_TOKEN` | Any non-empty string — local backends require the header but don't validate it. This also tells the Agent SDK to skip Claude OAuth, so no Anthropic account is needed. |
+| `ANTHROPIC_MODEL` | The model name your backend serves (must match exactly) |
+| `ANTHROPIC_SMALL_FAST_MODEL` | Model used for lightweight tasks like [subagent](/extending/subagents) work and background [routines](/scheduling/routines). Can be the same model or a smaller/faster one. |
+
 <AccordionGroup>
   <Accordion title="Ollama">
     [Ollama](https://ollama.com) (v0.17+) runs open models locally with
-    a native Anthropic-compatible endpoint, tool calling, and streaming:
+    a native Anthropic-compatible endpoint, tool calling, and streaming.
+
+    Install Ollama, pull a model, and verify the server is running:
+
+    ```bash
+    curl -fsSL https://ollama.com/install.sh | sh
+    ollama pull qwen3-coder-next
+    ollama serve
+    ```
+
+    Then add these variables to your `.env`:
 
     ```bash title=".env"
     ANTHROPIC_BASE_URL=http://localhost:11434
@@ -221,7 +240,7 @@ support the Anthropic Messages API with tool calling.
 
     ```bash title=".env"
     ANTHROPIC_BASE_URL=http://localhost:8000
-    ANTHROPIC_AUTH_TOKEN=token-abc123
+    ANTHROPIC_AUTH_TOKEN=vllm
     ANTHROPIC_MODEL=qwen3-coder-next
     ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
     ```
@@ -239,7 +258,7 @@ support the Anthropic Messages API with tool calling.
 
     ```bash title=".env"
     ANTHROPIC_BASE_URL=http://localhost:8080
-    ANTHROPIC_AUTH_TOKEN=placeholder
+    ANTHROPIC_AUTH_TOKEN=llamacpp
     ANTHROPIC_MODEL=qwen3-coder-next
     ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
     ```
@@ -260,8 +279,21 @@ support the Anthropic Messages API with tool calling.
 
 ### Recommended models for self-hosting
 
-Pick based on your hardware. Use q8 or fp16 quantization for reliable
-tool calling.
+Pick based on your hardware. For reliable tool calling, use high-quality
+quantizations (q8 or fp16 — these preserve the precision models need for
+structured output like tool calls).
+
+<Warning>
+  Self-hosting requires a dedicated GPU with at least 24GB VRAM. Consumer
+  GPUs (8–16GB) cannot run the models listed below at sufficient quality for
+  reliable tool calling. If you don't have the hardware, consider
+  [alternative subscriptions](#alternative-subscriptions) or
+  [pay-per-token providers](#pay-per-token-providers) instead.
+</Warning>
+
+Models marked "MoE" (Mixture of Experts) only activate a fraction of their
+total parameters per request — so an 80B model with 3B active runs on
+hardware sized for 3B, not 80B.
 
 | Model | Active params | Hardware | Tool use | License |
 |-------|--------------|----------|----------|---------|

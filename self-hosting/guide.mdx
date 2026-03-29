@@ -10,7 +10,7 @@ yourself, and run it. This guide covers the full process.
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh` (automatically installs the required Python version)
-- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI at startup
+- A [Claude](https://claude.ai) subscription (Pro or Max) — the bot authenticates via the bundled Agent SDK CLI at startup. If you plan to use a [local or alternative model provider](/self-hosting/model-providers), you don't need a Claude subscription.
 - A Discord account (the bot runs entirely in DMs — no server required)
 - Git installed (the data directory is a git repo)
 
@@ -71,6 +71,14 @@ The steps below cover self-hosting-specific setup.
 
     Once authenticated, the bot checks for duplicate instances, connects to
     Discord, starts the scheduler, and sends you a startup DM.
+
+    <Tip>
+      If you're using an alternative provider (Ollama, vLLM, etc.), set
+      `ANTHROPIC_AUTH_TOKEN` in your `.env` — the Agent SDK uses this token
+      instead of Claude OAuth, so no Anthropic account is needed. See
+      [Model providers](/self-hosting/model-providers) for provider-specific
+      `.env` configuration.
+    </Tip>
 
     <Note>
       ollim-bot enforces single-instance via a PID file. On startup, it checks whether
@@ -161,8 +169,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/path/to/ollim-bot
-ExecStart=/path/to/.local/bin/ollim-bot
+WorkingDirectory=<path-to-ollim-bot>
+ExecStart=<path-to>/.local/bin/ollim-bot
 Restart=on-failure
 RestartSec=10
 
@@ -188,7 +196,9 @@ systemctl --user enable --now ollim-bot
   If Claude Code is not authenticated when the service starts, the bot
   DMs you an OAuth link and blocks until you complete sign-in. The
   systemd service may time out waiting — run `ollim-bot auth login`
-  once manually before enabling the service.
+  once manually before enabling the service. If you're using an
+  alternative provider with `ANTHROPIC_AUTH_TOKEN`, this step is
+  not needed.
 </Warning>
 
 ## Session persistence
@@ -201,11 +211,11 @@ lifecycle events, and session recovery.
 ## Next steps
 
 <Columns cols={2}>
+  <Card title="Choose a model provider" icon="microchip" href="/self-hosting/model-providers">
+    Use a local model, alternative subscription, or pay-per-token provider.
+  </Card>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
     Install ollim-bot and create a Discord bot.
-  </Card>
-  <Card title="Set up Google integration" icon="puzzle-piece" href="/getting-started/google-integration">
-    Connect Google Tasks, Calendar, and Gmail.
   </Card>
   <Card title="Configuration reference" icon="sliders" href="/configuration/reference">
     All environment variables and configuration options.
