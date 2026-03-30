@@ -225,10 +225,17 @@ All self-hosted setups use the same `.env` pattern:
 
         Omit `--gpus all` if you don't have an NVIDIA GPU — but expect
         noticeably slower inference.
+
+        <Tip>
+        If port 11434 is already in use (e.g., another Ollama instance),
+        map to a different host port: `-p 127.0.0.1:11435:11434`. Update
+        `ANTHROPIC_BASE_URL` to `http://localhost:11435` to match.
+        </Tip>
       </Tab>
     </Tabs>
 
-    Pull a model and verify the server is running:
+    Pull a model **before starting the bot** — the bot reports a model
+    error if it starts before the pull finishes:
 
     ```bash
     ollama pull qwen3.5:2b

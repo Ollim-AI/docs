@@ -145,10 +145,12 @@ commands from this guide. To run a command, paste it in and press
     Click **Installation** in the left sidebar.
 
     Under **Installation Contexts**, check **User Install** and uncheck
-    **Guild Install**. Set the install link dropdown to **Discord
-    Provided Link**. Under **Default Install Settings**, click the
-    scopes dropdown and add `applications.commands`. Then click **Save
-    Changes** at the bottom.
+    **Guild Install**. Verify the install link dropdown is set to
+    **Discord Provided Link** (the default for new apps). Under
+    **Default Install Settings**, verify that `applications.commands`
+    is listed in the scopes — Discord adds it by default. If either
+    is missing, set them manually. Then click **Save Changes** at the
+    bottom.
 
     <Frame>
       <img src="/images/discord-installation.png" alt="Screenshot of the Installation page with User Install checked, Discord Provided Link selected, and applications.commands scope added" />
@@ -279,8 +281,12 @@ commands from this guide. To run a command, paste it in and press
     ```
 
     <Tip>
-    These three env vars are all you need to get started. On first launch, the bot's welcome message includes a **"Get started — 3 questions"** button that walks you through personality and user context interactively. You can also run `/setup` anytime.
+    These three env vars are all you need for a Claude subscription. On first launch, the bot's welcome message includes a **"Get started — 3 questions"** button that walks you through personality and user context interactively. You can also run `/setup` anytime.
     </Tip>
+
+    <Note>
+    Using a [local model](/self-hosting/model-providers#self-hosted-models) instead of Claude? Add `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL`, and `ANTHROPIC_SMALL_FAST_MODEL` to your `.env` as well — see the [self-hosted models](/self-hosting/model-providers#self-hosted-models) section for values. You can skip the sign-in step in step 6.
+    </Note>
   </Step>
 
   <Step titleSize="h3" title="Start the bot">
