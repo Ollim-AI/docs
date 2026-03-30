@@ -206,12 +206,39 @@ All self-hosted setups use the same `.env` pattern:
     [Ollama](https://ollama.com) (v0.17+) runs open models locally with
     a native Anthropic-compatible endpoint, tool calling, and streaming.
 
-    Install Ollama, pull a model, and verify the server is running:
+    <Tabs>
+      <Tab title="Install script">
+        ```bash
+        curl -fsSL https://ollama.com/install.sh -o /tmp/ollama-install.sh
+        less /tmp/ollama-install.sh   # inspect the script first
+        sh /tmp/ollama-install.sh
+        ```
+      </Tab>
+      <Tab title="Docker (recommended)">
+        ```bash
+        docker run -d --gpus all \
+          --name ollama \
+          -p 127.0.0.1:11434:11434 \
+          -v ollama:/root/.ollama \
+          ollama/ollama
+        ```
+
+        Omit `--gpus all` if you don't have an NVIDIA GPU — but expect
+        significantly slower inference (minutes vs. seconds per response).
+      </Tab>
+    </Tabs>
+
+    Pull a model and verify the server is running:
 
     ```bash
-    curl -fsSL https://ollama.com/install.sh | sh
-    ollama pull qwen3-coder-next
-    ollama serve
+    ollama pull qwen3.5:2b
+    curl http://localhost:11434/
+    ```
+
+    If you used Docker, prefix commands with `docker exec ollama`:
+
+    ```bash
+    docker exec ollama ollama pull qwen3.5:2b
     ```
 
     Then add these variables to your `.env`:
@@ -219,9 +246,22 @@ All self-hosted setups use the same `.env` pattern:
     ```bash title=".env"
     ANTHROPIC_BASE_URL=http://localhost:11434
     ANTHROPIC_AUTH_TOKEN=ollama
-    ANTHROPIC_MODEL=qwen3-coder-next
-    ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder
+    ANTHROPIC_MODEL=qwen3.5:2b
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3.5:2b
     ```
+
+    <Note>
+    Ollama model names use the Ollama registry format (e.g.,
+    `qwen3.5:2b`, `qwen3.5:latest`) — not HuggingFace model IDs.
+    Browse available models at [ollama.com/search](https://ollama.com/search).
+    </Note>
+
+    <Warning>
+    Ollama binds to all network interfaces by default. For security,
+    bind to localhost only by setting `OLLAMA_HOST=127.0.0.1` in your
+    environment, or use `127.0.0.1` in the Docker `-p` flag as shown
+    above.
+    </Warning>
 
     v0.17 (February 2026) ships a new inference engine with up to 40%
     faster prompt processing, improved multi-GPU tensor parallelism, and
@@ -231,6 +271,10 @@ All self-hosted setups use the same `.env` pattern:
     smaller ones. Local inference is still significantly slower than
     cloud providers. Not recommended as a primary backend for a bot
     that needs sub-second response times.
+
+    Once your `.env` is configured, return to
+    [step 6 of the quickstart](/getting-started/quickstart#start-the-bot)
+    to start the bot.
   </Accordion>
 
   <Accordion title="vLLM">
@@ -300,10 +344,10 @@ quantizations (q8 or fp16 — these preserve the precision models need for
 structured output like tool calls).
 
 <Warning>
-  Self-hosting requires a dedicated GPU with at least 24GB VRAM. Consumer
-  GPUs (8–16GB) cannot run the models listed below at sufficient quality for
-  reliable tool calling. If you don't have the hardware, consider
-  [alternative subscriptions](#alternative-subscriptions) or
+  Most self-hosted models require a dedicated GPU with at least 24GB VRAM.
+  Smaller models like Qwen3.5 (2B) can run on consumer GPUs (8GB+) but
+  with reduced tool-calling reliability. If you don't have the hardware,
+  consider [alternative subscriptions](#alternative-subscriptions) or
   [pay-per-token providers](#pay-per-token-providers) instead.
 </Warning>
 
@@ -311,15 +355,23 @@ Models marked "MoE" (Mixture of Experts) only activate a fraction of their
 total parameters per request — so an 80B model with 3B active runs on
 hardware sized for 3B, not 80B.
 
-| Model | Active params | Hardware | Tool use | License |
-|-------|--------------|----------|----------|---------|
-| **Qwen3-Coder-Next** | 3B (80B MoE) | 32GB+ VRAM | Excellent — SWE-Bench 70.6 | Apache 2.0 |
-| **Qwen3.5-35B-A3B** | 3B (35B MoE) | 32GB VRAM | Good — 1M context | Apache 2.0 |
-| **GLM-4.7-Flash** | 30B | 24GB+ VRAM | Good — interleaved reasoning | Open weights |
-| **DeepSeek V3.2 (32B distill)** | 32B | 24GB+ VRAM | Good — thinking + tool use | MIT |
-| **GLM-5** | 40B (744B MoE) | Multi-GPU cluster | Excellent — frontier open-source | MIT |
-| **MiniMax M2.5** | Large MoE | Multi-GPU cluster | Excellent — SWE-Bench 80.2% | Modified MIT |
-| **Kimi K2.5** | 32B (1T MoE) | Multi-GPU cluster | Excellent — 1,500 tool calls | Modified MIT |
+| Model | Ollama name | Active params | Hardware | Tool use | License |
+|-------|-------------|--------------|----------|----------|---------|
+| **Qwen3.5** | `qwen3.5:2b` | 2.3B | 8GB+ VRAM | Good — tool calling + multimodal | Apache 2.0 |
+| **Qwen3-Coder-Next** | — | 3B (80B MoE) | 32GB+ VRAM | Excellent — SWE-Bench 70.6 | Apache 2.0 |
+| **Qwen3.5-35B-A3B** | `qwen3.5:latest` | 3B (35B MoE) | 32GB VRAM | Good — 1M context | Apache 2.0 |
+| **GLM-4.7-Flash** | — | 30B | 24GB+ VRAM | Good — interleaved reasoning | Open weights |
+| **DeepSeek V3.2 (32B distill)** | `deepseek-v3.2` | 32B | 24GB+ VRAM | Good — thinking + tool use | MIT |
+| **GLM-5** | — | 40B (744B MoE) | Multi-GPU cluster | Excellent — frontier open-source | MIT |
+| **MiniMax M2.5** | — | Large MoE | Multi-GPU cluster | Excellent — SWE-Bench 80.2% | Modified MIT |
+| **Kimi K2.5** | — | 32B (1T MoE) | Multi-GPU cluster | Excellent — 1,500 tool calls | Modified MIT |
+
+<Note>
+The **Ollama name** column shows the tag to use with `ollama pull`. Models
+marked "—" are not yet available on Ollama — use vLLM or llama.cpp with the
+HuggingFace model ID instead. Check [ollama.com/search](https://ollama.com/search)
+for current availability.
+</Note>
 
 <Tip>
   Self-hosting works well for data sovereignty and experimentation.

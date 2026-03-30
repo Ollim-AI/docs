@@ -11,7 +11,7 @@ You need:
 
 - **A computer** running macOS, Windows, or Linux
 - **A Discord account** — [create a Discord account](https://discord.com/register) if you don't have one
-- **A Claude subscription** — Pro (20 USD/month) or Max (100 USD/month) at [Claude](https://claude.ai). Pro works fine to start; see [model providers](/self-hosting/model-providers) for alternatives
+- **A Claude subscription** — Pro (20 USD/month) or Max (100 USD/month) at [Claude](https://claude.ai). Pro works fine to start. **Not required if self-hosting** — see [self-hosted models](/self-hosting/model-providers#self-hosted-models) to run with a local model instead
 
 <Note>
 ollim-bot is a single-user bot designed to run as a personal assistant
@@ -95,6 +95,18 @@ commands from this guide. To run a command, paste it in and press
       </Tab>
     </Tabs>
 
+    <Tip>
+    Prefer to inspect the script first? Download it, review it, then run it:
+
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh -o /tmp/uv-install.sh
+    less /tmp/uv-install.sh
+    sh /tmp/uv-install.sh
+    ```
+
+    You can also install uv via `pip install uv` or your system package manager.
+    </Tip>
+
     After uv installs, **close your terminal** so your PATH updates.
     The next step is in the browser, so you won't need it yet.
   </Step>
@@ -142,7 +154,7 @@ commands from this guide. To run a command, paste it in and press
     </Frame>
 
     Copy the **Install Link** shown on this page and open it in your
-    browser. Click **Add to my apps** to install the bot to your Discord
+    browser. Click **Authorize** to install the bot to your Discord
     account.
 
     Finally, go back to **Bot** in the left sidebar and uncheck **Public
@@ -258,7 +270,12 @@ commands from this guide. To run a command, paste it in and press
     - Replace `YourFirstName` with your name (the bot will call you this)
     - Replace `Ollim` with whatever you want to call the bot
 
-    Save the file and close the editor.
+    Save the file and close the editor. Then restrict the file permissions
+    so only you can read it:
+
+    ```bash
+    chmod 600 .env
+    ```
 
     <Tip>
     These three env vars are all you need to get started. On first launch, the bot's welcome message includes a **"Get started — 3 questions"** button that walks you through personality and user context interactively. You can also run `/setup` anytime.
@@ -277,8 +294,15 @@ commands from this guide. To run a command, paste it in and press
     is open — closing the terminal stops the bot.
     </Warning>
 
-    If this is your first time, the bot sends you a Discord DM with a
-    sign-in link. Open the link and log in with your Anthropic account.
+    If this is your first time using a Claude subscription, the bot
+    sends you a Discord DM with a sign-in link. Open the link and log
+    in with your Anthropic account.
+
+    <Note>
+    If you configured a [local model provider](/self-hosting/model-providers#self-hosted-models)
+    or set `ANTHROPIC_AUTH_TOKEN` in your `.env`, no sign-in link
+    appears — the bot connects directly to your inference server.
+    </Note>
 
     Once ready, the bot sends you a startup DM in Discord.
 
