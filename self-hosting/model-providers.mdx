@@ -269,11 +269,27 @@ All self-hosted setups use the same `.env` pattern:
     for setup details.
   </Accordion>
 
-  <Accordion title="LiteLLM proxy">
+  <Accordion title="Bifrost proxy">
     If your inference server only speaks OpenAI Chat Completions,
-    route through a [LiteLLM proxy](https://docs.litellm.ai/)
-    (v1.81+) — it translates to Anthropic format automatically and
-    adds cost tracking, load balancing, and guardrails.
+    route through a [Bifrost gateway](https://github.com/maximhq/bifrost)
+    — it translates to Anthropic format automatically with sub-millisecond
+    overhead, load balancing, and a built-in web UI.
+
+    ```bash
+    # Start Bifrost (Docker or npx)
+    docker run -p 8080:8080 maximhq/bifrost
+    # or: npx -y @maximhq/bifrost
+    ```
+
+    ```bash title=".env"
+    ANTHROPIC_BASE_URL=http://localhost:8080/anthropic
+    ANTHROPIC_AUTH_TOKEN=bifrost
+    ANTHROPIC_MODEL=your-model-name
+    ANTHROPIC_SMALL_FAST_MODEL=your-model-name
+    ```
+
+    Bifrost is open source (Apache 2.0) and supports 15+ providers
+    including OpenAI, Ollama, and vLLM backends.
   </Accordion>
 </AccordionGroup>
 
@@ -571,7 +587,8 @@ a custom LLM gateway, these options are available but require more setup.
   <Accordion title="Custom LLM gateway">
     Point ollim-bot at any endpoint that implements the
     [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) —
-    a LiteLLM proxy, vLLM, or your own gateway.
+    a [Bifrost gateway](https://github.com/maximhq/bifrost), vLLM, or
+    your own gateway.
 
     | Variable | Required | Description |
     |----------|----------|-------------|
@@ -579,13 +596,12 @@ a custom LLM gateway, these options are available but require more setup.
     | `ANTHROPIC_AUTH_TOKEN` | No | Static API key sent as `Authorization` header |
 
     ```bash title=".env"
-    ANTHROPIC_BASE_URL=https://litellm-server:4000
-    ANTHROPIC_AUTH_TOKEN=sk-litellm-static-key
+    ANTHROPIC_BASE_URL=https://your-gateway:8080/anthropic
+    ANTHROPIC_AUTH_TOKEN=your-gateway-key
     ```
 
     The gateway must expose `/v1/messages` and forward the `anthropic-beta`
-    and `anthropic-version` headers. For LiteLLM-specific setup (unified
-    endpoint, Bedrock/Vertex pass-through, dynamic key helpers), see the
+    and `anthropic-version` headers. For general LLM gateway setup, see the
     [Claude Code LLM gateway docs](https://code.claude.com/docs/en/llm-gateway).
   </Accordion>
 
