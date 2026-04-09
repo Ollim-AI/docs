@@ -1,0 +1,66 @@
+---
+title: "Privacy policy"
+description: "How ollim-bot handles your data — what's stored, what's accessed, and what never leaves your machine."
+---
+
+**Last updated:** April 9, 2026
+
+ollim-bot is a self-hosted, single-user Discord bot. You run it on your own
+hardware, and your data stays on your machine. This policy explains what data
+the bot accesses and how it's handled.
+
+## What ollim-bot accesses
+
+When you connect your Google account via `/google-auth`, ollim-bot requests
+access to:
+
+| Service | Scope | What it does |
+|---------|-------|-------------|
+| Google Tasks | Read and write | Creates, reads, and updates tasks on your behalf |
+| Google Calendar | Read and write | Reads events and creates new ones when you ask |
+| Gmail | Read-only | Reads email subjects and bodies for triage — never sends email |
+
+These permissions are requested once during setup and persist until you revoke
+them.
+
+## What's stored on your machine
+
+All data lives in `~/.ollim-bot/` on the machine running the bot:
+
+- **`credentials.json`** — your Google OAuth client configuration
+- **`token.json`** — your Google OAuth refresh token
+- **`sessions.json`** — conversation history and context
+- **Routine and reminder data** — scheduling state
+
+Nothing is stored on external servers controlled by ollim-bot. The bot has no
+backend, no database, and no telemetry.
+
+## Third-party services
+
+ollim-bot communicates with:
+
+- **Anthropic** — conversation messages are sent to the Claude API (or your
+  configured model provider) for processing. See
+  [Anthropic's privacy policy](https://www.anthropic.com/privacy).
+- **Google APIs** — task, calendar, and email data is fetched from Google's
+  servers using your OAuth token. See
+  [Google's privacy policy](https://policies.google.com/privacy).
+- **Discord** — messages are sent and received through Discord's API. See
+  [Discord's privacy policy](https://discord.com/privacy).
+
+## Data sharing
+
+ollim-bot does not share your data with anyone. There is no analytics, no
+tracking, and no data collection. The bot runs entirely on your machine.
+
+## Revoking access
+
+To disconnect your Google account, revoke the bot's access at
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+and delete `~/.ollim-bot/state/token.json`.
+
+## Contact
+
+If you have questions about this policy, open an issue on
+[GitHub](https://github.com/Ollim-AI/ollim-bot) or email
+juliustfrost@gmail.com.

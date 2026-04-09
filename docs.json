@@ -24,7 +24,15 @@
   "footer": {
     "socials": {
       "github": "https://github.com/Ollim-AI/ollim-bot"
-    }
+    },
+    "links": [
+      {
+        "header": "Legal",
+        "items": [
+          { "label": "Privacy Policy", "href": "/privacy" }
+        ]
+      }
+    ]
   },
   "seo": {
     "metatags": {
