@@ -67,6 +67,8 @@ slash command. ollim-bot stores these in
 | `auto_update` | boolean | `off` | `on / off` | Auto-pull, upgrade tool install, and restart when a new `v*` tag is published |
 | `auto_update_interval` | integer | `60` | Any integer | Update check interval (minutes) |
 | `auto_update_hour` | hour (0-23) | `6` | `0-23` | Hour of day to apply updates |
+| `google_calendars` | string | `primary` | Comma-separated calendar IDs | Calendars queried by [`ollim-bot cal`](/integrations/google-calendar#configuring-which-calendars-to-query). First entry is the default for write operations. |
+| `google_task_list` | string | `@default` | Google Tasks list ID | Task list used by [`ollim-bot tasks`](/integrations/google-tasks#configuring-the-task-list) |
 
 <Note>
 Update detection is semver-tag based — the bot fetches tags from `origin` and compares the current version to the latest `v*` tag by version sort (`git tag -l "v*" --sort=-version:refname`). Untagged commits on `main` do not trigger auto-updates; releases only ship on a new `v*` tag. Use [`/version`](/core-usage/slash-commands#version) to see the currently running version.
@@ -76,6 +78,14 @@ Update detection is semver-tag based — the bot fetches tags from `origin` and 
 Runtime config is separate from environment variables — env vars require a
 restart, while `/config` changes take effect immediately. Use env vars for
 credentials and infrastructure, `/config` for preferences.
+</Note>
+
+<Note>
+The `/config` slash command's dropdown only exposes a subset of keys for
+quick edits. `google_calendars` and `google_task_list` are not in the
+dropdown — edit `~/.ollim-bot/state/config.json` directly to change
+them. Run `/config` with no parameters to see every key's current
+value.
 </Note>
 
 ## Tool policy

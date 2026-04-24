@@ -3,10 +3,15 @@ title: "Google Tasks"
 description: "Manage Google Tasks through CLI commands and agent-powered embed buttons."
 ---
 
-ollim-bot provides full read/write access to your primary Google Tasks list.
+ollim-bot provides full read/write access to a Google Tasks list.
 You can list, add, complete, update, and delete tasks through CLI commands,
 and the agent can present tasks in Discord embeds with action buttons for
 one-click completion or deletion.
+
+By default, ollim-bot targets your default task list (`@default`). Set
+the `google_task_list` [runtime config key](/configuration/reference#runtime-configuration)
+to point at a different list, or pass `--list <id>` to any command to
+override per-invocation.
 
 ## Prerequisites
 
@@ -25,13 +30,17 @@ No additional setup is required beyond the shared Google OAuth flow. The
   <Tab title="CLI">
     The `ollim-bot tasks` subcommand provides six operations.
 
+    Every `tasks` subcommand accepts `--list <id>` to target a specific task
+    list for that invocation. When omitted, the configured `google_task_list`
+    is used.
+
     ### List tasks
 
     ```bash
     ollim-bot tasks list
     ```
 
-    Shows incomplete tasks from your default task list. Each line displays the
+    Shows incomplete tasks from the configured task list. Each line displays the
     task ID, due date, status checkbox, and title:
 
     ```text
@@ -45,6 +54,12 @@ No additional setup is required beyond the shared Google OAuth flow. The
 
     ```bash
     ollim-bot tasks list --all
+    ```
+
+    To list from a specific task list, pass `--list`:
+
+    ```bash
+    ollim-bot tasks list --list MDc3NDk2NzQ3MTE0MTI2NjU5NzU6MDow
     ```
 
     ### Show task details
@@ -74,6 +89,7 @@ No additional setup is required beyond the shared Google OAuth flow. The
     | `title` (positional) | Yes | Task title |
     | `--due` | No | Due date in `YYYY-MM-DD` format |
     | `--notes` | No | Task notes or description |
+    | `--list` | No | Task list ID — defaults to `google_task_list` |
 
     Due dates are stored as midnight UTC (`YYYY-MM-DDT00:00:00.000Z`).
 
@@ -97,7 +113,7 @@ No additional setup is required beyond the shared Google OAuth flow. The
     ollim-bot tasks delete <task_id>
     ```
 
-    Permanently deletes the task from your Google Tasks list.
+    Permanently deletes the task from the configured task list.
   </Tab>
   <Tab title="Agent">
     The agent interacts with Google Tasks through two mechanisms.
@@ -111,20 +127,30 @@ No additional setup is required beyond the shared Google OAuth flow. The
     - **Delete** — permanently removes the task
 
     Clicking a button shows a temporary confirmation only you can see.
-    The agent also gets an update so it knows what you did.
+    The agent also gets an update so it knows what you did. Buttons honor
+    the configured `google_task_list`, and the agent can encode a specific
+    list ID into the button action when a task lives in a non-default list.
 
     ### CLI delegation
 
     The agent can also run `ollim-bot tasks` subcommands directly for
     operations like listing all tasks, adding new ones, or updating existing
-    entries.
+    entries. When a specific task list is relevant, the agent passes
+    `--list <id>` — otherwise it uses the configured default.
   </Tab>
 </Tabs>
 
-<Note>
-All operations use your default task list (`@default`). ollim-bot does not
-support multiple task lists.
-</Note>
+## Configuring the task list
+
+The `google_task_list` runtime config key sets the default task list.
+Defaults to `@default` — Google's alias for your primary task list.
+
+To target a different list, set `google_task_list` to its ID. Task list
+IDs are Google-generated strings; you can get them from the
+[Google Tasks API `tasklists.list` endpoint](https://developers.google.com/tasks/reference/rest/v1/tasklists/list).
+
+See the [configuration reference](/configuration/reference#runtime-configuration)
+for how to inspect and change runtime config keys.
 
 ## Troubleshooting
 
@@ -137,6 +163,11 @@ support multiple task lists.
   <Accordion title="How do I find a task ID?">
     Task IDs are displayed as the first column in `ollim-bot tasks list`
     output. When using embed buttons, the agent handles IDs automatically.
+  </Accordion>
+  <Accordion title="A command targets the wrong task list">
+    Commands use `google_task_list` by default (alias `@default`). To check
+    which list you've configured, run `/config` with no parameters. To
+    target a different list for a single command, pass `--list <id>`.
   </Accordion>
   <Accordion title="Due dates show the wrong day">
     Due dates are stored as midnight UTC. The Google Tasks API and CLI both

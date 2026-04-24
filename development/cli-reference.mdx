@@ -146,17 +146,26 @@ Exits with code 1 if the reminder is not found.
 
 Manage Google Tasks. Requires [Google integration setup](/getting-started/google-integration).
 
+Every `tasks` subcommand accepts `--list <id>` to target a specific task
+list. When omitted, the `google_task_list`
+[runtime config key](/configuration/reference#runtime-configuration)
+is used (defaults to `@default`). See
+[Google Tasks](/integrations/google-tasks#configuring-the-task-list)
+for details.
+
 ### `tasks list`
 
-List tasks from your default task list.
+List tasks from the configured task list.
 
 | Flag | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
 | `--all` | flag | No | `false` | Include completed tasks |
+| `--list` | string | No | `google_task_list` | Task list ID to query |
 
 ```bash
 ollim-bot tasks list
 ollim-bot tasks list --all
+ollim-bot tasks list --list MDc3NDk2NzQ3MTE0MTI2NjU5NzU6MDow
 ```
 
 Output format:
@@ -172,9 +181,10 @@ Tasks with notes display a **[+]** marker after the title.
 
 Show full details for a specific task — title, status, due date, notes, and ID.
 
-| Argument | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | positional | Yes | Task ID (shown in `tasks list`) |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Task ID (shown in `tasks list`) |
+| `--list` | string | No | `google_task_list` | Task list ID |
 
 ```bash
 ollim-bot tasks show abc123
@@ -199,6 +209,7 @@ Create a new task.
 | `title` | positional | Yes | — | Task title |
 | `--due` | string | No | — | Due date in `YYYY-MM-DD` format |
 | `--notes` | string | No | — | Task notes |
+| `--list` | string | No | `google_task_list` | Task list ID |
 
 ```bash
 ollim-bot tasks add "Fix login bug" --due 2026-02-15
@@ -209,28 +220,31 @@ ollim-bot tasks add "Buy groceries" --notes "Milk, eggs, bread"
 
 Mark a task as completed.
 
-| Argument | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | positional | Yes | Task ID |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Task ID |
+| `--list` | string | No | `google_task_list` | Task list ID |
 
 ### `tasks update`
 
 Update an existing task. At least one of `--title`, `--due`, or `--notes` is required.
 
-| Argument / Flag | Type | Required | Description |
-|-----------------|------|----------|-------------|
-| `id` | positional | Yes | Task ID |
-| `--title` | string | No | New title |
-| `--due` | string | No | New due date in `YYYY-MM-DD` format |
-| `--notes` | string | No | New notes |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Task ID |
+| `--title` | string | No | — | New title |
+| `--due` | string | No | — | New due date in `YYYY-MM-DD` format |
+| `--notes` | string | No | — | New notes |
+| `--list` | string | No | `google_task_list` | Task list ID |
 
 ### `tasks delete`
 
 Delete a task.
 
-| Argument | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | positional | Yes | Task ID |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Task ID |
+| `--list` | string | No | `google_task_list` | Task list ID |
 
 ## `cal`
 
@@ -238,13 +252,30 @@ Manage Google Calendar events. Requires
 [Google integration setup](/getting-started/google-integration).
 All times use the configured timezone (`OLLIM_TIMEZONE`, defaults to system local).
 
+Read commands (`today`, `upcoming`) query every calendar listed in the
+`google_calendars` [runtime config key](/configuration/reference#runtime-configuration)
+by default. Write commands (`add`, `show`, `update`, `delete`) target the
+**first** entry of `google_calendars`. Pass `--calendar <id>` on any
+command to override for that invocation. See
+[Google Calendar](/integrations/google-calendar#configuring-which-calendars-to-query)
+for details.
+
 ### `cal today`
 
-Show today's calendar events. No arguments.
+Show today's calendar events.
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--calendar` | string | No | All configured | Calendar ID to query |
 
 ```bash
 ollim-bot cal today
+ollim-bot cal today --calendar work@example.com
 ```
+
+When more than one calendar is configured, events are merged and sorted
+client-side, and each line is tagged with its source calendar ID in
+brackets.
 
 ### `cal upcoming`
 
@@ -253,6 +284,7 @@ Show upcoming events.
 | Flag | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
 | `--days` | int | No | `7` | Number of days to look ahead |
+| `--calendar` | string | No | All configured | Calendar ID to query |
 
 ```bash
 ollim-bot cal upcoming
@@ -263,9 +295,10 @@ ollim-bot cal upcoming --days 14
 
 Show details for a specific event.
 
-| Argument | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | positional | Yes | Event ID |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Event ID |
+| `--calendar` | string | No | First configured | Calendar ID |
 
 ### `cal add`
 
@@ -277,6 +310,7 @@ Create a calendar event.
 | `--start` | string | Yes | — | Start time in `YYYY-MM-DDTHH:MM` format |
 | `--end` | string | Yes | — | End time in `YYYY-MM-DDTHH:MM` format |
 | `--description` | string | No | — | Event description |
+| `--calendar` | string | No | First configured | Calendar ID to insert into |
 
 ```bash
 ollim-bot cal add "Team standup" --start 2026-02-25T09:00 --end 2026-02-25T09:30
@@ -287,21 +321,42 @@ ollim-bot cal add "Team standup" --start 2026-02-25T09:00 --end 2026-02-25T09:30
 Update an existing event. At least one of `--summary`, `--start`,
 `--end`, or `--description` is required.
 
-| Argument / Flag | Type | Required | Description |
-|-----------------|------|----------|-------------|
-| `id` | positional | Yes | Event ID |
-| `--summary` | string | No | New title |
-| `--start` | string | No | New start time in `YYYY-MM-DDTHH:MM` format |
-| `--end` | string | No | New end time in `YYYY-MM-DDTHH:MM` format |
-| `--description` | string | No | New description |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Event ID |
+| `--summary` | string | No | — | New title |
+| `--start` | string | No | — | New start time in `YYYY-MM-DDTHH:MM` format |
+| `--end` | string | No | — | New end time in `YYYY-MM-DDTHH:MM` format |
+| `--description` | string | No | — | New description |
+| `--calendar` | string | No | First configured | Calendar ID |
 
 ### `cal delete`
 
 Delete a calendar event.
 
-| Argument | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | positional | Yes | Event ID |
+| Argument / Flag | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `id` | positional | Yes | — | Event ID |
+| `--calendar` | string | No | First configured | Calendar ID |
+
+### `cal calendars`
+
+List every calendar your Google account can access. No arguments.
+
+```bash
+ollim-bot cal calendars
+```
+
+Output format — one line per calendar, ID first then display name:
+
+```text
+  primary                                  My Calendar
+  work@example.com                         Work
+  family12345@group.calendar.google.com    Family
+```
+
+Use this output to pick IDs for the `google_calendars` config key or the
+`--calendar` flag.
 
 ## `gmail`
 

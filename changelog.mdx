@@ -9,6 +9,17 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
+## Apr 7-21, 2026
+
+**Multi-calendar support and configurable task list**
+
+- **Multi-calendar queries** — `ollim-bot cal today` and `cal upcoming` now query every calendar listed in the new `google_calendars` config key (comma-separated IDs, default `primary`). Events are merged across calendars and sorted client-side, and each line is tagged with its source calendar ID when more than one calendar is configured. A 404 on an individual calendar is logged and skipped. See [Google Calendar](/integrations/google-calendar#configuring-which-calendars-to-query).
+- **`ollim-bot cal calendars`** — new subcommand that lists every calendar your Google account can access, showing the ID and display name. Use it to discover IDs for `google_calendars` or `--calendar`.
+- **`--calendar` flag on every `cal` subcommand** — read commands use it to query a single calendar, write commands (`add`, `show`, `update`, `delete`) use it to target a non-default calendar. Defaults to the first configured calendar for writes.
+- **Calendar delete buttons encode the calendar ID** — the `event_del` button action now accepts `event_del:<calendar_id>/<event_id>` in addition to the legacy `event_del:<event_id>` (defaults to `primary`), so events on non-primary calendars are deleted from the correct calendar.
+- **Configurable task list** — new `google_task_list` config key sets the default Google Tasks list (default `@default`). Every `ollim-bot tasks` subcommand accepts `--list <id>` to override per invocation. Task-complete and task-delete buttons honor the configured list and can encode a specific list ID into the button action.
+- **Degenerate-config fallback** — an empty or whitespace-only `google_calendars` value falls back to `primary` instead of crashing, keeping `cal calendars` runnable for recovery.
+
 ## Mar 31 – Apr 21, 2026
 
 **Counterfactual trajectory testing**

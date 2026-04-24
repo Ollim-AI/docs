@@ -3,10 +3,15 @@ title: "Google Calendar"
 description: "Manage Google Calendar events through commands and Discord embeds."
 ---
 
-ollim-bot provides full read/write access to your primary Google Calendar.
+ollim-bot provides full read/write access to one or more Google calendars.
 You can list, show, add, update, and delete events through CLI commands,
 and the agent can present events in Discord embeds with a delete button
 for one-click removal.
+
+By default, ollim-bot queries your **primary** calendar only. Configure
+the `google_calendars` [runtime config key](/configuration/reference#runtime-configuration)
+with a comma-separated list of calendar IDs to query multiple calendars
+at once.
 
 ## Prerequisites
 
@@ -22,7 +27,7 @@ No additional setup is required. Once you've completed the
 
 <Tabs>
   <Tab title="CLI">
-    The `ollim-bot cal` subcommand provides six operations.
+    The `ollim-bot cal` subcommand provides seven operations.
 
     ### List today's events
 
@@ -30,12 +35,22 @@ No additional setup is required. Once you've completed the
     ollim-bot cal today
     ```
 
-    Shows events for the current day. Each line displays the event ID, date, time range,
-    and title:
+    Shows events for the current day across every configured calendar. Each
+    line displays the event ID, date, time range, and title:
 
     ```text
       abc123def  2026-02-24  09:00-10:00  Team standup
       ghi456jkl  2026-02-24  (all-day)     Project deadline
+    ```
+
+    When more than one calendar is configured, events from all calendars are
+    merged and sorted client-side, and each line is tagged with its source
+    calendar ID in brackets — for example `[primary]` or `[work@example.com]`.
+
+    Pass `--calendar <id>` to query a single calendar instead of all configured ones:
+
+    ```bash
+    ollim-bot cal today --calendar work@example.com
     ```
 
     ### List upcoming events
@@ -53,6 +68,7 @@ No additional setup is required. Once you've completed the
     | Argument | Required | Default | Description |
     |----------|----------|---------|-------------|
     | `--days` | No | `7` | Number of days to look ahead |
+    | `--calendar` | No | All configured | Calendar ID to query |
 
     ### Show event details
 
@@ -62,6 +78,9 @@ No additional setup is required. Once you've completed the
 
     Displays detailed information including title, time, location, description,
     link, attendees (by email), status, and event ID.
+
+    Pass `--calendar <id>` when the event lives on a calendar other than the
+    first one you've configured. Defaults to the first entry of `google_calendars`.
 
     ### Add an event
 
@@ -75,6 +94,7 @@ No additional setup is required. Once you've completed the
     | `--start` | Yes | Start time in `YYYY-MM-DDTHH:MM` format |
     | `--end` | Yes | End time in `YYYY-MM-DDTHH:MM` format |
     | `--description` | No | Event description |
+    | `--calendar` | No | Calendar ID — defaults to the first configured calendar |
 
     Times without a timezone are treated as the configured timezone (`OLLIM_TIMEZONE`).
 
@@ -84,7 +104,9 @@ No additional setup is required. Once you've completed the
     ollim-bot cal update <event_id> --summary "Updated title" --start 2026-02-25T13:00 --end 2026-02-25T14:00
     ```
 
-    At least one of `--summary`, `--start`, `--end`, or `--description` must be provided.
+    At least one of `--summary`, `--start`, `--end`, or `--description` must
+    be provided. `--calendar <id>` targets a specific calendar; otherwise the
+    first configured calendar is used.
 
     ### Delete an event
 
@@ -92,7 +114,25 @@ No additional setup is required. Once you've completed the
     ollim-bot cal delete <event_id>
     ```
 
-    Permanently deletes the event from your primary calendar.
+    Permanently deletes the event. Pass `--calendar <id>` when the event lives
+    on a calendar other than the first configured one.
+
+    ### List available calendars
+
+    ```bash
+    ollim-bot cal calendars
+    ```
+
+    Lists every calendar your Google account can access, showing the calendar
+    ID and its display name:
+
+    ```text
+      primary                                  My Calendar
+      work@example.com                         Work
+      family12345@group.calendar.google.com    Family
+    ```
+
+    Use this output to pick IDs for the `google_calendars` config key.
   </Tab>
   <Tab title="Agent">
     The agent interacts with Google Calendar in two ways.
@@ -103,19 +143,42 @@ No additional setup is required. Once you've completed the
     a **Delete** button that permanently removes the event.
 
     Clicking the button shows a temporary confirmation only you can see,
-    and the agent is informed of what you did so it stays in sync.
+    and the agent is informed of what you did so it stays in sync. Delete
+    buttons encode the source calendar ID so events on non-primary calendars
+    are removed from the correct calendar.
 
     ### CLI delegation
 
     The agent can also run calendar commands directly for
     operations like listing upcoming events, showing details, adding new events,
-    or updating existing entries.
+    or updating existing entries. When you mention a specific calendar, the
+    agent passes `--calendar <id>` — otherwise it uses the configured defaults.
   </Tab>
 </Tabs>
 
+## Configuring which calendars to query
+
+Calendar selection is controlled by the `google_calendars` runtime config
+key. It accepts a comma-separated list of calendar IDs — defaults to
+`primary`.
+
+| Value | Behavior |
+|-------|----------|
+| `primary` (default) | Queries only your primary calendar |
+| `primary,work@example.com` | Queries both calendars; events are merged and sorted client-side |
+| `family12345@group.calendar.google.com` | Queries that one calendar |
+
+For write operations (`add`, `update`, `delete`, `show`), the **first**
+entry in `google_calendars` is used when `--calendar` is not provided.
+
+Run `ollim-bot cal calendars` to discover the IDs available on your
+account. See the [configuration reference](/configuration/reference#runtime-configuration)
+for how to inspect and change runtime config keys.
+
 <Note>
-All operations use your primary Google Calendar. ollim-bot does
-not support secondary calendars or calendar selection.
+A 404 on an individual calendar (typo, revoked access) is logged as
+`(calendar '<id>' not found — skipped)` and the command continues with
+the remaining calendars.
 </Note>
 
 <Accordion title="Developer reference: API helpers">
@@ -123,9 +186,13 @@ not support secondary calendars or calendar selection.
 
   | Function | Signature | Returns |
   |----------|-----------|---------|
-  | `delete_event` | `delete_event(event_id: str) -> str` | Event summary |
+  | `delete_event` | `delete_event(event_id: str, calendar_id: str = "primary") -> str` | Event summary |
 
-  This is called via `asyncio.to_thread` in the button handler to avoid blocking the event loop.
+  This is called via `asyncio.to_thread` in the button handler to avoid
+  blocking the event loop. The button's action string encodes the calendar
+  ID as `event_del:<calendar_id>/<event_id>` — the legacy
+  `event_del:<event_id>` form (no calendar ID) still works and defaults to
+  `primary` for backward compatibility.
 </Accordion>
 
 ## Troubleshooting
@@ -140,6 +207,11 @@ not support secondary calendars or calendar selection.
     Event IDs are displayed as the first column in `ollim-bot cal today` and
     `ollim-bot cal upcoming` output. When using embed buttons, the agent
     handles this automatically.
+  </Accordion>
+  <Accordion title="How do I find a calendar ID?">
+    Run `ollim-bot cal calendars` to list every calendar your Google account
+    can access, with its ID and display name. The ID is what you pass to
+    `--calendar` and to the `google_calendars` config key.
   </Accordion>
   <Accordion title="Times show in the wrong timezone">
     All times are handled in the configured timezone (`OLLIM_TIMEZONE`,
