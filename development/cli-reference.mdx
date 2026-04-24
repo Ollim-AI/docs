@@ -22,6 +22,7 @@ ollim-bot [command] [subcommand] [options]
 | `ollim-bot tasks` | Manage Google Tasks |
 | `ollim-bot cal` | Manage Google Calendar events |
 | `ollim-bot gmail` | Read and search Gmail |
+| `ollim-bot chat` | Talk to the agent from the terminal, without Discord |
 | `ollim-bot eval` | Run ADHD behavior evals against the real agent |
 | `ollim-bot auth` | Manage Claude Code authentication |
 | `ollim-bot doctor` | Run diagnostic checks on your installation |
@@ -344,6 +345,60 @@ List all Gmail labels. No arguments.
 ```bash
 ollim-bot gmail labels
 ```
+
+## `chat`
+
+Talk to the agent directly from your terminal — no Discord required. Useful
+for debugging agent behavior, trying a local Ollama model, or driving the bot
+on a machine without a Discord account.
+
+<Warning>
+  `chat` requires Claude authentication — run `ollim-bot auth login` first.
+  The command exits with code 1 if you're not logged in and
+  `ANTHROPIC_AUTH_TOKEN` is not set.
+</Warning>
+
+| Flag | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--model` | string | No | agent default | Model name for this chat (for example `opus` or an Ollama model like `qwen3.5:2b`) |
+
+```bash
+ollim-bot chat
+ollim-bot chat --model opus
+```
+
+Type a message at the `you>` prompt and press Enter. The agent streams its
+response to stdout. Tool activity prints as dim `[tool] <label>` lines, and
+any MCP tool that would normally send a Discord embed prints its title as
+`[embed] <title>`. Exit with **Ctrl-D** (EOF) or **Ctrl-C** — on exit the SDK
+client disconnects so the session transcript is flushed.
+
+### Session behavior
+
+`chat` shares the **main session** with the Discord bot via
+`~/.ollim-bot/state/sessions.json`. If a session ID is stored there, chat
+resumes it; otherwise a new one starts on the first message. When you
+switch between chat and Discord, each side picks up the other's
+conversation — see [session management](/architecture/session-management)
+for the underlying mechanism.
+
+`chat` runs with `permission_mode="bypassPermissions"`, so the agent does not
+prompt for tool approvals while you're at the terminal. This applies to the
+main session only — [background forks](/scheduling/background-forks) spawned
+from chat still enforce the configured tool policy and ping budget.
+
+### Scope
+
+Chat captures what the agent sends through its Discord channel duck type, but
+Discord-only UI elements are inert:
+
+- **Visible** — text responses, tool activity labels, and the titles of any
+  embeds the agent sends
+- **Not interactive** — buttons and view components attached to embeds
+  (for example, the save/report buttons on a [fork](/core-usage/forks) exit
+  embed) print no output and cannot be clicked
+- **Not rendered** — file attachments from `send_file` are recorded
+  internally but not displayed in the terminal
 
 ## `eval`
 

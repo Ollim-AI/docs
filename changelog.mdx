@@ -9,6 +9,26 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
+## Mar 31, 2026
+
+**`ollim-bot chat` — Discord-free agent interface**
+
+- **`ollim-bot chat` CLI** — new subcommand for talking to the agent from
+  the terminal without Discord. Uses a `ChatChannel` duck type that captures
+  MCP tool output to stdout. Supports a `--model` flag for switching between
+  Claude and local Ollama models, and runs with
+  `permission_mode="bypassPermissions"` so the terminal session never prompts
+  for tool approvals. See
+  [CLI reference](/development/cli-reference#chat).
+- **Shared main session** — `chat` resumes the existing **main session** if
+  one is present, so conversations persist between Discord and the terminal
+  in both directions.
+- **Clean shutdown** — exiting chat (Ctrl-D or Ctrl-C) disconnects the SDK
+  client via a new public `Agent.close()` method so the session transcript
+  is flushed to disk before the process exits.
+- Internal: `check_auth()` extracted to `auth.py` for reuse between the
+  Discord startup path and the chat entry point.
+
 ## Mar 29-31, 2026
 
 **Docker deployment**
