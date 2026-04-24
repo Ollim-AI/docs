@@ -19,6 +19,16 @@ chronological order.
 - **Non-root container user** — the bot runs as an unprivileged `bot` user inside the container. Ollama's port is bound to `127.0.0.1` on the host, not exposed to the network.
 - Internal: `--no-dev` in the Dockerfile `CMD` skips dev dependency downloads, session ID reset in chat mode prevents stale state across container restarts.
 
+## Mar 28, 2026
+
+**Semver releases, `/version` command, and tag-based auto-update**
+
+- **`/version` slash command** — shows the running bot version. Prints `ollim-bot v0.2.0` when `HEAD` is on a tag, or `ollim-bot v0.1.0+dev (abc1234)` for dev builds ahead of the nearest tag. Derived from `git describe --tags`, with an `importlib.metadata` fallback. See [`/version`](/core-usage/slash-commands#version).
+- **Version string in startup DM** — the first-run welcome and resume message now include the running version — e.g. `hey, i'm back (ollim-bot v0.2.0). picking up where we left off.`
+- **Auto-update migrated from SHA to semver tag comparison** — [`auto_update`](/configuration/reference#runtime-configuration) and [`/update`](/core-usage/slash-commands#update) now detect updates by comparing the current version against the latest `v*` tag on `origin` (`git tag -l "v*" --sort=-version:refname`). Untagged commits on `main` no longer trigger auto-updates; releases only ship on a new `v*` tag. First tagged release: **v0.1.1**.
+- **Semver release workflow** — the `release.yml` GitHub Action (`workflow_dispatch` with a `patch / minor / major` bump choice) bumps `pyproject.toml`, runs checks, commits, tags, pushes, and publishes a GitHub Release — which is what `auto_update` watches for.
+- **`__version__` exposed** — `ollim_bot.__version__` reads from `importlib.metadata`, with uv metadata cache invalidation fixed so version bumps show up without a clean reinstall.
+
 ## Mar 27, 2026
 
 **AI training restriction and source-file headers**

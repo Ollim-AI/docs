@@ -64,9 +64,13 @@ slash command. ollim-bot stores these in
 | `bg_fork_timeout` | integer | `1800` | Any integer | Max background fork runtime (seconds) |
 | `fork_idle_timeout` | integer | `10` | Any integer | Interactive fork idle timeout (minutes) |
 | `permission_mode` | permission mode | `dontAsk` | `dontAsk / default / acceptEdits / bypassPermissions` | Default [permission mode](/core-usage/permissions) |
-| `auto_update` | boolean | `off` | `on / off` | Auto-pull, upgrade tool install, and restart on new commits |
+| `auto_update` | boolean | `off` | `on / off` | Auto-pull, upgrade tool install, and restart when a new `v*` tag is published |
 | `auto_update_interval` | integer | `60` | Any integer | Update check interval (minutes) |
 | `auto_update_hour` | hour (0-23) | `6` | `0-23` | Hour of day to apply updates |
+
+<Note>
+Update detection is semver-tag based — the bot fetches tags from `origin` and compares the current version to the latest `v*` tag by version sort (`git tag -l "v*" --sort=-version:refname`). Untagged commits on `main` do not trigger auto-updates; releases only ship on a new `v*` tag. Use [`/version`](/core-usage/slash-commands#version) to see the currently running version.
+</Note>
 
 <Note>
 Runtime config is separate from environment variables — env vars require a
