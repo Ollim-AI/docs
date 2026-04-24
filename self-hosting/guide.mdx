@@ -157,9 +157,93 @@ See [Data directory](/configuration/data-directory) for the full layout.
   remote for backup.
 </Tip>
 
+## Docker deployment
+
+The repo ships a `Dockerfile`, `docker-compose.yml`, and `docker-entrypoint.sh`
+for containerized deployment. The compose file bundles ollim-bot with a local
+[Ollama](https://ollama.com) server, so a single `docker compose up` gives you
+a self-contained stack with no Anthropic account required for inference.
+
+<Steps>
+  <Step title="Configure .env">
+    Create a `.env` file in the repo root. At minimum you need `DISCORD_TOKEN`,
+    `OLLIM_USER_NAME`, and `OLLIM_BOT_NAME`. To use the bundled Ollama service,
+    point the bot at the `ollama` service hostname and set any non-empty
+    `ANTHROPIC_AUTH_TOKEN`:
+
+    ```bash title=".env"
+    DISCORD_TOKEN=your-discord-bot-token
+    OLLIM_USER_NAME=YourName
+    OLLIM_BOT_NAME=Ollim
+    ANTHROPIC_BASE_URL=http://ollama:11434
+    ANTHROPIC_AUTH_TOKEN=ollama
+    ANTHROPIC_MODEL=qwen3.5:2b
+    ANTHROPIC_SMALL_FAST_MODEL=qwen3.5:2b
+    ```
+
+    Setting `ANTHROPIC_AUTH_TOKEN` tells ollim-bot to skip the Claude OAuth
+    check at startup — necessary inside containers where the bundled CLI can't
+    prompt for login. See [Model providers](/self-hosting/model-providers) for
+    other backend options.
+  </Step>
+
+  <Step title="Start the stack">
+    ```bash
+    docker compose up -d
+    ```
+
+    The entrypoint (`docker-entrypoint.sh`) checks whether `ANTHROPIC_MODEL` is
+    already present on the Ollama server and pulls it automatically if not —
+    the first start may take several minutes while the model downloads. Compose
+    waits for Ollama's healthcheck before starting the bot container.
+  </Step>
+
+  <Step title="Tail logs and verify">
+    ```bash
+    docker compose logs -f ollim-bot
+    ```
+
+    Once the bot connects to Discord, you receive the startup DM. Use
+    `docker compose down` to stop and `docker compose up -d --build` to rebuild
+    after changing source or prompts.
+  </Step>
+</Steps>
+
+### What the compose stack does
+
+| Service | Image | Purpose |
+|---------|-------|---------|
+| `ollama` | `ollama/ollama` | Local Ollama server bound to `127.0.0.1:11434` on the host |
+| `ollim-bot` | Built from local `Dockerfile` | The bot, depending on `ollama` being healthy |
+
+| Volume | Mounted at | Purpose |
+|--------|------------|---------|
+| `ollama_data` | `/root/.ollama` (in `ollama`) | Pulled Ollama models persist across restarts |
+| `bot_data` | `/home/bot/.ollim-bot` (in `ollim-bot`) | Data directory — routines, reminders, sessions, profile files |
+| `cli_data` | `/home/bot/.claude` (in `ollim-bot`) | Claude CLI configuration |
+
+The bot container runs as an unprivileged `bot` user. The Ollama port is bound
+to `127.0.0.1` on the host so it isn't reachable from other machines on your
+network.
+
+<Note>
+  To use a cloud provider (Claude subscription, Z.AI, DeepSeek, etc.) instead
+  of bundled Ollama, set the provider's `ANTHROPIC_BASE_URL` and
+  `ANTHROPIC_AUTH_TOKEN` in `.env` and remove the `ollama` service and its
+  `depends_on` entry from `docker-compose.yml`. See
+  [Model providers](/self-hosting/model-providers) for provider configurations.
+</Note>
+
+<Warning>
+  The bot container can't complete Claude OAuth on your behalf — there's no
+  browser inside. Either set `ANTHROPIC_AUTH_TOKEN` (any provider, including
+  Ollama) to skip OAuth entirely, or run the bot natively once to complete
+  login before switching to Docker.
+</Warning>
+
 ## Running as a service
 
-For persistent operation, run ollim-bot as a systemd user service:
+For persistent operation without Docker, run ollim-bot as a systemd user service:
 
 ```bash title="~/.config/systemd/user/ollim-bot.service"
 [Unit]
@@ -207,6 +291,18 @@ ollim-bot persists its Claude session across restarts — no context is lost. If
 want a fresh start, use `/clear` in Discord. See
 [Session management](/architecture/session-management) for details on compaction,
 lifecycle events, and session recovery.
+
+## License
+
+ollim-bot is licensed under [GPL-3.0](https://github.com/Ollim-AI/ollim-bot/blob/main/LICENSE.md).
+If you fork the repo and distribute your modified version, your fork must also
+be released under GPL-3.0 and include the full source — that's what copyleft
+means. Running your own private fork for personal use has no such requirement.
+
+The license also carries a Section 7 supplementary notice restricting use of
+the repo's contents for training or evaluating machine learning models without
+written permission from the copyright holder. This does not affect normal human
+use, modification, or redistribution under GPL-3.0.
 
 ## Next steps
 

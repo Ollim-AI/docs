@@ -9,6 +9,24 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
+## Mar 29-31, 2026
+
+**Docker deployment**
+
+- **Dockerfile and compose stack** — the repo now ships `Dockerfile`, `docker-compose.yml`, and `docker-entrypoint.sh`. `docker compose up -d` brings up ollim-bot alongside a local [Ollama](https://ollama.com) server, with named volumes (`ollama_data`, `bot_data`, `cli_data`) for persistence across rebuilds. See [Docker deployment](/self-hosting/guide#docker-deployment).
+- **Auto-pull Ollama models** — the entrypoint checks whether `ANTHROPIC_MODEL` exists on the Ollama server and pulls it automatically if not, so the first start downloads the model before the bot launches.
+- **Skip OAuth when `ANTHROPIC_AUTH_TOKEN` is set** — `is_authenticated()` is no longer called when the token is present, fixing a crash in restricted container environments where the bundled CLI can't write temp files.
+- **Non-root container user** — the bot runs as an unprivileged `bot` user inside the container. Ollama's port is bound to `127.0.0.1` on the host, not exposed to the network.
+- Internal: `--no-dev` in the Dockerfile `CMD` skips dev dependency downloads, session ID reset in chat mode prevents stale state across container restarts.
+
+## Mar 27, 2026
+
+**AI training restriction and source-file headers**
+
+- **AI training restriction** — [`LICENSE.md`](https://github.com/Ollim-AI/ollim-bot/blob/main/LICENSE.md) gained a Section 7 supplementary notice prohibiting use of the repo's contents for training or evaluating machine learning models without written permission. GPL-3.0 itself was adopted on Feb 26. See [License](/self-hosting/guide#license).
+- **Per-file copyright headers** — all Python source files now carry a GPL-3.0 copyright header naming Julius Frost as the copyright holder (2025-2026).
+- **Crawler opt-out signals** — `robots.txt` and `ai.txt` added at the repo root to signal the restriction to automated crawlers.
+
 ## Mar 23, 2026
 
 **`send_file` tool and save-context confirmation**
