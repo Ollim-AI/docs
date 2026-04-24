@@ -218,6 +218,74 @@ each job fires. Unsafe patterns are rejected and the job is skipped:
 If a pattern fails validation, the bot logs the error so you can fix
 it.
 
+## Reflections
+
+After every background fork finishes, the bot spawns a small Haiku
+meta-fork that writes a short execution trace to disk. Reflections are
+a per-job history you can scroll through when debugging.
+
+<Note>
+Reflections are an internal log, not telemetry. Files stay in your
+data directory — nothing is sent externally.
+</Note>
+
+### Where traces are written
+
+Each trace lands in a per-job subdirectory under the data directory:
+
+```text
+~/.ollim-bot/reflections/<item-id>/<timestamp>.md
+```
+
+`<item-id>` is the routine, reminder, or webhook `id`. `<timestamp>`
+is UTC in `YYYY-MM-DDTHH-MM-SSZ` format — hyphens replace colons so
+the filename is safe on every filesystem. One file per background
+fork run.
+
+### What a trace contains
+
+The reflection prompt pre-fills the deterministic fields in Python;
+Haiku only generates the narrative **Trace** line:
+
+| Field | Source |
+|-------|--------|
+| `Status` | `completed`, `timed out after N minutes`, or `failed: <error>` — from the fork outcome |
+| `Report filed` | `yes` if the fork called `report_updates`, otherwise `no` |
+| `Errors` | The exception type and message, or `none` |
+| `Trace` | 1-3 factual sentences from Haiku — what the task was meant to do and what the status indicates happened |
+
+The reflection fork receives the job's `description`, the prompt tag
+(e.g. `[routine-bg:morning-checkin]`), and the `report_updates`
+message if one was sent. It runs isolated with only a scoped
+`Write(reflections/**/*.md)` tool.
+
+### Timing and failure handling
+
+The reflection fork runs in the parent fork's `finally` block, after
+contextvars reset. It has a 60-second timeout. Failures — including
+cancellation — are logged and swallowed so they cannot affect the
+original job.
+
+### Opting out
+
+Reflections are enabled by default. Set `reflect: false` in a routine,
+reminder, or webhook's YAML frontmatter to skip the meta-fork for that
+job:
+
+```yaml title="routines/low-signal-check.md"
+---
+id: low-signal-check
+cron: "*/15 * * * *"
+background: true
+isolated: true
+reflect: false
+description: High-frequency check — no trace needed
+---
+Quick status check.
+```
+
+There is no global toggle — opt out per job.
+
 ## Configuration
 
 All background fork fields available in routine and reminder YAML
@@ -233,6 +301,7 @@ frontmatter:
 | `allow-ping` | `bool` | `true` | Allow pings. `critical` does not bypass. |
 | `allowed-tools` | `list[string]` | — | Additional tools merged with [default tools](#default-tools) |
 | `skills` | `list[string]` | — | [Skills](/extending/skills) to load at fire time |
+| `reflect` | `bool` | `true` | Write a [reflection trace](#reflections) when the fork finishes |
 
 ## Examples
 

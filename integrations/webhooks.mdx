@@ -127,6 +127,7 @@ YAML frontmatter and a markdown body.
 | `update-main-session` | `string` | `on_ping` | When to write back to main session |
 | `skills` | `list[string] \| null` | `null` | [Skill](/extending/skills) names to load at fire time |
 | `subagent` | `string \| null` | `null` | [Subagent](/extending/subagents) to delegate the core task to |
+| `reflect` | `bool` | `true` | Write a [reflection trace](/scheduling/background-forks#reflections) when the fork finishes |
 
 <Tip>
   The `isolated`, `model`, `thinking`, `allow-ping`, and

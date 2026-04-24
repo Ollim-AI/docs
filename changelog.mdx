@@ -48,6 +48,15 @@ chronological order.
   UUIDs are rejected with a clear error, and the first record in a session
   cannot be a rewind point.
 
+## Apr 9, 2026
+
+**Structural reflections for background forks**
+
+- **Execution traces after every background fork** — when a [background fork](/scheduling/background-forks#reflections) finishes (success, timeout, or failure), a Haiku meta-fork writes a short trace to `~/.ollim-bot/reflections/<item-id>/<timestamp>.md`. Each trace records the job status, whether `report_updates` was called, any error info, and a 1-3 sentence summary of what the task was meant to do.
+- **Pre-filled deterministic fields** — Status, Report filed, and Errors are filled in Python from the fork outcome; Haiku only generates the **Trace** line. This prevents hallucinated statuses and literal copying of placeholder text.
+- **Isolated write-only scope** — the meta-fork runs with `model: haiku`, thinking off, and a single `Write(reflections/**/*.md)` tool. It runs in the parent fork's `finally` block after contextvars reset, with a 60-second timeout. Reflection failures (including cancellation) are logged and swallowed — they never affect the original job.
+- **Per-job opt-out** — set `reflect: false` in a routine, reminder, or webhook's YAML frontmatter. Default is `true`.
+
 ## Mar 31, 2026
 
 **`ollim-bot chat` — Discord-free agent interface**

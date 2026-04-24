@@ -35,6 +35,7 @@ Stored in `~/.ollim-bot/routines/*.md`. Filenames are auto-generated slugs based
 | `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default background tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 | `subagent` | `str \| null` | `null` | Subagent to delegate the core task to at fire time |
+| `reflect` | `bool` | `true` | Write a [reflection trace](/scheduling/background-forks#reflections) after the background fork finishes |
 
 The markdown body after the closing `---` becomes the routine's task message.
 
@@ -74,6 +75,7 @@ Stored in `~/.ollim-bot/reminders/*.md`. Same slug-based filenames as routines.
 | `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default background tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time (e.g., `[ux-principles, async-principles]`) |
 | `subagent` | `str \| null` | `null` | Subagent to delegate the core task to at fire time |
+| `reflect` | `bool` | `true` | Write a [reflection trace](/scheduling/background-forks#reflections) after the background fork finishes |
 
 ```yaml title="reminders/pick-up-groceries.md"
 ---
@@ -112,6 +114,7 @@ Stored in `~/.ollim-bot/webhooks/*.md`. Same slug-based filenames.
 | `allowed-tools` | `list[str] \| null` | `null` | Additional tools merged with default background tools |
 | `skills` | `list[str] \| null` | `null` | Skill names to load at fire time |
 | `subagent` | `str \| null` | `null` | Subagent to delegate the core task to at fire time |
+| `reflect` | `bool` | `true` | Write a [reflection trace](/scheduling/background-forks#reflections) after the fork finishes |
 
 The markdown body is a template — `{field_name}` placeholders are replaced with payload values at dispatch time.
 
