@@ -9,6 +9,34 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
+## Mar 31 – Apr 21, 2026
+
+**Counterfactual trajectory testing**
+
+- **`counterfactual` CLI** — new top-level command (a sibling of `ollim-bot`,
+  not a subcommand) that replays a real production transcript from a chosen
+  user-message UUID, applies an intervention (system prompt append/replace,
+  tool disallow, model swap, or alternate message), and prints the new
+  response next to the original. Installed alongside `ollim-bot` by
+  `uv tool install --editable .`. See
+  [CLI reference](/development/cli-reference#counterfactual) and
+  [Counterfactual trajectory testing](/development/testing#counterfactual-trajectory-testing).
+- **`--with-baseline`** — optional second fork that re-runs the original
+  settings so differences between baseline and variant isolate the
+  intervention's effect from sampling noise. Doubles cost.
+- **`src/ollim_bot/eval/` sub-package** — module layout for the
+  counterfactual implementation, with unit tests covering session truncation,
+  UUID resolution, and original-response extraction.
+- **`counterfactual-test` Claude Code skill** — bundled at
+  `.claude/skills/counterfactual-test/SKILL.md` in the source repo. Invoke
+  with `/counterfactual-test`; model invocation is disabled. This is a
+  Claude Code dev-harness skill, separate from
+  [ollim-bot runtime skills](/extending/skills).
+- **UUID prefix matching** — the `rewind_uuid` argument accepts prefixes and
+  resolves them against user-message UUIDs only. Assistant and tool-result
+  UUIDs are rejected with a clear error, and the first record in a session
+  cannot be a rewind point.
+
 ## Mar 31, 2026
 
 **`ollim-bot chat` — Discord-free agent interface**

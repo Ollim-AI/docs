@@ -211,6 +211,88 @@ without requiring API calls:
 These run as part of the regular `pytest` suite and catch regressions in
 prompt content and scenario definitions.
 
+## Counterfactual trajectory testing
+
+The `counterfactual` command answers a different question from ADHD behavior
+evals: **"what would the agent have done here if I changed X?"** It replays a
+real production transcript up to a chosen point, applies an intervention, and
+prints the new response next to the original so you can see exactly what
+changed.
+
+Use it when you want to validate a prompt edit, tool restriction, or model
+swap against a session that already happened — without waiting for similar
+behavior to recur in production.
+
+| Tool | Question it answers | Input |
+|------|---------------------|-------|
+| `ollim-bot eval` | Does the agent handle simulated ADHD users well? | Synthetic scenarios |
+| `counterfactual` | How would the agent have responded here with different settings? | A real past session and a rewind point |
+
+<Note>
+  `counterfactual` is a separate top-level command installed alongside
+  `ollim-bot` by `uv tool install --editable .`. It is not an `ollim-bot`
+  subcommand.
+</Note>
+
+### How it works
+
+`counterfactual` truncates the session's JSONL transcript at the rewind point,
+then uses the Claude Agent SDK's fork feature to resume from the truncated
+state with modified [`ClaudeAgentOptions`](https://github.com/anthropics/claude-agent-sdk).
+It can run two forks in parallel — a **baseline** (same settings as the
+original) and a **variant** (with the intervention) — so you can distinguish
+sampling noise from the intervention's effect. The truncated file and both
+fork sessions are cleaned up after the run.
+
+Source: `src/ollim_bot/eval/counterfactual.py` and
+`src/ollim_bot/eval/counterfactual_cli.py`.
+
+### Running a test
+
+```bash
+# 1. Find the session and the message UUID you want to rewind to
+claude-history sessions --cwd ~/.ollim-bot --since 7d
+claude-history transcript <session_id> --cwd ~/.ollim-bot
+
+# 2. Replay with an intervention
+counterfactual <session> <rewind_uuid> --append "Respond in one sentence."
+```
+
+The `session` argument accepts UUID prefixes, `prev`, `prev-N`, or slug names —
+matching `claude-history` conventions. The `rewind_uuid` must be a
+**user message** UUID (assistant and tool-result UUIDs are rejected), and it
+cannot be the first record in the session.
+
+See the [counterfactual CLI reference](/development/cli-reference#counterfactual)
+for every flag and default.
+
+### Bundled Claude Code skill
+
+The source repo ships a `counterfactual-test` Claude Code skill at
+`.claude/skills/counterfactual-test/SKILL.md`. It walks Claude Code through
+picking a session and rewind point, choosing an intervention, and interpreting
+the output. The skill sets `disable-model-invocation: true`, so it runs only
+when you type `/counterfactual-test` in a Claude Code session inside the
+source repo — the model will not trigger it automatically.
+
+This is a Claude Code dev-harness skill, separate from
+[ollim-bot runtime skills](/extending/skills) loaded by the bot at startup.
+
+### Cost and gotchas
+
+- Default caps are `$0.50` per run and `5` turns; `--with-baseline` doubles
+  cost by running two forks.
+- **Discord MCP tools are not connected** — pick rewind points where the
+  original response did not depend on `ping_user`, `discord_embed`, or other
+  Discord-side tools, or the comparison is invalid.
+- **Variant runs use `bypassPermissions`** — tools denied in production can
+  succeed on replay, which may change tool selection behavior.
+- **Profile drift** — the variant uses the current `IDENTITY.md` and
+  `USER.md`. If these changed since the original session, differences may
+  reflect profile edits rather than the intervention.
+- Interrupted runs may leave orphaned JSONL files under
+  `~/.claude/projects/`. Delete them manually if cleanup did not run.
+
 ## Writing tests
 
 ### Basic pattern

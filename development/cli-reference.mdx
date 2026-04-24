@@ -3,7 +3,7 @@ title: "CLI reference"
 description: "Look up all CLI subcommands and flags for managing the bot, routines, reminders, and Google services."
 ---
 
-The `ollim-bot` CLI is the single entry point for running the bot and managing
+The `ollim-bot` CLI is the primary entry point for running the bot and managing
 routines, reminders, Google Tasks, Google Calendar, and Gmail from the terminal.
 With no subcommand, it starts the Discord bot. With a subcommand, it runs the
 corresponding operation and exits.
@@ -11,6 +11,11 @@ corresponding operation and exits.
 ```bash
 ollim-bot [command] [subcommand] [options]
 ```
+
+Installing with `uv tool install --editable .` also installs a separate
+[`counterfactual`](#counterfactual) command for replaying production
+transcripts with modified agent settings — it is a sibling entry point, not
+an `ollim-bot` subcommand.
 
 ## Command overview
 
@@ -27,6 +32,7 @@ ollim-bot [command] [subcommand] [options]
 | `ollim-bot auth` | Manage Claude Code authentication |
 | `ollim-bot doctor` | Run diagnostic checks on your installation |
 | `ollim-bot help` | Show help message |
+| `counterfactual` | Replay a transcript with an intervention (separate entry point) |
 
 ## `routine`
 
@@ -565,6 +571,74 @@ Run `ollim-bot doctor` after initial setup or whenever something feels off.
 It catches the most common issues — missing env vars, corrupt state files,
 invalid cron expressions — before they surface as confusing runtime errors.
 </Tip>
+
+## `counterfactual`
+
+<Note>
+  `counterfactual` is a separate top-level command, not an `ollim-bot`
+  subcommand. `uv tool install --editable .` installs both entry points.
+</Note>
+
+Replay a real production transcript from a chosen point, apply an intervention
+(modified system prompt, tool restrictions, model swap, or alternate message),
+and print the agent's new response alongside the original. Use it to evaluate
+prompt or configuration changes without waiting for the behavior to recur in
+production. See
+[Counterfactual trajectory testing](/development/testing#counterfactual-trajectory-testing)
+for when to reach for this tool.
+
+```bash
+counterfactual <session> <rewind_uuid> [options]
+```
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `session` | positional | Yes | Session ID prefix, `prev`, `prev-N`, or slug name — matches `claude-history` conventions |
+| `rewind_uuid` | positional | Yes | UUID (or UUID prefix) of the user message to rewind to |
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--cwd` | string | `~/.ollim-bot` | Working directory used to locate the session's Claude project |
+| `--project` | string | — | Direct path to a project directory under `~/.claude/projects/` |
+| `--append` | string | — | Text appended to the system prompt for the variant run |
+| `--replace-prompt` | string | — | Replace the system prompt entirely (mutually exclusive with `--append`) |
+| `--model` | string | — | Model override (for example, `haiku`, `sonnet`, `opus`) |
+| `--message` | string | — | Send a different user message than the original |
+| `--disallow` | string | — | Disallow a tool for the variant run; repeat the flag to disallow multiple tools |
+| `--max-turns` | int | `5` | Maximum agent turns per run |
+| `--max-budget` | float | `0.50` | Maximum cost per run in USD |
+| `--with-baseline` | flag | `false` | Also run a baseline (same settings as original) to separate sampling noise from the intervention's effect — doubles cost |
+| `-v`, `--verbose` | flag | `false` | Show debug logging |
+
+The `rewind_uuid` must belong to a **user message** — assistant or tool-result
+UUIDs are rejected. Prefixes are accepted as long as they resolve to exactly
+one user message. The first record in a session cannot be a rewind point —
+there is no prior context to fork from.
+
+```bash
+# Append to the system prompt and replay the last session's message
+counterfactual prev 418a8812 --append "Respond in one sentence."
+
+# Swap to haiku with a single turn for a cheap smoke test
+counterfactual 408bc4a1 418a8812 --model haiku --max-turns 1
+
+# Disallow Bash and compare against a baseline
+counterfactual elegant-hopping-seal 418a8812 --disallow Bash --with-baseline
+```
+
+The output shows the **original** response from the transcript, an optional
+**baseline** (same settings as the original, re-run fresh), and the
+**variant** (with the intervention). Each block includes the response text,
+tool calls, turn count, cost, and token usage.
+
+<Warning>
+  The variant runs with `bypassPermissions` and the default `--cwd` is
+  `~/.ollim-bot` — tools like `Bash`, `Write`, and `Edit` can modify files
+  anywhere under that directory. Discord MCP tools (`ping_user`,
+  `discord_embed`) are not connected, so pick rewind points where the
+  original response did not depend on them, or the comparison will not be
+  meaningful.
+</Warning>
 
 ## Background mode options
 
