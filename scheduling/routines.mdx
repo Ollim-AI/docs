@@ -66,6 +66,12 @@ Filenames are slugified from the message text (lowercase, hyphens, max
 — filenames are for human readability only. Collisions append `-2`,
 `-3`, etc.
 
+### Validation on write
+
+Routine writes and edits pass through the [`routine_validator` hook](/extending/hooks#routine-validator) before landing on disk. It blocks files missing `id`, `cron`, or valid frontmatter, and warns on unscoped tool permissions or dangerous delegation/write combinations.
+
+For quality issues the validator can't catch — a routine that pings at bad times, reports inaccurate data, or relies on conversation history as ground truth — invoke the bundled [`/improve-routine`](/extending/skills#bundled-skills) skill. It diagnoses failures in plan mode, proposes fixes grounded in the source, and verifies the changes with critic subagents before signing off.
+
 ## Managing routines
 
 <Tabs>

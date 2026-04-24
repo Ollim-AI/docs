@@ -18,6 +18,7 @@ each write.
 | `OLLIM_USER_NAME` | Yes | — | Your display name, used in the system prompt and messages |
 | `OLLIM_BOT_NAME` | Yes | — | The bot's display name |
 | `OLLIM_TIMEZONE` | No | System local | IANA timezone name (e.g. `America/New_York`). Used for timestamps in session history, pending updates, scheduling preambles, and Google Calendar/Gmail. Falls back to system local detection, then UTC. |
+| `OLLIM_DATA_DIR` | No | `~/.ollim-bot` | Override the [data directory](/configuration/data-directory). Must be set as a shell env var — `storage.py` is imported before `load_dotenv()`, so values in `.env` are ignored. Useful for running a second instance side-by-side. |
 | `WEBHOOK_PORT` | No | — | Port for the webhook HTTP server; omit to disable webhooks |
 | `WEBHOOK_SECRET` | Conditional | — | Bearer token for webhook authentication; required if `WEBHOOK_PORT` is set |
 

@@ -42,6 +42,46 @@ Hooks can also be scoped narrower:
 - **Per-subagent** — define a `hooks` field in a subagent's `.md` frontmatter. The hooks activate when that subagent starts and are cleaned up when it finishes.
 - **Per-skill** — define a `hooks` field in a skill's `SKILL.md` frontmatter. Active only while that skill runs.
 
+## Built-in hooks
+
+ollim-bot registers its own hooks on the main session via the SDK `hooks` parameter — separate from the `settings.json` hooks above. These run for every session automatically.
+
+| Hook | Event | Matcher | Purpose |
+|------|-------|---------|---------|
+| `state_dir_guard` | `PreToolUse` | `Write\|Edit` | Blocks writes targeting paths inside `state/`. See [state directory write-protection](/core-usage/permissions#state-directory-write-protection). |
+| `routine_validator` | `PreToolUse` | `Write\|Edit` | Validates routine `.md` files before they're written. |
+| `auto_commit_hook` | `PostToolUse` | `Write\|Edit` | Auto-commits markdown writes inside the data directory. |
+| `tool_error_hook` | `PostToolUse` | any | Marks a tool label as errored when the tool returns `is_error: true`. |
+| `tool_failure_hook` | `PostToolUseFailure` | any | Marks a tool label as errored on hard execution failure. |
+| `require_report_hook` | `Stop` | any | Enforces the background fork report contract. |
+
+### Routine validator
+
+When the agent writes or edits a file inside `~/.ollim-bot/routines/`, the `routine_validator` hook simulates the resulting content and runs it through `validate_routine()` before the write lands on disk.
+
+**Blocks** (the write is denied):
+
+- Missing frontmatter — routine files require YAML between `---` markers
+- Missing `id` — required for scheduler job registration
+- Missing `cron` — required for scheduling
+- Invalid cron — must have exactly 5 whitespace-separated fields
+- Malformed YAML — unclosed frontmatter or lines that don't parse
+
+**Warns** (the write proceeds, but the agent sees a diagnostic):
+
+- Missing `description` or `background` — degrades schedule display and defaults
+- Unscoped `Bash`, `Write`, `Edit`, or `MultiEdit` in `allowed-tools` — should be restricted with a path pattern like `Bash(ollim-bot cal *)`
+- Delegation (`Task`/`Agent`) combined with unscoped `Write`/`Edit` — subagent output may land in shared files without verification
+- Underscore keys where canonical form is hyphenated (`allowed_tools` vs `allowed-tools`)
+- Unknown frontmatter keys
+- Routine longer than 200 lines
+
+The validator runs on both `Write` and `Edit` — for `Edit`, it simulates the string replacement against the current file contents. When it rejects a write, the denial reason is prefixed with `routine-validator:` so you can find it in the permission surface.
+
+<Tip>
+If a routine still produces wrong results after the validator accepts it, invoke the [`/improve-routine`](/extending/skills#bundled-skills) skill to diagnose quality issues the validator can't catch — like embellished reporting or data source confusion.
+</Tip>
+
 ## Full reference
 
 <Card title="Claude Code hooks reference" icon="book" href="https://code.claude.com/docs/en/hooks-guide">

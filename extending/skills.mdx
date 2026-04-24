@@ -17,9 +17,17 @@ Skills are loaded fresh every time they're invoked. If you update a skill's inst
 
 ## Bundled skills
 
-The bot ships with **two bundled skills** — `job-config` and `setup` — that live in the bot's source code rather than in `~/.ollim-bot/skills/`. `job-config` guides tool selection and behavioral configuration when creating background jobs. `setup` guides initial bot setup and configuration.
+The bot ships with **three bundled skills** — `job-config`, `setup`, and `improve-routine` — that live in the bot's source code rather than in `~/.ollim-bot/skills/`.
+
+| Skill | Purpose |
+|-------|---------|
+| `job-config` | Guides tool selection and behavioral configuration when creating background jobs |
+| `setup` | Walks you through initial bot configuration |
+| `improve-routine` | Diagnoses and fixes routine quality issues — data source confusion, embellishment propagation, model/tool mismatches, report quality |
 
 The bot invokes `job-config` automatically when you create or edit a routine, reminder, or webhook that needs background config. It determines which tools belong in [`allowed-tools`](/scheduling/background-forks#adding-tools) and which behavioral flags (`allow-ping`, `update-main-session`, `model`) to set — so you don't have to remember the rules yourself.
+
+Invoke `/improve-routine routines/<name>.md` when a routine produces wrong results, pings at bad times, or needs structural fixes. It runs a diagnostic pass in plan mode before proposing changes, then spawns critic subagents to verify the fix prevents the reported failure. Not for creating new routines — use the agent conversationally for that.
 
 Bundled skills are always available and don't need to be created manually. They work the same way as user-created skills but are maintained as part of the bot itself.
 
@@ -177,7 +185,7 @@ The bot distinguishes between three categories of skills:
 |----------|---------|-------------------|
 | **User-authored** | Skills you create in `~/.ollim-bot/skills/` | Yes — listed under "Your custom skills" |
 | **Generated** | `routine-*`, `reminder-*`, `webhook-*` (auto-created at fire time) | No |
-| **Bundled** | `job-config`, `setup`, `claude-history` | No |
+| **Bundled** | `job-config`, `setup`, `improve-routine`, `claude-history` | No |
 
 User-authored skills are automatically surfaced in the system prompt so the bot knows they exist and can invoke them interactively or reference them when creating jobs. The listing includes each skill's name and description.
 

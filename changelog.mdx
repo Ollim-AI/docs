@@ -9,6 +9,14 @@ chronological order.
 
 <Note>ollim-bot has been in active development since February 9, 2026 with 588 commits across 35 active development days.</Note>
 
+## Apr 19-21, 2026
+
+**Auto-memory disabled, reminder and webhook reliability fixes**
+
+- **`autoMemoryEnabled: false` by default** — bootstrap now writes `autoMemoryEnabled: false` to `~/.ollim-bot/.claude/settings.json` unless you set the key explicitly. ollim-bot persists context through its own markdown files ([`IDENTITY.md`](/personalizing/personality), [`USER.md`](/personalizing/user-context), reflections), so Claude Code's auto-memory would write a parallel note track the bot never reads.
+- **Reminder file cleanup on dispatch failure** — if `validate_dispatch` fails at fire time for a one-shot reminder, the orphaned `.md` is now removed instead of being left behind. Previously the `DateTrigger` job would fire once, APScheduler would drop it, and `sync_all`'s "already registered" guard would silently block re-registration — killing the reminder forever.
+- **Webhook `AppKey` migration** — `_bg_tasks` now uses a typed `web.AppKey` instead of a raw string key, silencing aiohttp 3.9+'s `NotAppKeyWarning` on every webhook POST.
+
 ## Apr 7-21, 2026
 
 **Multi-calendar support and configurable task list**
@@ -48,6 +56,12 @@ chronological order.
   UUIDs are rejected with a clear error, and the first record in a session
   cannot be a rewind point.
 
+## Apr 13, 2026
+
+**Agent tool usage guardrail**
+
+- **Never use `run_in_background` for `Bash`** — the `claude_code` preset encourages background execution for long-running commands, but background results are never delivered back in the SDK streaming context, so commands silently lose their output. The system prompt now overrides this with an explicit "never" instruction.
+
 ## Apr 9, 2026
 
 **Structural reflections for background forks**
@@ -56,6 +70,16 @@ chronological order.
 - **Pre-filled deterministic fields** — Status, Report filed, and Errors are filled in Python from the fork outcome; Haiku only generates the **Trace** line. This prevents hallucinated statuses and literal copying of placeholder text.
 - **Isolated write-only scope** — the meta-fork runs with `model: haiku`, thinking off, and a single `Write(reflections/**/*.md)` tool. It runs in the parent fork's `finally` block after contextvars reset, with a 60-second timeout. Reflection failures (including cancellation) are logged and swallowed — they never affect the original job.
 - **Per-job opt-out** — set `reflect: false` in a routine, reminder, or webhook's YAML frontmatter. Default is `true`.
+
+## Apr 6-7, 2026
+
+**Fork turn-count, skill invocation, and permission label fixes**
+
+- **Fork turn-count bump on all entry paths** — `/fork`, the `enter_fork` MCP tool, and idle-timeout prompts now call `bump_fork_turn()`. Previously these paths never bumped at all, leaving `turn_count` at 0 and causing `exit_fork` and `report_updates` to reject with "cannot exit on the first turn" even after multiple turns. Completes the [Mar 25](#mar-25-2026) fix that reordered the bump to run before dispatch.
+- **Routine re-registration on any field change** — `_registered_routines` now stores the full `Routine` dataclass instead of just the cron string, so changes to `model`, `allowed_tools`, `message`, `thinking`, and other fields are detected and re-registered automatically without a restart. Previously only cron changes triggered re-registration.
+- **`/skill-name` invocation restored** — routines, reminders, and webhooks that start with `/skill-name` now invoke the skill as expected. `append_context()` places the timestamp and pending-update preamble *after* the message body so the `/command` stays at position 0 for CLI skill recognition.
+- **Deferred labels skipped for interactively surfaced permissions** — tools that go through interactive Discord approval no longer render a duplicate label at the bottom of the response with the wrong hint (`use /permissions default`). The previous render duplicated info the user had already seen.
+- Internal: consolidated `clear_denied`, `clear_errored`, and `clear_surfaced` into a single `clear_label_state` helper for coherent label-state transitions.
 
 ## Mar 31, 2026
 
@@ -76,6 +100,13 @@ chronological order.
   is flushed to disk before the process exits.
 - Internal: `check_auth()` extracted to `auth.py` for reuse between the
   Discord startup path and the chat entry point.
+
+**Routine validator hook, `/improve-routine` skill, and reply-to-fork tracking**
+
+- **`routine_validator` PreToolUse hook** — a new built-in SDK hook validates routine `.md` files on `Write` and `Edit`. Blocks on missing `id`, missing `cron`, invalid cron (must be 5 fields), unclosed frontmatter, and malformed YAML. Warns on unscoped `Bash`/`Write`/`Edit` in `allowed-tools`, delegation combined with unscoped writes, underscore keys where canonical form is hyphenated, unknown frontmatter keys, and routines over 200 lines. See [Hooks](/extending/hooks#routine-validator) and [Routines](/scheduling/routines#validation-on-write).
+- **`/improve-routine` bundled skill** — new bundled [skill](/extending/skills#bundled-skills) that diagnoses routine quality issues — data source confusion, embellishment propagation, model/tool mismatches, report quality. Runs in plan mode, presents a failure report for user sign-off, then applies fixes and spawns two critic subagents (completeness + regression) to verify each change prevents the reported failure.
+- **Fork exit embed tracking** — "Fork Ended — summary queued" embeds are now written to `fork_messages.json` via `track_fork_message()` across all five exit paths (`bot.py`, `views.py` ×3, `scheduler.py`). Previously, replying to a fork-end embed did not resume the fork session.
+- **Idle-check and `save_context` message tracking** — the idle-check status message and `save_context` confirmation embed now call `track_message()`, so replying to them is recognized by reply-to-fork lookup.
 
 ## Mar 29-31, 2026
 
@@ -104,6 +135,18 @@ chronological order.
 - **AI training restriction** — [`LICENSE.md`](https://github.com/Ollim-AI/ollim-bot/blob/main/LICENSE.md) gained a Section 7 supplementary notice prohibiting use of the repo's contents for training or evaluating machine learning models without written permission. GPL-3.0 itself was adopted on Feb 26. See [License](/self-hosting/guide#license).
 - **Per-file copyright headers** — all Python source files now carry a GPL-3.0 copyright header naming Julius Frost as the copyright holder (2025-2026).
 - **Crawler opt-out signals** — `robots.txt` and `ai.txt` added at the repo root to signal the restriction to automated crawlers.
+
+## Mar 26, 2026
+
+**`OLLIM_DATA_DIR` env var for second instance**
+
+- **`OLLIM_DATA_DIR` env var** — set `OLLIM_DATA_DIR=~/.ollim-bot-2 ollim-bot` to run a second instance with a separate [data directory](/configuration/data-directory). Must be set as a shell env var (not in `.env`) because `storage.py` is imported before `load_dotenv()`. See [Configuration reference](/configuration/reference#environment-variables).
+
+## Mar 25, 2026
+
+**Fork exit tools on first user message**
+
+- **Fork turn bumped before dispatch** — `bump_fork_turn()` now runs before `_dispatch()` so `is_first_fork_turn()` returns false once the user has sent a message, unblocking `exit_fork` and `report_updates` on the first user turn. The fork-started prompt guard is unaffected — it does not bump the turn count.
 
 ## Mar 23, 2026
 
